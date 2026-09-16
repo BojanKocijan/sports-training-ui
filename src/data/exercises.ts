@@ -21,6 +21,10 @@ export interface Exercise {
   cues?: Cue[]
   /** A break isn't a "graded" exercise — hidden from rating/library filtering by default. */
   isBreak?: boolean
+  /** Group-template ids (see group_templates, e.g. 'u8'/'u10') this exercise is appropriate
+   * for. Omitted = applies to every group — most exercises are shared fundamentals; only tag
+   * this when an exercise's framing (age-appropriate content, difficulty) is group-specific. */
+  groups?: string[]
 }
 
 /** Exercise library, per sport — basketball is the only sport with content today. Add a new
@@ -34,6 +38,7 @@ const EXERCISES_BY_SPORT: Record<SportId, Exercise[]> = {
     categories: ['warmup'],
     durationMinutes: 5,
     goal: 'Learn names, set the tone, agree on rules.',
+    groups: ['u8'],
     steps: [
       'Children place one foot on a ball, or hold it still.',
       'Say: "Welkom! Vandaag gaan we spelen, dribbelen, passen en schieten." / "Welcome! Today we’ll play, dribble, pass and shoot."',
@@ -55,6 +60,7 @@ const EXERCISES_BY_SPORT: Record<SportId, Exercise[]> = {
     categories: ['warmup', 'agility'],
     durationMinutes: 5,
     goal: 'Warm up, run around, have fun as a group.',
+    groups: ['u8'],
     steps: [
       'Pick one child to be the "tagger" who tries to tag other players.',
       'When the tagger tags someone, they join hands and try to tag other players together.',
@@ -71,6 +77,7 @@ const EXERCISES_BY_SPORT: Record<SportId, Exercise[]> = {
     categories: ['agility', 'warmup'],
     durationMinutes: 5,
     goal: 'Coordination, fun movement patterns, listening for the whistle.',
+    groups: ['u8'],
     steps: [
       'Start at corner 1.',
       'Corner 1 → middle line: run while jumping and punching the sky, like Mario.',
@@ -111,6 +118,7 @@ const EXERCISES_BY_SPORT: Record<SportId, Exercise[]> = {
     categories: ['warmup', 'agility'],
     durationMinutes: 4,
     goal: 'Light, springy feet and ankle bounce.',
+    groups: ['u8'],
     steps: [
       'Stand tall, feet together, arms relaxed — pretend you have a pogo stick under your feet.',
       'Bounce up and down fast using only your ankles, not big knee bends.',
@@ -131,6 +139,7 @@ const EXERCISES_BY_SPORT: Record<SportId, Exercise[]> = {
     categories: ['agility', 'warmup'],
     durationMinutes: 4,
     goal: 'Fast feet, staying light and ready.',
+    groups: ['u8'],
     steps: [
       'Stand with feet shoulder-width apart, knees soft, on your own spot.',
       'Pretend the floor is burning hot — tap your feet up and down as fast as you can without moving forward.',
@@ -141,6 +150,91 @@ const EXERCISES_BY_SPORT: Record<SportId, Exercise[]> = {
     cues: [
       { nl: 'Snel, snel, snel!', en: 'Fast, fast, fast!' },
       { nl: 'Bevries!', en: 'Freeze!' },
+    ],
+  },
+  {
+    id: 'dynamic-warmup-circuit',
+    emoji: '🏃',
+    title: 'Dynamic warm-up circuit',
+    subtitle: 'High knees, butt-kicks, lunges, lateral shuffles',
+    categories: ['warmup', 'agility'],
+    durationMinutes: 6,
+    goal: 'Raise the heart rate and open up hips/ankles like a real practice warm-up.',
+    groups: ['u10'],
+    steps: [
+      'Line up on the baseline. Down and back on each drill before moving to the next.',
+      'High knees: drive knees up fast, pump the arms.',
+      'Butt-kicks: heels snap up toward the glutes.',
+      'Walking lunge with a torso twist toward the front leg each step.',
+      'Lateral shuffle in a low stance, leading with each side on the way back.',
+      'Finish with two building-speed strides the length of the court.',
+    ],
+    cues: [
+      { nl: 'Knieën omhoog', en: 'Knees up' },
+      { nl: 'Laag blijven', en: 'Stay low' },
+    ],
+  },
+  {
+    id: 'reaction-sprint',
+    emoji: '🚦',
+    title: 'Reaction sprint',
+    subtitle: 'Coach-call quick starts',
+    categories: ['warmup', 'agility'],
+    durationMinutes: 5,
+    goal: 'Fast first step off an unpredictable signal — game-speed starts, not a countdown.',
+    groups: ['u10'],
+    steps: [
+      'Players start in an athletic stance on the baseline, facing the coach.',
+      'Coach calls a signal at a random moment: a number, a clap, or a color — first move only on the signal.',
+      'Sprint to the marked line, jog back, reset stance.',
+      'Mix in false signals (a word that is NOT the trigger) to test discipline — no reaction on those.',
+      'Rotate through 6-8 reps, resting a few seconds between.',
+    ],
+    cues: [
+      { nl: 'Klaar staan', en: 'Ready position' },
+      { nl: 'Nu!', en: 'Go!' },
+    ],
+  },
+  {
+    id: 'defensive-slide-ladder',
+    emoji: '🛡️',
+    title: 'Defensive slide ladder',
+    subtitle: 'Lateral slides down the sideline and back',
+    categories: ['warmup', 'defense', 'agility'],
+    durationMinutes: 5,
+    goal: 'Build a low, wide defensive stance into the warm-up instead of adding it later.',
+    groups: ['u10'],
+    steps: [
+      'Start in a low defensive stance on the sideline: knees bent, chest up, arms wide.',
+      'Slide sideways to half-court without crossing your feet or standing up.',
+      'Sprint the rest of the way to the far baseline, then jog back.',
+      'Repeat leading with the other foot on the way down.',
+      'Coach checks stance height and foot-crossing, not just speed.',
+    ],
+    cues: [
+      { nl: 'Voeten niet kruisen', en: "Don't cross your feet" },
+      { nl: 'Laag en breed', en: 'Low and wide' },
+    ],
+  },
+  {
+    id: 'partner-mirror-drill',
+    emoji: '🪞',
+    title: 'Partner mirror',
+    subtitle: 'Defensive-stance mirroring drill',
+    categories: ['warmup', 'defense', 'agility'],
+    durationMinutes: 6,
+    goal: 'Read-and-react footwork in a defensive stance, warm-up intensity.',
+    groups: ['u10'],
+    steps: [
+      'Pair up, facing each other about two steps apart, both in a defensive stance.',
+      'Leader moves side to side, forward and back, at a controlled pace; the partner mirrors it, staying square.',
+      'Switch leader every 20-30 seconds.',
+      'Progression: leader adds a quick fake direction change to test the mirror.',
+      'No ball yet — this is about feet and stance, not hands.',
+    ],
+    cues: [
+      { nl: 'Blijf op gelijke hoogte', en: 'Stay level with your partner' },
+      { nl: 'Ogen op de heupen', en: 'Eyes on the hips' },
     ],
   },
   {
@@ -323,4 +417,10 @@ export function exercisesForSport(sportId: SportId): Exercise[] {
 
 export function findExercise(id: string): Exercise | undefined {
   return exercises.find((e) => e.id === id)
+}
+
+/** Exercises appropriate for a given group template (see group_templates, e.g. 'u8'/'u10') —
+ * untagged exercises are shared fundamentals and show for every group. */
+export function exercisesForGroup(templateId: string): Exercise[] {
+  return exercises.filter((e) => !e.groups || e.groups.includes(templateId))
 }

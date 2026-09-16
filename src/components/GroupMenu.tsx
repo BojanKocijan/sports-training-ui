@@ -17,7 +17,6 @@ export function GroupMenu({
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const active = groups.find((g) => g.id === groupId)
-  const availableGroups = groups.filter((g) => g.status === 'available')
 
   useEffect(() => {
     if (!open) return
@@ -56,27 +55,34 @@ export function GroupMenu({
           role="listbox"
           className="absolute left-0 top-full z-30 mt-1 min-w-full overflow-hidden rounded-2xl border border-black/10 bg-white py-1 shadow-lg dark:border-white/10 dark:bg-neutral-900"
         >
-          {availableGroups.map((g) => (
-            <li key={g.id}>
-              <button
-                type="button"
-                role="option"
-                aria-selected={g.id === groupId}
-                onClick={() => {
-                  setGroupId(g.id)
-                  setOpen(false)
-                }}
-                className={`flex w-full items-center gap-2 whitespace-nowrap px-3 py-2 text-left text-sm font-semibold transition-colors ${
-                  g.id === groupId
-                    ? 'bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300'
-                    : 'text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800'
-                }`}
-              >
-                <span>{g.emoji}</span>
-                {g.name}
-              </button>
-            </li>
-          ))}
+          {groups.map((g) => {
+            const comingSoon = g.status === 'coming_soon'
+            return (
+              <li key={g.id}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={g.id === groupId}
+                  disabled={comingSoon}
+                  onClick={() => {
+                    setGroupId(g.id)
+                    setOpen(false)
+                  }}
+                  className={`flex w-full items-center gap-2 whitespace-nowrap px-3 py-2 text-left text-sm font-semibold transition-colors ${
+                    comingSoon
+                      ? 'cursor-not-allowed text-neutral-400 dark:text-neutral-600'
+                      : g.id === groupId
+                        ? 'bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300'
+                        : 'text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800'
+                  }`}
+                >
+                  <span>{g.emoji}</span>
+                  {g.name}
+                  {comingSoon && <span className="text-[10px] font-normal">· soon</span>}
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>

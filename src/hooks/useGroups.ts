@@ -3,6 +3,9 @@ import { api, isApiConfigured } from '../lib/apiClient'
 
 export interface ApiGroup {
   id: string
+  /** The age-band catalog entry this group is an instance of (e.g. 'u8', 'u10') — stable even
+   * if an admin renames the group itself. Used to key group-specific content like exercises. */
+  templateId: string
   name: string
   emoji: string
   status: 'available' | 'coming_soon'
@@ -10,6 +13,7 @@ export interface ApiGroup {
 
 interface RawGroup {
   id: string
+  template_id: string
   name: string
   group_templates: { label: string; emoji: string; status: 'available' | 'coming_soon' } | null
 }
@@ -37,6 +41,7 @@ export function useGroups() {
         setGroups(
           data.map((g) => ({
             id: g.id,
+            templateId: g.template_id,
             name: g.name,
             emoji: g.group_templates?.emoji ?? '🏀',
             status: g.group_templates?.status ?? 'available',

@@ -16,6 +16,7 @@ export function GroupsScreen({
 }) {
   const { groups } = useGroups()
   const group = groups.find((g) => g.id === groupId) ?? { name: groupId, emoji: '🏀' }
+  const templateId = groups.find((g) => g.id === groupId)?.templateId ?? groupId
   // Always unlocked here — the app-level gate in App.tsx (see LockScreen) never renders this
   // screen otherwise.
   const { lock, passcode } = trainerAccess
@@ -192,6 +193,7 @@ export function GroupsScreen({
           initialDate={editingPlan?.training_date ?? ''}
           initialExerciseIds={editingPlan?.exercise_ids ?? []}
           groupLabel={group.name}
+          templateId={templateId}
           takenDates={plans.filter((p) => p.id !== editingPlan?.id).map((p) => p.training_date)}
           saving={saving}
           saveError={saveError}

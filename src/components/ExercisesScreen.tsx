@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { CATEGORIES, type CategoryId } from '../data/categories'
-import { exercises } from '../data/exercises'
+import { exercisesForGroup } from '../data/exercises'
+import { useActiveGroup } from '../hooks/useActiveGroup'
+import { useGroups } from '../hooks/useGroups'
 import { useRatings } from '../hooks/useRatings'
 import { CategoryChip } from './CategoryChip'
 import { ExerciseLibraryCard } from './ExerciseLibraryCard'
@@ -9,8 +11,12 @@ export function ExercisesScreen() {
   const [query, setQuery] = useState('')
   const [activeCategories, setActiveCategories] = useState<CategoryId[]>([])
   const { rate, stats } = useRatings()
+  const { groupId } = useActiveGroup()
+  const { groups } = useGroups()
+  const activeGroup = groups.find((g) => g.id === groupId)
+  const templateId = activeGroup?.templateId ?? groupId
 
-  const trainable = exercises.filter((e) => !e.isBreak)
+  const trainable = exercisesForGroup(templateId).filter((e) => !e.isBreak)
 
   function toggleCategory(id: CategoryId) {
     setActiveCategories((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]))
@@ -31,7 +37,8 @@ export function ExercisesScreen() {
       <header>
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">Exercise library</h1>
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          The full exercise library. Tap one to see the steps, run its timer, or rate it.
+          {activeGroup ? `${activeGroup.name}'s exercise library. ` : 'The full exercise library. '}
+          Tap one to see the steps, run its timer, or rate it.
         </p>
       </header>
 

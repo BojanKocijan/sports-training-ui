@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CATEGORIES, type CategoryId } from '../data/categories'
-import { exercises, findExercise } from '../data/exercises'
+import { exercisesForGroup, findExercise } from '../data/exercises'
 import { formatDate } from '../utils/format'
 import { Calendar } from './Calendar'
 import { CategoryCard } from './CategoryCard'
@@ -13,6 +13,7 @@ export function PlanTrainingWizard({
   initialDate,
   initialExerciseIds,
   groupLabel,
+  templateId,
   takenDates,
   saving,
   saveError,
@@ -23,6 +24,9 @@ export function PlanTrainingWizard({
   initialDate: string
   initialExerciseIds: string[]
   groupLabel: string
+  /** The group's template id (see group_templates) — narrows the exercise picker to what's
+   * appropriate for this age band instead of the full library. */
+  templateId: string
   /** Dates (YYYY-MM-DD) this group already has a training on — one training per date, per group. */
   takenDates: string[]
   saving: boolean
@@ -36,7 +40,7 @@ export function PlanTrainingWizard({
   const [activeCategories, setActiveCategories] = useState<CategoryId[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set(initialExerciseIds))
 
-  const trainable = exercises.filter((e) => !e.isBreak)
+  const trainable = exercisesForGroup(templateId).filter((e) => !e.isBreak)
   const filtered =
     activeCategories.length === 0
       ? trainable
