@@ -99,7 +99,7 @@ export function JerseyGraphic({
   return (
     <svg
       viewBox="0 0 280 400"
-      className="h-40 w-28 overflow-visible"
+      className="h-40 w-28"
       fill="none"
       role="img"
       aria-label={`${nickname}'s jersey${number !== null ? `, number ${number}` : ''}`}
@@ -137,10 +137,10 @@ export function JerseyGraphic({
       <text
         ref={textRef}
         x="140"
-        y="98"
+        y="108"
         textAnchor="middle"
         fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
-        fontSize="19"
+        fontSize="34"
         fontWeight="900"
         fill={textColor}
         letterSpacing="0.5"
@@ -150,12 +150,12 @@ export function JerseyGraphic({
       {number !== null && (
         <text
           x="140"
-          y="215"
+          y="225"
           textAnchor="middle"
           fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
-          fontSize="88"
+          fontSize="120"
           fontWeight="900"
-          letterSpacing="-2"
+          letterSpacing="-3"
           fill={accent}
           stroke={textColor}
           strokeWidth="1.5"

@@ -223,11 +223,6 @@ export function PlayersSection({ groupId, passcode }: { groupId: string; passcod
     <section>
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Players</h2>
-        {!adding && !editingId && players.length > 0 && (
-          <Button variant="secondary" size="sm" onClick={startAdding}>
-            + Add player
-          </Button>
-        )}
       </div>
 
       {error && <p className="mb-2 text-sm text-red-600">Could not load players: {error}</p>}
@@ -281,6 +276,19 @@ export function PlayersSection({ groupId, passcode }: { groupId: string; passcod
                 </button>
               </Card>
             ),
+          )}
+          {!adding && !editingId && (
+            <button
+              type="button"
+              onClick={startAdding}
+              aria-label="Add player"
+              className="flex min-h-[13rem] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-black/15 text-neutral-400 transition-colors hover:border-orange-400 hover:text-orange-500 dark:border-white/15 dark:text-neutral-500 dark:hover:border-orange-400 dark:hover:text-orange-400"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-current text-xl leading-none">
+                +
+              </span>
+              <span className="text-xs font-semibold">Add player</span>
+            </button>
           )}
         </div>
       )}
