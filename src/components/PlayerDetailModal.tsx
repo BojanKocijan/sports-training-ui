@@ -1,6 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useCategories } from '../hooks/useCategories'
-import { issueParentCode, ratePlayerProgress, revokeParentCode, type Player } from '../hooks/usePlayers'
+import {
+  fetchParentCode,
+  issueParentCode,
+  ratePlayerProgress,
+  revokeParentCode,
+  type Player,
+} from '../hooks/usePlayers'
 import { usePlayerProgress } from '../hooks/usePlayerProgress'
 import type { TrainingPlan } from '../hooks/usePlans'
 import { formatDate, toLocalIso } from '../utils/format'
@@ -34,16 +40,36 @@ export function PlayerDetailModal({
   onRosterChange: () => void
 }) {
   const { byCategory, loading, error, refresh } = usePlayerProgress(player.id)
+  const [parentCode, setParentCode] = useState<string | null>(null)
+  const [parentCodeLoading, setParentCodeLoading] = useState(true)
   const [parentCodePending, setParentCodePending] = useState(false)
   const [parentCodeError, setParentCodeError] = useState<string | null>(null)
-  const [justIssuedCode, setJustIssuedCode] = useState<string | null>(null)
+
+  // Trainer-only — never fetched or shown anywhere in the parent-facing view (see ParentView).
+  useEffect(() => {
+    let cancelled = false
+    setParentCodeLoading(true)
+    fetchParentCode(passcode(), player.id)
+      .then((code) => {
+        if (!cancelled) setParentCode(code)
+      })
+      .catch((e) => {
+        if (!cancelled) setParentCodeError(e instanceof Error ? e.message : 'Could not load the code')
+      })
+      .finally(() => {
+        if (!cancelled) setParentCodeLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [passcode, player.id])
 
   async function handleIssueCode() {
     setParentCodePending(true)
     setParentCodeError(null)
     try {
       const code = await issueParentCode(passcode(), player.id)
-      setJustIssuedCode(code)
+      setParentCode(code)
       onRosterChange()
     } catch (e) {
       setParentCodeError(e instanceof Error ? e.message : 'Could not generate a code')
@@ -57,7 +83,7 @@ export function PlayerDetailModal({
     setParentCodeError(null)
     try {
       await revokeParentCode(passcode(), player.id)
-      setJustIssuedCode(null)
+      setParentCode(null)
       onRosterChange()
     } catch (e) {
       setParentCodeError(e instanceof Error ? e.message : 'Could not revoke the code')
@@ -113,22 +139,24 @@ export function PlayerDetailModal({
         </div>
 
         <div className="rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-900">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Parent code</p>
-          {justIssuedCode ? (
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            Parent code · visible to trainers only
+          </p>
+          {parentCodeLoading ? (
+            <p className="mt-1 text-sm text-neutral-400">Loading…</p>
+          ) : parentCode ? (
             <div className="mt-1.5 rounded-xl bg-orange-50 p-2.5 dark:bg-orange-500/10">
               <p className="font-mono text-lg font-bold tracking-widest text-orange-700 dark:text-orange-300">
-                {justIssuedCode}
+                {parentCode}
               </p>
               <p className="mt-0.5 text-xs text-orange-800 dark:text-orange-300">
-                Give this to {player.nickname}'s parent now — it won't be shown again. They enter
-                it on the group's lock screen, same as a trainer code.
+                Share this with {player.nickname}'s parent — they enter it on the group's lock
+                screen, same as a trainer code.
               </p>
             </div>
           ) : (
             <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-              {player.hasParentCode
-                ? 'A parent code is set. Regenerating replaces it — the old code stops working.'
-                : "No parent code yet — generate one to let this child's parent view their progress."}
+              No parent code yet — generate one to let this child's parent view their progress.
             </p>
           )}
           {parentCodeError && <p className="mt-1 text-xs font-semibold text-red-600">{parentCodeError}</p>}
@@ -139,9 +167,9 @@ export function PlayerDetailModal({
               onClick={handleIssueCode}
               className="text-xs font-bold text-orange-600 disabled:opacity-50"
             >
-              {parentCodePending ? '…' : player.hasParentCode ? 'Regenerate code' : 'Generate code'}
+              {parentCodePending ? '…' : parentCode ? 'Regenerate code' : 'Generate code'}
             </button>
-            {player.hasParentCode && (
+            {parentCode && (
               <button
                 type="button"
                 disabled={parentCodePending}
