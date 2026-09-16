@@ -4,19 +4,18 @@ import { usePlayerProgress } from '../hooks/usePlayerProgress'
 import { usePlans } from '../hooks/usePlans'
 import { formatDate } from '../utils/format'
 import { GroupProgressSummary } from './GroupProgressSummary'
-import { TrainerAccessBar } from './TrainerAccessBar'
+import { Card } from './ui/card'
 
 /** Read-only view unlocked by a parent code (see sports-training-api#20) — scoped to one child
  * plus the group's overall progress and schedule. No edit controls anywhere, no way to switch
- * to another child or group: unlike the trainer app, this isn't a tabbed shell, just one page. */
+ * to another child or group: unlike the trainer app, this isn't a tabbed shell, just one page.
+ * Logging out is handled globally now, via the ClubHeader trainer-access menu. */
 export function ParentView({
   groupId,
   player,
-  onLock,
 }: {
   groupId: string
   player: ParentPlayer
-  onLock: () => void
 }) {
   const { byCategory, loading, error } = usePlayerProgress(player.id)
   const { categories } = useCategories()
@@ -33,8 +32,6 @@ export function ParentView({
         </p>
       </header>
 
-      <TrainerAccessBar onLock={onLock} label={`✓ Viewing ${player.nickname}'s progress`} />
-
       <section>
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">
           {player.nickname}'s progress
@@ -45,7 +42,7 @@ export function ParentView({
         ) : byCategory.length === 0 ? (
           <p className="text-sm text-neutral-400">No ratings logged yet.</p>
         ) : (
-          <div className="space-y-2 rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-900">
+          <Card size="sm" className="space-y-2 px-3">
             {byCategory.map((c) => {
               const cat = categoryInfo(categories, c.categoryId)
               return (
@@ -65,7 +62,7 @@ export function ParentView({
                 </div>
               )
             })}
-          </div>
+          </Card>
         )}
       </section>
 
@@ -82,17 +79,14 @@ export function ParentView({
         ) : (
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             {upcoming.map((p) => (
-              <div
-                key={p.id}
-                className="rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-900"
-              >
+              <Card key={p.id} size="sm" className="px-3">
                 <p className="text-sm font-bold text-neutral-900 dark:text-neutral-50">
                   {p.emoji} {formatDate(p.training_date)}
                 </p>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
                   {p.exercise_ids.length} exercises
                 </p>
-              </div>
+              </Card>
             ))}
           </div>
         )}

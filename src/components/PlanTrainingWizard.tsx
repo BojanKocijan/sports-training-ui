@@ -5,6 +5,8 @@ import { formatDate } from '../utils/format'
 import { Calendar } from './Calendar'
 import { CategoryCard } from './CategoryCard'
 import { SelectableExerciseCard } from './SelectableExerciseCard'
+import { Button } from './ui/button'
+import { Card } from './ui/card'
 
 const STEPS = ['When?', 'Focus', 'Exercises', 'Review'] as const
 
@@ -160,24 +162,23 @@ export function PlanTrainingWizard({
 
         {step === 4 && (
           <div className="space-y-3">
-            <div className="rounded-2xl border border-black/10 bg-white px-4 py-3 dark:border-white/10 dark:bg-neutral-900">
+            <Card className="gap-1 px-4">
               <p className="text-sm font-bold text-neutral-900 dark:text-neutral-50">
                 {groupLabel} · {formatDate(date)}
               </p>
               <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 {selected.size} exercises · {selectedMinutes}′ total
               </p>
-            </div>
+            </Card>
             <ul className="space-y-1.5">
               {selectedExercises.map((ex) => (
-                <li
-                  key={ex.id}
-                  className="flex items-center justify-between rounded-xl border border-black/10 bg-white px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-900"
-                >
-                  <span>
-                    {ex.emoji} {ex.title}
-                  </span>
-                  <span className="text-xs text-neutral-400">{ex.durationMinutes}′</span>
+                <li key={ex.id}>
+                  <Card size="sm" className="flex-row items-center justify-between px-3 text-sm">
+                    <span>
+                      {ex.emoji} {ex.title}
+                    </span>
+                    <span className="text-xs text-neutral-400">{ex.durationMinutes}′</span>
+                  </Card>
                 </li>
               ))}
             </ul>
@@ -188,31 +189,35 @@ export function PlanTrainingWizard({
 
       <footer className="shrink-0 border-t border-black/10 bg-white px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] dark:border-white/10 dark:bg-neutral-900">
         <div className="mx-auto flex max-w-md gap-2 md:max-w-2xl lg:max-w-3xl">
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="lg"
+            shape="pill"
+            className="flex-1"
             onClick={step === 1 ? onCancel : () => setStep((s) => s - 1)}
-            className="flex-1 rounded-xl border border-black/10 py-2.5 text-sm font-semibold text-neutral-600 dark:border-white/10 dark:text-neutral-300"
           >
             {step === 1 ? 'Cancel' : 'Back'}
-          </button>
+          </Button>
           {step < STEPS.length ? (
-            <button
-              type="button"
+            <Button
+              size="lg"
+              shape="pill"
+              className="flex-1"
               disabled={!canGoNext}
               onClick={() => setStep((s) => s + 1)}
-              className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
             >
               Next
-            </button>
+            </Button>
           ) : (
-            <button
-              type="button"
+            <Button
+              size="lg"
+              shape="pill"
+              className="flex-1"
               disabled={saving}
               onClick={() => onSave(date, [...selected])}
-              className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
             >
               {saving ? 'Saving…' : mode === 'edit' ? 'Save changes' : 'Save training'}
-            </button>
+            </Button>
           )}
         </div>
       </footer>

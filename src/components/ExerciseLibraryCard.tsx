@@ -27,7 +27,7 @@ export function ExerciseLibraryCard({
       <Button
         variant="ghost"
         onClick={() => setExpanded((v) => !v)}
-        className="w-full items-start justify-start p-0 text-left"
+        className="h-auto w-full items-start justify-start p-0 text-left hover:bg-transparent"
       >
         <div className="w-full">
           <div className="flex items-center justify-between gap-2">
@@ -53,7 +53,7 @@ export function ExerciseLibraryCard({
 
       {expanded && (
         <div className="mt-4 space-y-4 border-t border-border pt-4">
-          <Card className="flex items-center justify-between rounded-xl bg-muted px-3 py-2 ring-0 [--card-spacing:0]">
+          <Card className="flex items-center justify-between rounded-xl border-0 bg-muted px-3 py-2 shadow-none hover:shadow-none [--card-spacing:0]">
             <span className="font-mono text-xl font-bold text-foreground">
               {mm}:{ss.toString().padStart(2, '0')}
             </span>

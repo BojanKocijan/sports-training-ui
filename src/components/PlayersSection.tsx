@@ -3,6 +3,8 @@ import { JERSEY_COLORS, usePlayers, type JerseyColor, type Player } from '../hoo
 import { usePlans } from '../hooks/usePlans'
 import { JerseyGraphic } from './JerseyGraphic'
 import { PlayerDetailModal } from './PlayerDetailModal'
+import { Button } from './ui/button'
+import { Card } from './ui/card'
 
 // Tailwind can't see dynamically-built class names, so the swatch classes are spelled out here
 // rather than interpolated from JERSEY_COLORS.
@@ -28,27 +30,46 @@ function PlayerForm({
   onCancel,
   onSave,
 }: {
-  initial: { nickname: string; jerseyNumber: string; jerseyColor: JerseyColor | null }
+  initial: {
+    nickname: string
+    jerseyNumber: string
+    jerseyColor: JerseyColor | null
+    heightCm: string
+    weightKg: string
+  }
   saving: boolean
   saveError: string | null
   onCancel: () => void
-  onSave: (nickname: string, jerseyNumber: number | null, jerseyColor: JerseyColor | null) => void
+  onSave: (
+    nickname: string,
+    jerseyNumber: number | null,
+    jerseyColor: JerseyColor | null,
+    heightCm: number | null,
+    weightKg: number | null,
+  ) => void
 }) {
   const [nickname, setNickname] = useState(initial.nickname)
   const [jerseyNumber, setJerseyNumber] = useState(initial.jerseyNumber)
   const [jerseyColor, setJerseyColor] = useState<JerseyColor | null>(initial.jerseyColor)
+  const [heightCm, setHeightCm] = useState(initial.heightCm)
+  const [weightKg, setWeightKg] = useState(initial.weightKg)
 
   const trimmed = nickname.trim()
   const canSave = trimmed.length > 0 && !saving
 
+  function toIntOrNull(v: string) {
+    if (v.trim() === '') return null
+    const n = Number(v)
+    return Number.isFinite(n) ? n : null
+  }
+
   function submit() {
     if (!canSave) return
-    const num = jerseyNumber.trim() === '' ? null : Number(jerseyNumber)
-    onSave(trimmed, num !== null && Number.isFinite(num) ? num : null, jerseyColor)
+    onSave(trimmed, toIntOrNull(jerseyNumber), jerseyColor, toIntOrNull(heightCm), toIntOrNull(weightKg))
   }
 
   return (
-    <div className="space-y-3 rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-900">
+    <Card size="sm" className="space-y-3 px-3">
       <div className="flex gap-2">
         <input
           type="text"
@@ -86,6 +107,31 @@ function PlayerForm({
         ))}
       </div>
 
+      {/* Optional — most groups won't bother, and a kid's height/weight change fast enough
+       * that a stale value is worse than none. */}
+      <div className="flex gap-2">
+        <input
+          type="number"
+          inputMode="numeric"
+          min={50}
+          max={250}
+          value={heightCm}
+          onChange={(e) => setHeightCm(e.target.value)}
+          placeholder="Height (cm)"
+          className="min-w-0 flex-1 rounded-xl border border-black/10 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-orange-500 dark:border-white/10 dark:bg-neutral-800 dark:text-neutral-50"
+        />
+        <input
+          type="number"
+          inputMode="numeric"
+          min={10}
+          max={200}
+          value={weightKg}
+          onChange={(e) => setWeightKg(e.target.value)}
+          placeholder="Weight (kg)"
+          className="min-w-0 flex-1 rounded-xl border border-black/10 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-orange-500 dark:border-white/10 dark:bg-neutral-800 dark:text-neutral-50"
+        />
+      </div>
+
       {saveError && <p className="text-xs text-red-600">{saveError}</p>}
 
       <div className="flex gap-3">
@@ -101,7 +147,7 @@ function PlayerForm({
           Cancel
         </button>
       </div>
-    </div>
+    </Card>
   )
 }
 
@@ -138,14 +184,20 @@ export function PlayersSection({ groupId, passcode }: { groupId: string; passcod
     setEditingId(null)
   }
 
-  async function handleSave(nickname: string, jerseyNumber: number | null, jerseyColor: JerseyColor | null) {
+  async function handleSave(
+    nickname: string,
+    jerseyNumber: number | null,
+    jerseyColor: JerseyColor | null,
+    heightCm: number | null,
+    weightKg: number | null,
+  ) {
     setSaving(true)
     setSaveError(null)
     try {
       if (editingPlayer) {
-        await updatePlayer(passcode(), editingPlayer.id, nickname, jerseyNumber, jerseyColor)
+        await updatePlayer(passcode(), editingPlayer.id, nickname, jerseyNumber, jerseyColor, heightCm, weightKg)
       } else {
-        await createPlayer(passcode(), nickname, jerseyNumber, jerseyColor)
+        await createPlayer(passcode(), nickname, jerseyNumber, jerseyColor, heightCm, weightKg)
       }
       closeForm()
     } catch (e) {
@@ -171,10 +223,10 @@ export function PlayersSection({ groupId, passcode }: { groupId: string; passcod
     <section>
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Players</h2>
-        {!adding && !editingId && (
-          <button type="button" onClick={startAdding} className="text-xs font-bold text-orange-600">
+        {!adding && !editingId && players.length > 0 && (
+          <Button variant="secondary" size="sm" onClick={startAdding}>
             + Add player
-          </button>
+          </Button>
         )}
       </div>
 
@@ -183,7 +235,18 @@ export function PlayersSection({ groupId, passcode }: { groupId: string; passcod
       {loading ? (
         <p className="text-sm text-neutral-400">Loading…</p>
       ) : players.length === 0 && !adding ? (
-        <p className="text-sm text-neutral-400">No players yet.</p>
+        <Card className="flex flex-col items-center gap-2 py-8 text-center">
+          <span className="text-4xl">🏀</span>
+          <p className="text-sm font-semibold text-neutral-600 dark:text-neutral-300">
+            No players yet
+          </p>
+          <p className="max-w-xs text-xs text-neutral-400">
+            Add the kids in this group — nickname only — to start tracking their training.
+          </p>
+          <Button size="lg" shape="pill" className="mt-2" onClick={startAdding}>
+            + Add player
+          </Button>
+        </Card>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {players.map((p) =>
@@ -194,6 +257,8 @@ export function PlayersSection({ groupId, passcode }: { groupId: string; passcod
                     nickname: p.nickname,
                     jerseyNumber: p.jersey_number?.toString() ?? '',
                     jerseyColor: p.jersey_color,
+                    heightCm: p.height_cm?.toString() ?? '',
+                    weightKg: p.weight_kg?.toString() ?? '',
                   }}
                   saving={saving}
                   saveError={saveError}
@@ -202,39 +267,19 @@ export function PlayersSection({ groupId, passcode }: { groupId: string; passcod
                 />
               </div>
             ) : (
-              <div
-                key={p.id}
-                className="flex flex-col items-center gap-2 rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-900"
-              >
+              <Card key={p.id} size="sm" className="flex flex-col items-center gap-2 px-3">
                 <button
                   type="button"
                   onClick={() => setViewingId(p.id)}
                   className="flex flex-col items-center gap-2"
-                  aria-label={`View ${p.nickname}'s progress`}
+                  aria-label={`View ${p.nickname}'s details`}
                 >
                   <JerseyGraphic color={p.jersey_color} number={p.jersey_number} nickname={p.nickname} />
                   <p className="max-w-full truncate text-xs font-semibold text-neutral-500 dark:text-neutral-400">
                     {p.nickname}
                   </p>
                 </button>
-                <div className="flex shrink-0 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => startEditing(p)}
-                    className="text-xs font-bold text-orange-600"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    disabled={removingId === p.id}
-                    onClick={() => handleRemove(p.id)}
-                    className="text-xs font-semibold text-red-500 disabled:opacity-50"
-                  >
-                    {removingId === p.id ? '…' : 'Remove'}
-                  </button>
-                </div>
-              </div>
+              </Card>
             ),
           )}
         </div>
@@ -243,7 +288,7 @@ export function PlayersSection({ groupId, passcode }: { groupId: string; passcod
       {adding && (
         <div className="mt-2">
           <PlayerForm
-            initial={{ nickname: '', jerseyNumber: '', jerseyColor: null }}
+            initial={{ nickname: '', jerseyNumber: '', jerseyColor: null, heightCm: '', weightKg: '' }}
             saving={saving}
             saveError={saveError}
             onCancel={closeForm}
@@ -259,6 +304,15 @@ export function PlayersSection({ groupId, passcode }: { groupId: string; passcod
           passcode={passcode}
           onClose={() => setViewingId(null)}
           onRosterChange={refresh}
+          onEdit={() => {
+            setViewingId(null)
+            startEditing(viewingPlayer)
+          }}
+          onRemove={async () => {
+            await handleRemove(viewingPlayer.id)
+            setViewingId(null)
+          }}
+          removing={removingId === viewingPlayer.id}
         />
       )}
     </section>

@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { toLocalIso } from '../utils/format'
+import { Button } from './ui/button'
+import { Card } from './ui/card'
 
 const WEEKDAY_LABELS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 
@@ -52,25 +54,27 @@ export function Calendar({
   }
 
   return (
-    <div className="rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-900">
+    <Card size="sm" className="px-3">
       <div className="mb-2 flex items-center justify-between">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          shape="pill"
           onClick={goToPrevMonth}
           aria-label="Previous month"
-          className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 active:bg-neutral-100 dark:text-neutral-400 dark:active:bg-neutral-800"
         >
           ‹
-        </button>
+        </Button>
         <p className="text-sm font-bold text-neutral-900 dark:text-neutral-50">{monthLabel(viewMonth)}</p>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          shape="pill"
           onClick={goToNextMonth}
           aria-label="Next month"
-          className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 active:bg-neutral-100 dark:text-neutral-400 dark:active:bg-neutral-800"
         >
           ›
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-neutral-400">
@@ -90,17 +94,13 @@ export function Calendar({
           const isDisabled = iso < min || disabledDates.has(iso)
 
           return (
-            <button
+            <Button
               key={iso}
-              type="button"
+              variant={isSelected ? 'default' : 'ghost'}
               disabled={isDisabled}
               onClick={() => onChange(iso)}
-              className={`relative flex h-10 flex-col items-center justify-center rounded-xl text-sm font-medium transition-colors ${
-                isSelected
-                  ? 'bg-orange-500 text-white'
-                  : isDisabled
-                    ? 'text-neutral-300 dark:text-neutral-700'
-                    : 'text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800'
+              className={`relative h-10 w-full flex-col gap-0 rounded-xl text-sm font-medium ${
+                isDisabled ? 'text-neutral-300 dark:text-neutral-700' : ''
               }`}
             >
               {d.getDate()}
@@ -112,10 +112,10 @@ export function Calendar({
                   }`}
                 />
               )}
-            </button>
+            </Button>
           )
         })}
       </div>
-    </div>
+    </Card>
   )
 }
