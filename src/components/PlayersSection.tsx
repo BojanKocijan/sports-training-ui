@@ -108,7 +108,7 @@ function PlayerForm({
 /** A group's roster — add/edit/remove the kids (tracked only by nickname, never a real name)
  * training in this group. Gated behind the trainer passcode, same as plans. */
 export function PlayersSection({ groupId, passcode }: { groupId: string; passcode: () => string }) {
-  const { players, loading, error, createPlayer, updatePlayer, deletePlayer } = usePlayers(groupId)
+  const { players, loading, error, refresh, createPlayer, updatePlayer, deletePlayer } = usePlayers(groupId)
   const { plans } = usePlans(groupId)
 
   const [adding, setAdding] = useState(false)
@@ -258,6 +258,7 @@ export function PlayersSection({ groupId, passcode }: { groupId: string; passcod
           plans={plans}
           passcode={passcode}
           onClose={() => setViewingId(null)}
+          onRosterChange={refresh}
         />
       )}
     </section>

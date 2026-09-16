@@ -23,7 +23,7 @@ test('unlocks a group and can switch tabs via the bottom nav', async ({ page }) 
     }),
   )
   await page.route(`${API_URL}/auth/verify-passcode`, (route) =>
-    route.fulfill({ json: { valid: true } }),
+    route.fulfill({ json: { valid: true, kind: 'trainer' } }),
   )
   await page.route(`${API_URL}/plans*`, (route) => route.fulfill({ json: [] }))
   await page.route(`${API_URL}/clubs`, (route) => route.fulfill({ json: [] }))

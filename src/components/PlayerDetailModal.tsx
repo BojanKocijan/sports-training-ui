@@ -1,6 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useCategories } from '../hooks/useCategories'
-import { ratePlayerProgress, type Player } from '../hooks/usePlayers'
+import {
+  fetchParentCode,
+  issueParentCode,
+  ratePlayerProgress,
+  revokeParentCode,
+  type Player,
+} from '../hooks/usePlayers'
 import { usePlayerProgress } from '../hooks/usePlayerProgress'
 import type { TrainingPlan } from '../hooks/usePlans'
 import { formatDate, toLocalIso } from '../utils/format'
@@ -23,13 +29,68 @@ export function PlayerDetailModal({
   plans,
   passcode,
   onClose,
+  onRosterChange,
 }: {
   player: Player
   plans: TrainingPlan[]
   passcode: () => string
   onClose: () => void
+  /** Refreshes the roster (see usePlayers) — called after issuing/revoking a parent code so
+   * the "has a code" badge here reflects it without a manual reopen. */
+  onRosterChange: () => void
 }) {
   const { byCategory, loading, error, refresh } = usePlayerProgress(player.id)
+  const [parentCode, setParentCode] = useState<string | null>(null)
+  const [parentCodeLoading, setParentCodeLoading] = useState(true)
+  const [parentCodePending, setParentCodePending] = useState(false)
+  const [parentCodeError, setParentCodeError] = useState<string | null>(null)
+
+  // Trainer-only — never fetched or shown anywhere in the parent-facing view (see ParentView).
+  useEffect(() => {
+    let cancelled = false
+    setParentCodeLoading(true)
+    fetchParentCode(passcode(), player.id)
+      .then((code) => {
+        if (!cancelled) setParentCode(code)
+      })
+      .catch((e) => {
+        if (!cancelled) setParentCodeError(e instanceof Error ? e.message : 'Could not load the code')
+      })
+      .finally(() => {
+        if (!cancelled) setParentCodeLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [passcode, player.id])
+
+  async function handleIssueCode() {
+    setParentCodePending(true)
+    setParentCodeError(null)
+    try {
+      const code = await issueParentCode(passcode(), player.id)
+      setParentCode(code)
+      onRosterChange()
+    } catch (e) {
+      setParentCodeError(e instanceof Error ? e.message : 'Could not generate a code')
+    } finally {
+      setParentCodePending(false)
+    }
+  }
+
+  async function handleRevokeCode() {
+    setParentCodePending(true)
+    setParentCodeError(null)
+    try {
+      await revokeParentCode(passcode(), player.id)
+      setParentCode(null)
+      onRosterChange()
+    } catch (e) {
+      setParentCodeError(e instanceof Error ? e.message : 'Could not revoke the code')
+    } finally {
+      setParentCodePending(false)
+    }
+  }
   const { categories } = useCategories()
   // Same taxonomy as skill_categories in supabase/schema.sql — every training category except
   // warm-up, which isn't a skill to rate progress on.
@@ -75,6 +136,50 @@ export function PlayerDetailModal({
       <main className="mx-auto w-full max-w-md flex-1 space-y-4 overflow-y-auto px-4 py-4 md:max-w-lg">
         <div className="flex justify-center">
           <JerseyGraphic color={player.jersey_color} number={player.jersey_number} nickname={player.nickname} />
+        </div>
+
+        <div className="rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-900">
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            Parent code · visible to trainers only
+          </p>
+          {parentCodeLoading ? (
+            <p className="mt-1 text-sm text-neutral-400">Loading…</p>
+          ) : parentCode ? (
+            <div className="mt-1.5 rounded-xl bg-orange-50 p-2.5 dark:bg-orange-500/10">
+              <p className="font-mono text-lg font-bold tracking-widest text-orange-700 dark:text-orange-300">
+                {parentCode}
+              </p>
+              <p className="mt-0.5 text-xs text-orange-800 dark:text-orange-300">
+                Share this with {player.nickname}'s parent — they enter it on the group's lock
+                screen, same as a trainer code.
+              </p>
+            </div>
+          ) : (
+            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+              No parent code yet — generate one to let this child's parent view their progress.
+            </p>
+          )}
+          {parentCodeError && <p className="mt-1 text-xs font-semibold text-red-600">{parentCodeError}</p>}
+          <div className="mt-2 flex gap-3">
+            <button
+              type="button"
+              disabled={parentCodePending}
+              onClick={handleIssueCode}
+              className="text-xs font-bold text-orange-600 disabled:opacity-50"
+            >
+              {parentCodePending ? '…' : parentCode ? 'Regenerate code' : 'Generate code'}
+            </button>
+            {parentCode && (
+              <button
+                type="button"
+                disabled={parentCodePending}
+                onClick={handleRevokeCode}
+                className="text-xs font-semibold text-red-500 disabled:opacity-50"
+              >
+                Revoke
+              </button>
+            )}
+          </div>
         </div>
 
         {sortedPlans.length === 0 ? (
