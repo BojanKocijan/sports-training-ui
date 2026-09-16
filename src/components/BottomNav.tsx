@@ -1,5 +1,5 @@
 import { TABS, type Tab } from '../data/tabs'
-import { Button } from './ui/Button'
+import { Button } from './ui/button'
 
 export type { Tab } from '../data/tabs'
 
@@ -15,10 +15,7 @@ export function BottomNav({
   onChange: (tab: Tab) => void
 }) {
   return (
-    <nav
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-black/10 bg-white/95 backdrop-blur
-                 pb-[env(safe-area-inset-bottom)] dark:border-white/10 dark:bg-neutral-900/95 lg:hidden"
-    >
+    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur pb-[env(safe-area-inset-bottom)] lg:hidden">
       <div className="mx-auto flex max-w-md md:max-w-3xl">
         {TABS.map((tab) => {
           const isActive = tab.id === active
@@ -26,13 +23,11 @@ export function BottomNav({
             <Button
               key={tab.id}
               variant="ghost"
-              shape="rounded"
-              fullWidth
-              // `!text-*` (Tailwind's important-modifier) because this needs to win over the
-              // ghost variant's own text color, and two same-property utility classes on one
-              // element don't reliably override by source order in the className string.
-              className={`flex-col gap-0.5 rounded-none py-2.5 text-[11px] font-medium ${
-                isActive ? '!text-orange-600 dark:!text-orange-400' : ''
+              // Button's `cn()` (clsx + tailwind-merge) resolves same-property conflicts by
+              // which class comes last, so this text color reliably wins over ghost's own
+              // without needing Tailwind's `!important` modifier.
+              className={`w-full flex-col gap-0.5 rounded-none py-2.5 text-[11px] font-medium ${
+                isActive ? 'text-primary' : ''
               }`}
               onClick={() => onChange(tab.id)}
             >

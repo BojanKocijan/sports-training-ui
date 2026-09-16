@@ -1,5 +1,5 @@
 import { categoryInfo, type CategoryId, useCategories } from '../hooks/useCategories'
-import { Chip } from './ui/Chip'
+import { Chip } from './ui/chip'
 
 /** Small filter pill — used for filtering a list (e.g. the Library screen). */
 export function CategoryChip({

@@ -1,5 +1,5 @@
 import { useTheme, type ThemePreference } from '../hooks/useTheme'
-import { Button } from './ui/Button'
+import { Button } from './ui/button'
 
 const OPTIONS: { id: ThemePreference; label: string; emoji: string }[] = [
   { id: 'light', label: 'Light', emoji: '☀️' },
@@ -16,7 +16,7 @@ export function ThemeToggle() {
     <div
       role="radiogroup"
       aria-label="Theme"
-      className="flex shrink-0 gap-0.5 rounded-full border border-black/10 bg-neutral-50 p-0.5 dark:border-white/10 dark:bg-neutral-900"
+      className="flex shrink-0 gap-0.5 rounded-full border border-border bg-muted p-0.5"
     >
       {OPTIONS.map((opt) => {
         const isActive = opt.id === preference
@@ -25,17 +25,15 @@ export function ThemeToggle() {
             key={opt.id}
             variant="ghost"
             shape="pill"
-            iconOnly
+            size="icon-xs"
             role="radio"
             aria-checked={isActive}
             aria-label={opt.label}
             title={opt.label}
             onClick={() => setPreference(opt.id)}
-            className={`h-6 w-6 ${
-              isActive
-                ? '!bg-white shadow-sm hover:!bg-white dark:!bg-neutral-700 dark:hover:!bg-neutral-700'
-                : 'opacity-50 hover:opacity-80'
-            }`}
+            // Deliberately not the `active` variant (that's the orange-brand "selected"
+            // look) — this is a neutral raised-chip toggle, a different visual language.
+            className={isActive ? 'bg-card shadow-sm hover:bg-card' : 'opacity-50 hover:opacity-80'}
           >
             {opt.emoji}
           </Button>
