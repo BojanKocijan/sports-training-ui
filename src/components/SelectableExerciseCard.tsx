@@ -1,5 +1,6 @@
 import type { Exercise } from '../hooks/useExercises'
 import { CategoryBadges } from './CategoryBadges'
+import { Button } from './ui/Button'
 
 export function SelectableExerciseCard({
   exercise,
@@ -11,10 +12,11 @@ export function SelectableExerciseCard({
   onToggle: () => void
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="secondary"
+      fullWidth
       onClick={onToggle}
-      className="flex w-full items-start gap-3 rounded-2xl border border-black/10 bg-white px-4 py-3 text-left dark:border-white/10 dark:bg-neutral-900"
+      className="!items-start justify-start gap-3 px-4 py-3 text-left"
     >
       <span
         aria-hidden
@@ -36,13 +38,15 @@ export function SelectableExerciseCard({
             {exercise.durationMinutes}′
           </span>
         </div>
-        <p className="mt-0.5 truncate text-xs text-neutral-500 dark:text-neutral-400">
+        {/* font-normal: Button's own label text is font-semibold, which is inherited unless
+         * overridden — this line is de-emphasized body text, not a label. */}
+        <p className="mt-0.5 truncate text-xs font-normal text-neutral-500 dark:text-neutral-400">
           {exercise.goal}
         </p>
         <div className="mt-2">
           <CategoryBadges categories={exercise.categories} />
         </div>
       </div>
-    </button>
+    </Button>
   )
 }
