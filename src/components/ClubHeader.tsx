@@ -3,6 +3,7 @@ import { useClub } from '../hooks/useClub'
 import type { ApiGroup } from '../hooks/useGroups'
 import { DEFAULT_SPORT_ID, sportInfo } from '../data/sports'
 import { GroupMenu } from './GroupMenu'
+import { PrivacyPolicyScreen } from './PrivacyPolicyScreen'
 import { ThemeToggle } from './ThemeToggle'
 
 export function ClubHeader({
@@ -14,6 +15,9 @@ export function ClubHeader({
 }) {
   const club = useClub()
   const [logoFailed, setLogoFailed] = useState(false)
+  // Reachable both before and after unlocking a group — a privacy notice shouldn't require a
+  // trainer passcode to read.
+  const [privacyOpen, setPrivacyOpen] = useState(false)
 
   return (
     <div className="flex items-center justify-between gap-2 border-b border-black/10 bg-white px-4 py-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] dark:border-white/10 dark:bg-neutral-950">
@@ -41,7 +45,17 @@ export function ClubHeader({
           />
         )}
       </div>
-      <ThemeToggle />
+      <div className="flex shrink-0 items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setPrivacyOpen(true)}
+          className="text-[11px] font-semibold text-neutral-400 underline-offset-2 hover:underline dark:text-neutral-500"
+        >
+          Privacy
+        </button>
+        <ThemeToggle />
+      </div>
+      {privacyOpen && <PrivacyPolicyScreen onClose={() => setPrivacyOpen(false)} />}
     </div>
   )
 }
