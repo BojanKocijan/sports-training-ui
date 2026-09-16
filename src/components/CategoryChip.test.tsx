@@ -17,6 +17,8 @@ describe('CategoryChip', () => {
 
   it('applies the active styling when active', () => {
     render(<CategoryChip categoryId="dribbling" active onToggle={() => {}} />)
-    expect(screen.getByRole('button', { name: /dribbling/i }).className).toContain('border-orange-500')
+    // border-primary: the brand-orange border token (see index.css --primary), not a literal
+    // orange-* class — Chip is on the shared CSS-variable tokens since the shadcn migration.
+    expect(screen.getByRole('button', { name: /dribbling/i }).className).toContain('border-primary')
   })
 })

@@ -4,7 +4,7 @@ import type { ApiGroup } from "../hooks/useGroups";
 import { GroupMenu } from "./GroupMenu";
 import { PrivacyPolicyScreen } from "./PrivacyPolicyScreen";
 import { ThemeToggle } from "./ThemeToggle";
-import { Button } from "./ui/Button";
+import { Button } from "./ui/button";
 
 function clubInitials(name: string) {
   return (
@@ -37,7 +37,7 @@ export function ClubHeader({
   const showLogo = Boolean(club.logoUrl) && failedLogoUrl !== club.logoUrl;
 
   return (
-    <div className="flex items-center justify-between gap-2 border-b border-black/10 bg-white px-4 py-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] dark:border-white/10 dark:bg-neutral-950">
+    <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-4 py-2 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex min-w-0 items-center gap-2">
           {showLogo ? (
@@ -49,13 +49,13 @@ export function ClubHeader({
             />
           ) : (
             <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white"
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
               aria-label={`${club.name} initials`}
             >
               {clubInitials(club.name)}
             </span>
           )}
-          <span className="truncate text-xs font-bold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+          <span className="truncate text-xs font-bold uppercase tracking-wide text-muted-foreground">
             {club.name}
           </span>
         </div>
@@ -72,7 +72,7 @@ export function ClubHeader({
           variant="ghost"
           size="sm"
           onClick={() => setPrivacyOpen(true)}
-          className="px-0 py-0 text-[11px] text-neutral-400 underline-offset-2 hover:bg-transparent hover:underline dark:text-neutral-500 dark:hover:bg-transparent"
+          className="px-0 py-0 text-[11px] text-muted-foreground underline-offset-2 hover:bg-transparent hover:underline"
         >
           Privacy
         </Button>
