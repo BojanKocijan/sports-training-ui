@@ -1,11 +1,12 @@
-import { categoryInfo, type CategoryId } from '../data/categories'
+import { categoryInfo, type CategoryId, useCategories } from '../hooks/useCategories'
 
 export function CategoryBadges({ categories }: { categories: CategoryId[] }) {
+  const { categories: allCategories } = useCategories()
   if (categories.length === 0) return null
   return (
     <div className="flex flex-wrap gap-1.5">
       {categories.map((id) => {
-        const info = categoryInfo(id)
+        const info = categoryInfo(allCategories, id)
         return (
           <span
             key={id}

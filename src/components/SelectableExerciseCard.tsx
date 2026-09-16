@@ -1,4 +1,4 @@
-import type { Exercise } from '../data/exercises'
+import type { Exercise } from '../hooks/useExercises'
 import { CategoryBadges } from './CategoryBadges'
 
 export function SelectableExerciseCard({

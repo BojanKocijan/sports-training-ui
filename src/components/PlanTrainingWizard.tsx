@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { CATEGORIES, type CategoryId } from '../data/categories'
-import { exercisesForGroup, findExercise } from '../data/exercises'
+import { type CategoryId, useCategories } from '../hooks/useCategories'
+import { exercisesForGroup, findExercise, useExercises } from '../hooks/useExercises'
 import { formatDate } from '../utils/format'
 import { Calendar } from './Calendar'
 import { CategoryCard } from './CategoryCard'
@@ -34,18 +34,22 @@ export function PlanTrainingWizard({
   onCancel: () => void
   onSave: (date: string, exerciseIds: string[]) => void
 }) {
+  const { categories } = useCategories()
+  const { exercises } = useExercises()
   const [step, setStep] = useState(1)
   const [date, setDate] = useState(initialDate)
   const takenDateSet = new Set(takenDates)
   const [activeCategories, setActiveCategories] = useState<CategoryId[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set(initialExerciseIds))
 
-  const trainable = exercisesForGroup(templateId).filter((e) => !e.isBreak)
+  const trainable = exercisesForGroup(exercises, templateId).filter((e) => !e.isBreak)
   const filtered =
     activeCategories.length === 0
       ? trainable
       : trainable.filter((e) => e.categories.some((c) => activeCategories.includes(c)))
-  const selectedExercises = [...selected].map(findExercise).filter((e): e is NonNullable<typeof e> => Boolean(e))
+  const selectedExercises = [...selected]
+    .map((id) => findExercise(exercises, id))
+    .filter((e): e is NonNullable<typeof e> => Boolean(e))
   const selectedMinutes = selectedExercises.reduce((sum, e) => sum + e.durationMinutes, 0)
 
   function toggleSelect(id: string) {
@@ -124,7 +128,7 @@ export function PlanTrainingWizard({
               Optionally narrow the exercise list to a focus for this training.
             </p>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-              {CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <CategoryCard
                   key={cat.id}
                   categoryId={cat.id}

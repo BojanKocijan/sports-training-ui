@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import type { CategoryId } from '../data/categories'
-import { categoryInfo } from '../data/categories'
+import { categoryInfo, type CategoryId, useCategories } from '../hooks/useCategories'
 import { ratePlayerProgress, usePlayers } from '../hooks/usePlayers'
 
 const SCALE = [
@@ -25,6 +24,7 @@ export function PlayerProgressSection({
   passcode: () => string
 }) {
   const { players, loading, error } = usePlayers(groupId)
+  const { categories: allCategories } = useCategories()
   const [ratings, setRatings] = useState<Record<string, number>>({})
   const [pending, setPending] = useState<Record<string, boolean>>({})
   const [failed, setFailed] = useState<Record<string, boolean>>({})
@@ -60,7 +60,7 @@ export function PlayerProgressSection({
             <p className="text-sm font-bold text-neutral-900 dark:text-neutral-50">{p.nickname}</p>
             <div className="mt-2 space-y-1.5">
               {categories.map((categoryId) => {
-                const cat = categoryInfo(categoryId)
+                const cat = categoryInfo(allCategories, categoryId)
                 const key = `${p.id}:${categoryId}`
                 const value = ratings[key]
                 return (

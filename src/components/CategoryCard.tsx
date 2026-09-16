@@ -1,5 +1,4 @@
-import type { CategoryId } from '../data/categories'
-import { categoryInfo } from '../data/categories'
+import { categoryInfo, type CategoryId, useCategories } from '../hooks/useCategories'
 
 /** Big Airbnb-style category tile — icon over label, used for the wizard's "Focus" step. */
 export function CategoryCard({
@@ -11,7 +10,8 @@ export function CategoryCard({
   active: boolean
   onToggle: () => void
 }) {
-  const cat = categoryInfo(categoryId)
+  const { categories } = useCategories()
+  const cat = categoryInfo(categories, categoryId)
   return (
     <button
       type="button"

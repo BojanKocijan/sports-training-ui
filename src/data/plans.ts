@@ -1,4 +1,4 @@
-import type { CategoryId } from './categories'
+import type { CategoryId } from '../hooks/useCategories'
 
 export interface Plan {
   id: string

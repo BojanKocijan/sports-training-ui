@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CATEGORIES } from '../data/categories'
+import { useCategories } from '../hooks/useCategories'
 import { ratePlayerProgress, type Player } from '../hooks/usePlayers'
 import { usePlayerProgress } from '../hooks/usePlayerProgress'
 import type { TrainingPlan } from '../hooks/usePlans'
@@ -11,10 +11,6 @@ const SCALE = [
   { value: 2, emoji: '🙂' },
   { value: 3, emoji: '🤩' },
 ] as const
-
-// Same taxonomy as skill_categories in supabase/schema.sql — every training category except
-// warm-up, which isn't a skill to rate progress on.
-const SKILL_CATEGORIES = CATEGORIES.filter((c) => c.id !== 'warmup')
 
 /** A player's detail view — opened by tapping their jersey card on the Players tab. Shows their
  * rating history per skill category (via usePlayerProgress) and lets a trainer log a new rating
@@ -34,6 +30,10 @@ export function PlayerDetailModal({
   onClose: () => void
 }) {
   const { byCategory, loading, error, refresh } = usePlayerProgress(player.id)
+  const { categories } = useCategories()
+  // Same taxonomy as skill_categories in supabase/schema.sql — every training category except
+  // warm-up, which isn't a skill to rate progress on.
+  const skillCategories = categories.filter((c) => c.id !== 'warmup')
 
   const sortedPlans = [...plans].sort((a, b) => a.training_date.localeCompare(b.training_date))
   const today = toLocalIso(new Date())
@@ -104,7 +104,7 @@ export function PlayerDetailModal({
             {error && <p className="text-sm text-red-600">Could not load progress: {error}</p>}
 
             <div className="space-y-2">
-              {SKILL_CATEGORIES.map((cat) => {
+              {skillCategories.map((cat) => {
                 const stat = statFor(cat.id)
                 const saved = justSaved[cat.id]
                 return (

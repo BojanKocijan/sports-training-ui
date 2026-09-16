@@ -1,4 +1,4 @@
-import type { Cue } from './exercises'
+import type { Cue } from '../hooks/useExercises'
 
 export const setupChecklist = [
   'One ball per child, if possible',
