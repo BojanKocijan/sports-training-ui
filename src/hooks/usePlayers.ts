@@ -20,6 +20,9 @@ export interface Player {
   nickname: string
   jersey_number: number | null
   jersey_color: JerseyColor | null
+  /** Optional bio details a trainer can fill in — nullable, metric (cm/kg). */
+  height_cm: number | null
+  weight_kg: number | null
   created_at: string
   updated_at: string
 }
@@ -57,6 +60,8 @@ export function usePlayers(groupId: string) {
     nickname: string,
     jerseyNumber: number | null,
     jerseyColor: JerseyColor | null,
+    heightCm: number | null = null,
+    weightKg: number | null = null,
   ) {
     await api.post('/players', {
       passcode,
@@ -64,6 +69,8 @@ export function usePlayers(groupId: string) {
       nickname,
       jerseyNumber,
       jerseyColor,
+      heightCm,
+      weightKg,
     })
     await refresh()
   }
@@ -74,6 +81,8 @@ export function usePlayers(groupId: string) {
     nickname: string,
     jerseyNumber: number | null,
     jerseyColor: JerseyColor | null,
+    heightCm: number | null = null,
+    weightKg: number | null = null,
   ) {
     await api.put(`/players/${id}`, {
       passcode,
@@ -81,6 +90,8 @@ export function usePlayers(groupId: string) {
       nickname,
       jerseyNumber,
       jerseyColor,
+      heightCm,
+      weightKg,
     })
     await refresh()
   }

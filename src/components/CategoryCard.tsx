@@ -1,6 +1,9 @@
 import { categoryInfo, type CategoryId, useCategories } from '../hooks/useCategories'
+import { Button } from './ui/button'
 
-/** Big Airbnb-style category tile — icon over label, used for the wizard's "Focus" step. */
+/** Big Airbnb-style category tile — icon over label, used for the wizard's "Focus" step. A
+ * toggle button, not a `Card` (which renders a plain div) — styled with the same border/shadow
+ * language as `Card` so it still reads as one of the app's "card" surfaces. */
 export function CategoryCard({
   categoryId,
   active,
@@ -13,13 +16,13 @@ export function CategoryCard({
   const { categories } = useCategories()
   const cat = categoryInfo(categories, categoryId)
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
       onClick={onToggle}
-      className={`flex flex-col items-center gap-2 rounded-2xl border-2 px-3 py-5 text-center transition-colors ${
+      className={`h-auto flex-col gap-2 rounded-2xl border-2 px-3 py-5 text-center shadow-sm transition-shadow hover:shadow-md ${
         active
           ? 'border-orange-500 bg-orange-50 dark:bg-orange-500/10'
-          : 'border-black/10 bg-white dark:border-white/10 dark:bg-neutral-900'
+          : 'border-border bg-card dark:bg-neutral-900'
       }`}
     >
       <span className="text-3xl leading-none">{cat.emoji}</span>
@@ -30,6 +33,6 @@ export function CategoryCard({
       >
         {cat.label}
       </span>
-    </button>
+    </Button>
   )
 }

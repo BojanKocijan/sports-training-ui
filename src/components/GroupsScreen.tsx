@@ -5,7 +5,8 @@ import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { isApiConfigured } from '../lib/apiClient'
 import { formatDate } from '../utils/format'
 import { PlanTrainingWizard } from './PlanTrainingWizard'
-import { TrainerAccessBar } from './TrainerAccessBar'
+import { Button } from './ui/button'
+import { Card } from './ui/card'
 
 export function GroupsScreen({
   groupId,
@@ -19,7 +20,7 @@ export function GroupsScreen({
   const templateId = groups.find((g) => g.id === groupId)?.templateId ?? groupId
   // Always unlocked here — the app-level gate in App.tsx (see LockScreen) never renders this
   // screen otherwise.
-  const { lock, passcode } = trainerAccess
+  const { passcode } = trainerAccess
   const { plans, upcoming, past, loading, error, createPlan, updatePlan, deletePlan } = usePlans(groupId)
 
   const [planning, setPlanning] = useState(false)
@@ -93,8 +94,6 @@ export function GroupsScreen({
         </div>
       )}
 
-      <TrainerAccessBar onLock={lock} />
-
       {error && <p className="text-sm text-red-600">Could not load plans: {error}</p>}
 
       <section>
@@ -106,31 +105,48 @@ export function GroupsScreen({
         ) : !nextTraining ? (
           <p className="text-sm text-neutral-400">Nothing scheduled yet.</p>
         ) : (
-          <div className="rounded-3xl border-2 border-orange-500 bg-orange-50 p-4 dark:bg-orange-500/10">
+          <Card
+            role="button"
+            tabIndex={0}
+            onClick={() => startEditing(nextTraining)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                startEditing(nextTraining)
+              }
+            }}
+            className="cursor-pointer gap-1 rounded-3xl border-2 border-orange-500 bg-orange-50 px-4 dark:bg-orange-500/10"
+          >
             <p className="text-lg font-bold text-neutral-900 dark:text-neutral-50">
               {nextTraining.emoji} {formatDate(nextTraining.training_date)}
             </p>
             <p className="text-sm text-neutral-600 dark:text-neutral-300">
               {nextTraining.exercise_ids.length} exercises · plan this with the other trainer
             </p>
-            <div className="mt-3 flex gap-3">
-              <button
-                type="button"
-                onClick={() => startEditing(nextTraining)}
-                className="text-xs font-bold text-orange-700 dark:text-orange-300"
+            <div className="mt-2 flex gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  startEditing(nextTraining)
+                }}
               >
                 Edit
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
                 disabled={removingId === nextTraining.id}
-                onClick={() => removePlan(nextTraining.id)}
-                className="text-xs font-semibold text-red-500 disabled:opacity-50"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  removePlan(nextTraining.id)
+                }}
               >
                 {removingId === nextTraining.id ? '…' : 'Remove'}
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         )}
       </section>
 
@@ -140,9 +156,9 @@ export function GroupsScreen({
             Also upcoming
           </h2>
           {!formOpen && (
-            <button type="button" onClick={startPlanning} className="text-xs font-bold text-orange-600">
+            <Button variant="secondary" size="sm" onClick={startPlanning}>
               + Plan a training
-            </button>
+            </Button>
           )}
         </div>
 
@@ -151,9 +167,19 @@ export function GroupsScreen({
         ) : (
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             {restUpcoming.map((p) => (
-              <div
+              <Card
                 key={p.id}
-                className="flex items-center justify-between rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-900"
+                size="sm"
+                role="button"
+                tabIndex={0}
+                onClick={() => startEditing(p)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    startEditing(p)
+                  }
+                }}
+                className="cursor-pointer flex-row items-center justify-between gap-2 px-3"
               >
                 <div>
                   <p className="text-sm font-bold text-neutral-900 dark:text-neutral-50">
@@ -163,24 +189,30 @@ export function GroupsScreen({
                     {p.exercise_ids.length} exercises
                   </p>
                 </div>
-                <div className="flex shrink-0 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => startEditing(p)}
-                    className="text-xs font-bold text-orange-600"
+                <div className="flex shrink-0 gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      startEditing(p)
+                    }}
                   >
                     Edit
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
                     disabled={removingId === p.id}
-                    onClick={() => removePlan(p.id)}
-                    className="text-xs font-semibold text-red-500 disabled:opacity-50"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removePlan(p.id)
+                    }}
                   >
                     {removingId === p.id ? '…' : 'Remove'}
-                  </button>
+                  </Button>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         )}
@@ -210,17 +242,14 @@ export function GroupsScreen({
               .slice()
               .reverse()
               .map((p) => (
-                <div
-                  key={p.id}
-                  className="rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-900"
-                >
+                <Card key={p.id} size="sm" className="px-3">
                   <p className="text-sm font-bold text-neutral-900 dark:text-neutral-50">
                     {p.emoji} {formatDate(p.training_date)}
                   </p>
                   <p className="text-xs text-neutral-500 dark:text-neutral-400">
                     {p.exercise_ids.length} exercises
                   </p>
-                </div>
+                </Card>
               ))}
           </div>
         </section>

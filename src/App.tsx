@@ -53,12 +53,15 @@ function App() {
         </>
       ) : trainerAccess.kind === 'parent' && trainerAccess.parentPlayer ? (
         <>
-          <ClubHeader />
-          <ParentView groupId={groupId} player={trainerAccess.parentPlayer} onLock={trainerAccess.lock} />
+          <ClubHeader trainerAccess={{ kind: 'parent', lock: trainerAccess.lock }} />
+          <ParentView groupId={groupId} player={trainerAccess.parentPlayer} />
         </>
       ) : (
         <>
-          <ClubHeader groupSwitcher={{ groups, groupId, setGroupId }} />
+          <ClubHeader
+            groupSwitcher={{ groups, groupId, setGroupId }}
+            trainerAccess={{ kind: 'trainer', lock: trainerAccess.lock }}
+          />
           <div className="lg:flex">
             <SideNav active={tab} onChange={setTab} />
             <div className="min-w-0 flex-1">

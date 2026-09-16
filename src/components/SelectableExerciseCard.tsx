@@ -15,12 +15,14 @@ export function SelectableExerciseCard({
     <Button
       variant="secondary"
       onClick={onToggle}
-      className="w-full items-start justify-start gap-3 px-4 py-3 text-left"
+      className="h-auto w-full items-start justify-start gap-3 px-4 py-3 text-left"
     >
       <span
         aria-hidden
         className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold ${
-          selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-transparent'
+          selected
+            ? 'border-primary bg-primary text-primary-foreground'
+            : 'border-muted-foreground/40 bg-background text-transparent'
         }`}
       >
         ✓

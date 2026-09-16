@@ -4,6 +4,7 @@ import type { ApiGroup } from "../hooks/useGroups";
 import { GroupMenu } from "./GroupMenu";
 import { PrivacyPolicyScreen } from "./PrivacyPolicyScreen";
 import { ThemeToggle } from "./ThemeToggle";
+import { TrainerAccessMenu } from "./TrainerAccessMenu";
 import { Button } from "./ui/button";
 
 function clubInitials(name: string) {
@@ -19,6 +20,7 @@ function clubInitials(name: string) {
 
 export function ClubHeader({
   groupSwitcher,
+  trainerAccess,
 }: {
   /** Omit pre-unlock — LockScreen has its own group picker for a different purpose (choosing
    * which group's passcode to enter). */
@@ -26,6 +28,12 @@ export function ClubHeader({
     groups: ApiGroup[];
     groupId: string;
     setGroupId: (id: string) => void;
+  };
+  /** Omit pre-unlock — nothing to log out of yet. Replaces the old per-screen "✓ Trainer access
+   * unlocked · Lock" bar with a single top-right avatar + menu. */
+  trainerAccess?: {
+    kind: "trainer" | "parent";
+    lock: () => void;
   };
 }) {
   const club = useClub();
@@ -77,6 +85,9 @@ export function ClubHeader({
           Privacy
         </Button>
         <ThemeToggle />
+        {trainerAccess && (
+          <TrainerAccessMenu kind={trainerAccess.kind} onLock={trainerAccess.lock} />
+        )}
       </div>
       {privacyOpen && (
         <PrivacyPolicyScreen onClose={() => setPrivacyOpen(false)} />
