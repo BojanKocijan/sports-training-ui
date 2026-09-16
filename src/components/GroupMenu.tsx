@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ApiGroup } from '../hooks/useGroups'
+import { Button } from './ui/Button'
+import { Card } from './ui/Card'
 
 /** Top-left dropdown for switching the active group — replaces what used to be a row of chips
  * repeated inline on both the Players and Groups/Training-planner screens. Shown once, globally,
@@ -38,52 +40,54 @@ export function GroupMenu({
 
   return (
     <div ref={rootRef} className="relative">
-      <button
-        type="button"
+      <Button
+        variant="secondary"
+        size="sm"
+        shape="pill"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="flex items-center gap-1.5 rounded-full border border-black/10 bg-neutral-50 px-3 py-1.5 text-xs font-semibold text-neutral-700 dark:border-white/10 dark:bg-neutral-900 dark:text-neutral-200"
       >
         <span>{active?.emoji ?? '🏀'}</span>
         {active?.name ?? groupId}
         <span className="text-neutral-400">▾</span>
-      </button>
+      </Button>
 
       {open && (
-        <ul
+        <Card
+          as="ul"
+          padding="none"
+          elevated
           role="listbox"
-          className="absolute left-0 top-full z-30 mt-1 min-w-full overflow-hidden rounded-2xl border border-black/10 bg-white py-1 shadow-lg dark:border-white/10 dark:bg-neutral-900"
+          className="absolute left-0 top-full z-30 mt-1 min-w-full overflow-hidden py-1"
         >
           {groups.map((g) => {
             const comingSoon = g.status === 'coming_soon'
             return (
               <li key={g.id}>
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  fullWidth
                   role="option"
                   aria-selected={g.id === groupId}
                   disabled={comingSoon}
+                  active={!comingSoon && g.id === groupId}
+                  className={`justify-start gap-2 whitespace-nowrap rounded-none px-3 py-2 text-left ${
+                    comingSoon ? '!text-neutral-400 dark:!text-neutral-600' : ''
+                  }`}
                   onClick={() => {
                     setGroupId(g.id)
                     setOpen(false)
                   }}
-                  className={`flex w-full items-center gap-2 whitespace-nowrap px-3 py-2 text-left text-sm font-semibold transition-colors ${
-                    comingSoon
-                      ? 'cursor-not-allowed text-neutral-400 dark:text-neutral-600'
-                      : g.id === groupId
-                        ? 'bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300'
-                        : 'text-neutral-700 hover:bg-neutral-50 dark:text-neutral-200 dark:hover:bg-neutral-800'
-                  }`}
                 >
                   <span>{g.emoji}</span>
                   {g.name}
                   {comingSoon && <span className="text-[10px] font-normal">· soon</span>}
-                </button>
+                </Button>
               </li>
             )
           })}
-        </ul>
+        </Card>
       )}
     </div>
   )

@@ -4,6 +4,7 @@ import type { ApiGroup } from "../hooks/useGroups";
 import { GroupMenu } from "./GroupMenu";
 import { PrivacyPolicyScreen } from "./PrivacyPolicyScreen";
 import { ThemeToggle } from "./ThemeToggle";
+import { Button } from "./ui/Button";
 
 function clubInitials(name: string) {
   return (
@@ -67,13 +68,14 @@ export function ClubHeader({
         )}
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setPrivacyOpen(true)}
-          className="text-[11px] font-semibold text-neutral-400 underline-offset-2 hover:underline dark:text-neutral-500"
+          className="px-0 py-0 text-[11px] text-neutral-400 underline-offset-2 hover:bg-transparent hover:underline dark:text-neutral-500 dark:hover:bg-transparent"
         >
           Privacy
-        </button>
+        </Button>
         <ThemeToggle />
       </div>
       {privacyOpen && (
