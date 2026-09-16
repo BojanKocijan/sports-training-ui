@@ -15,7 +15,7 @@ export interface Club {
  * No sport here — a club can run several sport sections (see the `groups`/`group_templates`
  * tables via useGroups), so sport is a property of the active group, not the club.
  */
-const FALLBACK_CLUB: Club = { name: 'Dunckers Hilversum', logoUrl: 'logos/deDunkers.png' }
+const FALLBACK_CLUB: Club = { name: 'Dunckers Hilversum', logoUrl: null }
 
 interface ClubRecord {
   name: string

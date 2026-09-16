@@ -32,7 +32,7 @@ export function SessionScreen({
     groupId,
     passcode,
   )
-  const { rate, stats } = useRatings()
+  const { rate, stats } = useRatings(groupId)
   const { enter: enterFullscreen, exit: exitFullscreen } = useFullscreen()
   const totalSeconds = totalMinutes * 60
 
