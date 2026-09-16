@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useCategories } from '../hooks/useCategories'
 import {
   fetchParentCode,
   issueParentCode,
@@ -105,8 +106,18 @@ export function PlayerDetailModal({
     }
   }
 
+  // /skill-categories is a new endpoint (sports-training-api#35) — until that PR merges and
+  // deploys, it 404s and skillCategories stays empty. Fall back to the older /categories
+  // taxonomy (same 6 top-level ids, just without sub-skill grouping) so rating still works
+  // today; this automatically upgrades to the richer grouping once the new endpoint is live.
   const { skillCategories } = useSkillCategories()
-  const groupedSkills = groupSkillCategories(skillCategories)
+  const { categories } = useCategories()
+  const groupedSkills =
+    skillCategories.length > 0
+      ? groupSkillCategories(skillCategories)
+      : categories
+          .filter((c) => c.id !== 'warmup')
+          .map((c) => ({ parent: { id: c.id, label: c.label, emoji: c.emoji }, children: [] as never[] }))
 
   const sortedPlans = [...plans].sort((a, b) => a.training_date.localeCompare(b.training_date))
   const today = toLocalIso(new Date())
