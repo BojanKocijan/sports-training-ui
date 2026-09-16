@@ -7,9 +7,7 @@ import { LockScreen } from './components/LockScreen'
 import { ParentView } from './components/ParentView'
 import { PlayersScreen } from './components/PlayersScreen'
 import { SessionScreen } from './components/SessionScreen'
-import { SetupScreen } from './components/SetupScreen'
 import { SideNav } from './components/SideNav'
-import { VocabularyScreen } from './components/VocabularyScreen'
 import { useActiveGroup } from './hooks/useActiveGroup'
 import { useActivePlan } from './hooks/useActivePlan'
 import { findExercise, useExercises } from './hooks/useExercises'
@@ -64,7 +62,6 @@ function App() {
           <div className="lg:flex">
             <SideNav active={tab} onChange={setTab} />
             <div className="min-w-0 flex-1">
-              {tab === 'setup' && <SetupScreen />}
               {tab === 'groups' && <GroupsScreen groupId={groupId} trainerAccess={trainerAccess} />}
               {tab === 'players' && <PlayersScreen groupId={groupId} trainerAccess={trainerAccess} />}
               {tab === 'library' && <ExercisesScreen />}
@@ -77,7 +74,6 @@ function App() {
                   onBuildPlan={() => setTab('groups')}
                 />
               )}
-              {tab === 'vocabulary' && <VocabularyScreen />}
               <BottomNav active={tab} onChange={setTab} />
             </div>
           </div>
