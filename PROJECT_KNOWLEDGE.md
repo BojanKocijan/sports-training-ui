@@ -127,6 +127,8 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 
 ## 6. Open questions / known issues
 
+- [ ] Visual tone pass: current reference app found for this category (MyKidDid, US-only, App Store) reads as too serious/corporate for what this app should feel like — light, sporty, clean, and fun instead. Not yet scheduled against a specific slice; fold into whichever widgets/forms slice comes after the primitives PR (#44) lands, or split out as its own pass once the primitives' current neutral/orange palette is reviewed against this direction.
+
 - [ ] #34 — Add harder U10 exercises beyond warm-ups, align levels across all categories.
 - [ ] #26 — Roster: reassign a player to another group (promotion flow) — touches the same nav area as the descoping work above.
 - [ ] #14 — Session tab: show who's controlling the shared clock when two trainers are both unlocked.
