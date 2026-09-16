@@ -1,4 +1,5 @@
 import { useTheme, type ThemePreference } from '../hooks/useTheme'
+import { Button } from './ui/Button'
 
 const OPTIONS: { id: ThemePreference; label: string; emoji: string }[] = [
   { id: 'light', label: 'Light', emoji: '☀️' },
@@ -20,22 +21,24 @@ export function ThemeToggle() {
       {OPTIONS.map((opt) => {
         const isActive = opt.id === preference
         return (
-          <button
+          <Button
             key={opt.id}
-            type="button"
+            variant="ghost"
+            shape="pill"
+            iconOnly
             role="radio"
             aria-checked={isActive}
             aria-label={opt.label}
             title={opt.label}
             onClick={() => setPreference(opt.id)}
-            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs leading-none transition-colors ${
+            className={`h-6 w-6 ${
               isActive
-                ? 'bg-white shadow-sm dark:bg-neutral-700'
+                ? '!bg-white shadow-sm hover:!bg-white dark:!bg-neutral-700 dark:hover:!bg-neutral-700'
                 : 'opacity-50 hover:opacity-80'
             }`}
           >
             {opt.emoji}
-          </button>
+          </Button>
         )
       })}
     </div>

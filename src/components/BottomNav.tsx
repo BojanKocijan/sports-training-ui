@@ -1,4 +1,5 @@
 import { TABS, type Tab } from '../data/tabs'
+import { Button } from './ui/Button'
 
 export type { Tab } from '../data/tabs'
 
@@ -22,19 +23,22 @@ export function BottomNav({
         {TABS.map((tab) => {
           const isActive = tab.id === active
           return (
-            <button
+            <Button
               key={tab.id}
-              type="button"
-              onClick={() => onChange(tab.id)}
-              className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors ${
-                isActive
-                  ? 'text-orange-600 dark:text-orange-400'
-                  : 'text-neutral-500 dark:text-neutral-400'
+              variant="ghost"
+              shape="rounded"
+              fullWidth
+              // `!text-*` (Tailwind's important-modifier) because this needs to win over the
+              // ghost variant's own text color, and two same-property utility classes on one
+              // element don't reliably override by source order in the className string.
+              className={`flex-col gap-0.5 rounded-none py-2.5 text-[11px] font-medium ${
+                isActive ? '!text-orange-600 dark:!text-orange-400' : ''
               }`}
+              onClick={() => onChange(tab.id)}
             >
               <span className="text-xl leading-none">{tab.emoji}</span>
               {tab.label}
-            </button>
+            </Button>
           )
         })}
       </div>
