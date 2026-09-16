@@ -10,8 +10,8 @@ import { ExerciseLibraryCard } from './ExerciseLibraryCard'
 export function ExercisesScreen() {
   const [query, setQuery] = useState('')
   const [activeCategories, setActiveCategories] = useState<CategoryId[]>([])
-  const { rate, stats } = useRatings()
   const { groupId } = useActiveGroup()
+  const { rate, stats } = useRatings(groupId)
   const { groups } = useGroups()
   const { categories } = useCategories()
   const { exercises, loading, error } = useExercises()
