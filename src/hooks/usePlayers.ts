@@ -22,6 +22,9 @@ export interface Player {
   jersey_color: JerseyColor | null
   created_at: string
   updated_at: string
+  /** Whether a parent code is currently issued — never the code itself (see
+   * sports-training-api#20; GET /players never echoes the raw code back). */
+  hasParentCode: boolean
 }
 
 /** A group's roster — kids are tracked only by a self-chosen nickname (see the GDPR note in
@@ -104,4 +107,21 @@ export async function ratePlayerProgress(
   rating: number,
 ) {
   await api.post(`/players/${playerId}/progress`, { passcode, planId, categoryId, rating })
+}
+
+/** Issues a fresh parent code for a player, overwriting any existing one (an old code stops
+ * working the moment a new one is generated). Returned only here — a trainer who navigates
+ * away without noting it down has to regenerate to see a code again (see
+ * sports-training-api#20). */
+export async function issueParentCode(passcode: string, playerId: string): Promise<string> {
+  const { parentCode } = await api.post<{ parentCode: string }>(`/players/${playerId}/parent-code`, {
+    passcode,
+  })
+  return parentCode
+}
+
+/** Revokes a player's parent code — the parent's next LockScreen attempt with the old code
+ * fails, same as a trainer whose passcode was reset. */
+export async function revokeParentCode(passcode: string, playerId: string) {
+  await api.delete(`/players/${playerId}/parent-code`, { passcode })
 }

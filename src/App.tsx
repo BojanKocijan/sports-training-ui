@@ -4,6 +4,7 @@ import { ClubHeader } from './components/ClubHeader'
 import { ExercisesScreen } from './components/ExercisesScreen'
 import { GroupsScreen } from './components/GroupsScreen'
 import { LockScreen } from './components/LockScreen'
+import { ParentView } from './components/ParentView'
 import { PlayersScreen } from './components/PlayersScreen'
 import { SessionScreen } from './components/SessionScreen'
 import { SetupScreen } from './components/SetupScreen'
@@ -51,6 +52,11 @@ function App() {
         <>
           <ClubHeader />
           <LockScreen groupId={groupId} onSelectGroup={setGroupId} trainerAccess={trainerAccess} />
+        </>
+      ) : trainerAccess.kind === 'parent' && trainerAccess.parentPlayer ? (
+        <>
+          <ClubHeader />
+          <ParentView groupId={groupId} player={trainerAccess.parentPlayer} onLock={trainerAccess.lock} />
         </>
       ) : (
         <>

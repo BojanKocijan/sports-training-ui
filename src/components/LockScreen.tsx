@@ -4,10 +4,12 @@ import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 
 /**
  * Gates the entire app: nothing (Setup/Library/Session/Words/Groups content) is reachable
- * without the active group's trainer passcode — there is no read-only/skip mode. Picking a
- * group is the one thing that stays open here, since you need to know which group you're in
- * before you can know which code to enter. Groups come from GET /groups (the club's actual
- * groups, each an instance of an 'available' or 'coming_soon' template) — not a hardcoded list.
+ * without a code for the active group. Same one code field for both trainer and parent codes —
+ * useTrainerAccess resolves which kind it was (see sports-training-api#20) and the caller
+ * branches into full trainer access or a read-only, single-child ParentView. Picking a group is
+ * the one thing that stays open here, since you need to know which group you're in before you
+ * know which code to enter. Groups come from GET /groups (the club's actual groups, each an
+ * instance of an 'available' or 'coming_soon' template) — not a hardcoded list.
  */
 export function LockScreen({
   groupId,
@@ -62,9 +64,10 @@ export function LockScreen({
       )}
 
       <div className="w-full rounded-3xl bg-white p-5 shadow-lg dark:bg-neutral-900">
-        <p className="text-lg font-bold text-neutral-900 dark:text-neutral-50">Trainer code</p>
+        <p className="text-lg font-bold text-neutral-900 dark:text-neutral-50">Enter your code</p>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          Enter the {activeGroup?.name ?? groupId} trainer code to use the app.
+          Enter the {activeGroup?.name ?? groupId} trainer code, or a parent code if a trainer
+          gave you one.
         </p>
         <input
           type="password"
