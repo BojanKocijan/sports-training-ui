@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
-import type { CategoryId } from '../data/categories'
 import type { useActivePlan } from '../hooks/useActivePlan'
+import type { CategoryId } from '../hooks/useCategories'
 import { useFullscreen } from '../hooks/useFullscreen'
 import { useRatings } from '../hooks/useRatings'
 import { useSessionClock } from '../hooks/useSessionClock'

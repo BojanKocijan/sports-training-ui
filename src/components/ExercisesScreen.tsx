@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { CATEGORIES, type CategoryId } from '../data/categories'
-import { exercisesForGroup } from '../data/exercises'
 import { useActiveGroup } from '../hooks/useActiveGroup'
+import { type CategoryId, useCategories } from '../hooks/useCategories'
+import { exercisesForGroup, useExercises } from '../hooks/useExercises'
 import { useGroups } from '../hooks/useGroups'
 import { useRatings } from '../hooks/useRatings'
 import { CategoryChip } from './CategoryChip'
@@ -13,10 +13,12 @@ export function ExercisesScreen() {
   const { rate, stats } = useRatings()
   const { groupId } = useActiveGroup()
   const { groups } = useGroups()
+  const { categories } = useCategories()
+  const { exercises, loading, error } = useExercises()
   const activeGroup = groups.find((g) => g.id === groupId)
   const templateId = activeGroup?.templateId ?? groupId
 
-  const trainable = exercisesForGroup(templateId).filter((e) => !e.isBreak)
+  const trainable = exercisesForGroup(exercises, templateId).filter((e) => !e.isBreak)
 
   function toggleCategory(id: CategoryId) {
     setActiveCategories((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]))
@@ -31,6 +33,16 @@ export function ExercisesScreen() {
       return matchesQuery && matchesCategory
     })
   }, [query, activeCategories, trainable])
+
+  if (loading || error || exercises.length === 0) {
+    return (
+      <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4">
+        <p className="text-sm text-neutral-400">
+          {error ? `Could not load exercises: ${error}` : 'Loading exercises…'}
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4 md:max-w-3xl lg:max-w-5xl">
@@ -51,7 +63,7 @@ export function ExercisesScreen() {
       />
 
       <div className="flex flex-wrap gap-2">
-        {CATEGORIES.map((cat) => (
+        {categories.map((cat) => (
           <CategoryChip
             key={cat.id}
             categoryId={cat.id}

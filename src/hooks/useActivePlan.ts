@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { findExercise } from '../data/exercises'
 import { fullU8Session } from '../data/plans'
+import { findExercise, useExercises } from './useExercises'
 
 const STORAGE_KEY = 'u8-active-plan'
 
@@ -25,6 +25,7 @@ function loadPlan(): StoredPlan {
 
 /** The exercise line-up the coach is currently running or about to run in the Session tab. */
 export function useActivePlan() {
+  const { exercises } = useExercises()
   const [plan, setPlan] = useState<StoredPlan>(loadPlan)
 
   useEffect(() => {
@@ -39,7 +40,9 @@ export function useActivePlan() {
     setPlan({ title, emoji, exerciseIds })
   }, [])
 
-  const planExercises = plan.exerciseIds.map(findExercise).filter((e): e is NonNullable<typeof e> => Boolean(e))
+  const planExercises = plan.exerciseIds
+    .map((id) => findExercise(exercises, id))
+    .filter((e): e is NonNullable<typeof e> => Boolean(e))
   const totalMinutes = planExercises.reduce((sum, e) => sum + e.durationMinutes, 0)
 
   return {

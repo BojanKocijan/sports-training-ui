@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Exercise } from '../data/exercises'
+import type { Exercise } from '../hooks/useExercises'
 import { useCountdown } from '../hooks/useCountdown'
 import { CategoryBadges } from './CategoryBadges'
 import { RatingWidget } from './RatingWidget'
