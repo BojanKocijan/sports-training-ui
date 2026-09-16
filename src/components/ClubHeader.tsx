@@ -55,9 +55,7 @@ export function ClubHeader({
         </button>
         <ThemeToggle />
       </div>
-      {privacyOpen && (
-        <PrivacyPolicyScreen clubName={club.name} onClose={() => setPrivacyOpen(false)} />
-      )}
+      {privacyOpen && <PrivacyPolicyScreen onClose={() => setPrivacyOpen(false)} />}
     </div>
   )
 }
