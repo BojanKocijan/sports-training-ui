@@ -7,7 +7,7 @@ import {
   revokeParentCode,
   type Player,
 } from '../hooks/usePlayers'
-import { usePlayerProgress } from '../hooks/usePlayerProgress'
+import { usePlayerProgress, type PlayerCategoryStat } from '../hooks/usePlayerProgress'
 import type { TrainingPlan } from '../hooks/usePlans'
 import { groupSkillCategories, useSkillCategories } from '../hooks/useSkillCategories'
 import { formatDate, toLocalIso } from '../utils/format'
@@ -166,8 +166,30 @@ export function PlayerDetailModal({
     return byCategory.find((c) => c.categoryId === categoryId)
   }
 
-  function SkillBar({ id, label, emoji }: { id: string; label: string; emoji: string }) {
-    const stat = statFor(id)
+  /** A parent category (e.g. "Dribbling") is never rated directly -- trainers rate its
+   * sub-skills (Strong-hand, Weak-hand, Change of direction). Without this, the parent row
+   * always read as unrated ("—") even when every child had ratings, which looked like a bug
+   * rather than the grouping header it actually is. Falls back to a count-weighted average
+   * across the children's own stats when the parent has no direct rating of its own. */
+  function statForParent(parentId: string, childIds: string[]) {
+    const direct = statFor(parentId)
+    if (direct) return direct
+    const childStats = childIds.map(statFor).filter((s): s is PlayerCategoryStat => s !== undefined)
+    if (childStats.length === 0) return undefined
+    const count = childStats.reduce((sum, s) => sum + s.count, 0)
+    const average = childStats.reduce((sum, s) => sum + s.average * s.count, 0) / count
+    return { categoryId: parentId, average, count, lastRatedAt: '' }
+  }
+
+  function SkillBar({
+    label,
+    emoji,
+    stat,
+  }: {
+    label: string
+    emoji: string
+    stat: PlayerCategoryStat | undefined
+  }) {
     const pct = stat ? (stat.average / 3) * 100 : 0
     return (
       <div className="flex items-center gap-2">
@@ -256,7 +278,9 @@ export function PlayerDetailModal({
         </div>
 
         <Tabs defaultValue="stats">
-          <TabsList className="w-full">
+          {/* Sticky so switching tabs never requires scrolling back up past the (now large)
+           * hero image -- the hero can grow freely without burying navigation. */}
+          <TabsList className="sticky top-0 z-10 w-full bg-neutral-50 dark:bg-neutral-950">
             <TabsTrigger value="stats">Stats</TabsTrigger>
             <TabsTrigger value="training">This training</TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
@@ -270,11 +294,18 @@ export function PlayerDetailModal({
             )}
             {groupedSkills.map(({ parent, children }) => (
               <Card key={parent.id} size="sm" className="gap-2 px-3">
-                <SkillBar id={parent.id} label={parent.label} emoji={parent.emoji} />
+                <SkillBar
+                  label={parent.label}
+                  emoji={parent.emoji}
+                  stat={statForParent(
+                    parent.id,
+                    children.map((c) => c.id),
+                  )}
+                />
                 {children.length > 0 && (
                   <div className="space-y-1.5 border-t border-black/5 pt-2 dark:border-white/5">
                     {children.map((child) => (
-                      <SkillBar key={child.id} id={child.id} label={child.label} emoji={child.emoji} />
+                      <SkillBar key={child.id} label={child.label} emoji={child.emoji} stat={statFor(child.id)} />
                     ))}
                   </div>
                 )}
