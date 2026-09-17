@@ -78,6 +78,25 @@ const INK = {
   dark: { fill: '#171717', stroke: '#ffffff' },
 } as const
 
+/** Distinct art for mascot_avatars' `stage='child'` (U10, sports-training-api#55) -- a different
+ * illustration/pose than the shared baby/child stopgap above (see PROJECT_KNOWLEDGE.md), so it
+ * needs its own NATIVE_SIZE + chest-plate placement rather than reusing the color-only tables.
+ * Only orange/white exist so far; other colors keep resolving to the shared stopgap art via
+ * apiMatch until their own 'child'-stage art is seeded. Placement is eyeballed against the
+ * actual pose (no Figma frame for this AI-generated art) -- verify visually after any change. */
+const CHILD_STAGE_LAYOUT: Partial<
+  Record<JerseyColor, { native: { w: number; h: number }; layout: (typeof NUMBER_LAYOUT)[JerseyColor] }>
+> = {
+  orange: {
+    native: { w: 480, h: 720 },
+    layout: { centerX: 0.58, numberY: 0.49, maxWidth: 0.22, fontScale: 0.105, rotateDeg: 0, ink: 'light' },
+  },
+  white: {
+    native: { w: 480, h: 720 },
+    layout: { centerX: 0.58, numberY: 0.49, maxWidth: 0.22, fontScale: 0.105, rotateDeg: 0, ink: 'dark' },
+  },
+}
+
 // Alfa Slab One is a bold slab-serif face -- the flat block-serif numeral shape is what reads as
 // a "varsity"/collegiate jersey number rather than a plain condensed display font.
 const JERSEY_FONT = '"Alfa Slab One", "Arial Black", Impact, "Haettenschweiler", sans-serif'
@@ -142,14 +161,6 @@ export function JerseyGraphic({
   mascotId?: string | null
 }) {
   const resolvedColor = color ?? FALLBACK_COLOR
-  const { w, h } = NATIVE_SIZE[resolvedColor]
-  const layout = NUMBER_LAYOUT[resolvedColor]
-  const ink = INK[layout.ink]
-
-  const displayNumber = number !== null ? String(number) : ''
-  const numberX = layout.centerX * w
-  const numberY = layout.numberY * h
-  const numberRef = useFitText(displayNumber, w, layout.maxWidth, numberX)
 
   // Only fetches when a groupId is actually passed in -- useMascotAvatars('') would otherwise
   // fire a request keyed on an empty group. The hook's own per-group cache means many jersey
@@ -159,6 +170,18 @@ export function JerseyGraphic({
   const apiMatch = groupId
     ? avatars.find((a) => a.mascot_id === resolvedMascotId && a.jersey_color === resolvedColor)
     : undefined
+
+  // 'child' stage has its own art (distinct pose) for some colors -- use its own native
+  // size/placement when it applies, since it isn't a recolor of the shared stopgap pose above.
+  const childOverride = apiMatch?.stage === 'child' ? CHILD_STAGE_LAYOUT[resolvedColor] : undefined
+  const { w, h } = childOverride?.native ?? NATIVE_SIZE[resolvedColor]
+  const layout = childOverride?.layout ?? NUMBER_LAYOUT[resolvedColor]
+  const ink = INK[layout.ink]
+
+  const displayNumber = number !== null ? String(number) : ''
+  const numberX = layout.centerX * w
+  const numberY = layout.numberY * h
+  const numberRef = useFitText(displayNumber, w, layout.maxWidth, numberX)
 
   // The artwork itself is a real network fetch (a ~70-90KB webp per color, see ASSET_BASE) --
   // separate from any API loading state, this tracks whether THIS image has actually painted
