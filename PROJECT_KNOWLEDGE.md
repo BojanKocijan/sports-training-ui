@@ -37,6 +37,17 @@ One subscription per **sport, per club** (`sport_subscriptions`, already in the 
    - **Club pays, becomes a reference** — every new paying club becomes proof for the next one (same school-by-school pattern Seesaw used).
 2. **Federation (NBB/Club.Basketball.nl) comes later** — once there are 5–10 paying clubs as proof, approach as a partner with a track record, not as an unknown competitor to their admin tool.
 
+### Competitive scouting (Sept 2026)
+
+A scan of 19 youth-sports coaching apps across basketball, soccer, swimming, and multi-sport platforms (full report: `scratchpad_competitors.html`, triggered by finding levelupbasket.com), framed against the plan to generalize this app beyond basketball-only.
+
+**Findings:**
+- 13 apps are sport-specific single-lane players (basketball: Level Up, Elite Hoops, Jr. NBA Coach, The Hoops Geek; soccer: SoccerXpert, SoccerDrive; swimming: SwimShare, MySwimPro, Swim Coach App).
+- 6 apps already do multi-sport practice planning: TeamSnap, Coach Planner, Practice Plan App, MOJO Sports, Sportlingo, planet.training. **"Supports many sports" alone is not a differentiator** — it already has six direct competitors.
+- Every one of those 19 apps converges on the same shape: account/login required for coaches (often parents too), attendance/messaging/payments bundled in whether wanted or not, and monetization via subscription tiers.
+
+**Where the actual gap is — and why it matters for the multi-sport milestone:** none of them ship **zero-account, zero-PII** access. This app already has that property (trainer passcode per group, parent access via a trainer-issued code, no names — see `PRIVACY.md`) and it's the one thing not in the competitive set. The multi-sport generalization work (schema, `sports`/`groups` filtering — see "What's in this milestone" above) must preserve this property as a hard constraint, not just a nice-to-have: it's the actual moat, not the sport count.
+
 ### Proof this isn't just theory
 
 The first real club (Dunckers Hilversum, U8 + U10 groups) is already using the shipped product with real data: logged plans, rated player progress, an active live session. This milestone is about deepening that, not starting from zero.
@@ -144,3 +155,4 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 ## Changelog
 
 - **2026-09-16** — File created; captured current scope, architecture, the a11y/interaction-state gap found in this session, and the plan to descope Setup/Vocabulary.
+- **2026-09-17** — Added competitive scouting summary (§ Milestone 1): zero-account/zero-PII access is the differentiator, not sport count — a hard constraint on the multi-sport generalization work.

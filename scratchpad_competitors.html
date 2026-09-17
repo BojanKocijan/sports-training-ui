@@ -1,0 +1,565 @@
+<title>Sports Coaching App Scouting Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;600;700;800&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+  :root {
+    --paper: #fbf7f1;
+    --ink: #211c17;
+    --ink-soft: #4a4136;
+    --muted: #8a7d68;
+    --line: #e4dac9;
+    --line-strong: #d3c6ac;
+    --accent: #d75f1a;
+    --accent-ink: #ffffff;
+    --accent-soft: #fbe3cd;
+    --card: #ffffff;
+    --good: #3f7a4f;
+    --good-soft: #e3efe3;
+    --watch: #b3541a;
+    --watch-soft: #fbe3cd;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #18140e;
+      --ink: #f2ece0;
+      --ink-soft: #cdc2ad;
+      --muted: #93876f;
+      --line: #362d20;
+      --line-strong: #46392715;
+      --line-strong: #4a3d29;
+      --accent: #ff9142;
+      --accent-ink: #1a1006;
+      --accent-soft: #3a2513;
+      --card: #201a12;
+      --good: #7cc28f;
+      --good-soft: #1e2e20;
+      --watch: #ffb066;
+      --watch-soft: #3a2513;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #18140e;
+    --ink: #f2ece0;
+    --ink-soft: #cdc2ad;
+    --muted: #93876f;
+    --line: #362d20;
+    --line-strong: #4a3d29;
+    --accent: #ff9142;
+    --accent-ink: #1a1006;
+    --accent-soft: #3a2513;
+    --card: #201a12;
+    --good: #7cc28f;
+    --good-soft: #1e2e20;
+    --watch: #ffb066;
+    --watch-soft: #3a2513;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Source Sans 3', system-ui, sans-serif;
+    line-height: 1.55;
+    padding-block: 3rem 5rem;
+  }
+
+  .sheet {
+    max-width: 920px;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  h1, h2, h3 {
+    font-family: 'League Spartan', system-ui, sans-serif;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .eyebrow::before {
+    content: '';
+    width: 22px;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  header.masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 3px solid var(--ink);
+    margin-bottom: 2rem;
+  }
+
+  header.masthead h1 {
+    font-size: clamp(1.9rem, 4.2vw, 2.7rem);
+    font-weight: 800;
+  }
+
+  .subhead {
+    color: var(--ink-soft);
+    font-size: 1.05rem;
+    max-width: 62ch;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 0.4rem;
+  }
+  .meta-row b { color: var(--ink-soft); font-weight: 600; }
+
+  /* --- Insight callout --- */
+  .callout {
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-left: 4px solid var(--accent);
+    border-radius: 4px;
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 2.75rem;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.4rem;
+    align-items: center;
+  }
+  .callout .stat {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 2.6rem;
+    color: var(--accent);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .callout .stat span {
+    display: block;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.35rem;
+  }
+  .callout p { margin: 0; color: var(--ink-soft); font-size: 0.98rem; }
+  .callout strong { color: var(--ink); }
+
+  @media (max-width: 560px) {
+    .callout { grid-template-columns: 1fr; text-align: left; }
+  }
+
+  /* --- Section headers --- */
+  section { margin-bottom: 3rem; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 0.6rem;
+    margin-bottom: 1.25rem;
+  }
+  .section-head h2 { font-size: 1.4rem; font-weight: 700; }
+  .section-head .count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .section-note {
+    color: var(--muted);
+    font-size: 0.92rem;
+    margin: -0.6rem 0 1.4rem;
+    max-width: 68ch;
+  }
+
+  /* --- Sport groups --- */
+  .sport-group { margin-bottom: 1.75rem; }
+  .sport-group h3 {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .sport-group h3::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 0.85rem;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1.05rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .card .name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 0.5rem;
+  }
+  .card .name { font-weight: 700; font-size: 1.02rem; }
+  .card .price {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.74rem;
+    color: var(--accent);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .card .desc { color: var(--ink-soft); font-size: 0.88rem; }
+  .card .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* --- Comparison table --- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    min-width: 700px;
+  }
+  thead th {
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--accent-soft);
+    padding: 0.65rem 0.9rem;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  tbody td {
+    padding: 0.75rem 0.9rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink-soft);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody td.name-cell { color: var(--ink); font-weight: 600; }
+  tbody td.price-cell { font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; white-space: nowrap; }
+  .sport-pills { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.66rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 20px;
+    background: var(--accent-soft);
+    color: var(--watch);
+    white-space: nowrap;
+  }
+
+  /* --- Gap analysis --- */
+  .gap-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 640px) { .gap-grid { grid-template-columns: 1fr; } }
+
+  .gap-card {
+    border-radius: 6px;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--line);
+  }
+  .gap-card.them { background: var(--card); }
+  .gap-card.us { background: var(--good-soft); border-color: var(--good); }
+  .gap-card h4 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 0.7rem;
+    color: var(--muted);
+  }
+  .gap-card.us h4 { color: var(--good); }
+  .gap-card ul { margin: 0; padding-left: 1.1rem; font-size: 0.9rem; color: var(--ink-soft); display: flex; flex-direction: column; gap: 0.4rem; }
+  .gap-card.us li { color: var(--ink); }
+
+  /* --- Recommendation --- */
+  .recommend {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 8px;
+    padding: 1.6rem 1.75rem;
+  }
+  :root[data-theme="dark"] .recommend,
+  @media (prefers-color-scheme: dark) { }
+  .recommend h2 { color: var(--accent); font-size: 1.25rem; margin-bottom: 0.6rem; }
+  .recommend p { margin: 0 0 0.5rem; opacity: 0.92; font-size: 0.95rem; max-width: 66ch; }
+  .recommend p:last-child { margin-bottom: 0; }
+  .recommend strong { color: var(--accent); }
+
+  footer.sources {
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  footer.sources a { color: var(--muted); }
+</style>
+
+<div class="sheet">
+
+  <header class="masthead">
+    <div class="eyebrow">Competitive Scouting Report</div>
+    <h1>Who else is planning the practice?</h1>
+    <p class="subhead">
+      A scan of the youth-sports coaching-app market, triggered by
+      <a href="https://www.levelupbasket.com/" style="color:inherit">levelupbasket.com</a> —
+      framed against the plan to grow <strong>sports-training-planner</strong> from a
+      basketball-only tool into a group-any-sport-in-one planner.
+    </p>
+    <div class="meta-row">
+      <span><b>Scope:</b> basketball, soccer, swimming, multi-sport platforms</span>
+      <span><b>Apps reviewed:</b> 19</span>
+      <span><b>Prepared:</b> Sep 2026</span>
+    </div>
+  </header>
+
+  <div class="callout">
+    <div class="stat">6<span>already multi-sport</span></div>
+    <p>
+      <strong>The "group every sport in one place" idea already has direct competitors.</strong>
+      TeamSnap, Coach&nbsp;Planner, MOJO, Practice&nbsp;Plan&nbsp;App, Sportlingo, and planet.training
+      all plan practices across multiple sports today. The open ground isn't
+      "supports many sports" — it's <em>how little friction</em> it takes to use one.
+    </p>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <h2>Sport-specific players</h2>
+      <span class="count">13 apps</span>
+    </div>
+    <p class="section-note">
+      Each sport has its own crowded, single-sport-first lane — this is who
+      levelupbasket.com is actually up against, and its equivalents in other sports.
+    </p>
+
+    <div class="sport-group">
+      <h3>🏀 Basketball</h3>
+      <div class="card-grid">
+        <div class="card">
+          <div class="name-row"><span class="name">Level Up</span><span class="price">Freemium</span></div>
+          <p class="desc">AI video analysis of shooting form/footwork + drill library + club/academy team management. Gamified, community-driven.</p>
+          <span class="tag">Academies · content creators</span>
+        </div>
+        <div class="card">
+          <div class="name-row"><span class="name">Elite Hoops</span><span class="price">Paid</span></div>
+          <p class="desc">Play designer, practice builder, drill library. 14,000+ coaches from AAU to D1.</p>
+          <span class="tag">Play design · roster mgmt</span>
+        </div>
+        <div class="card">
+          <div class="name-row"><span class="name">Jr. NBA Coach</span><span class="price">Free</span></div>
+          <p class="desc">Official Jr. NBA curriculum — 48 pre-built practice plans, or build your own.</p>
+          <span class="tag">Curriculum-driven</span>
+        </div>
+        <div class="card">
+          <div class="name-row"><span class="name">The Hoops Geek</span><span class="price">Freemium</span></div>
+          <p class="desc">Browser-based playbook, practice planner, and even-minutes lineup balancer for youth rosters.</p>
+          <span class="tag">Browser-first</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sport-group">
+      <h3>⚽ Soccer</h3>
+      <div class="card-grid">
+        <div class="card">
+          <div class="name-row"><span class="name">SoccerXpert</span><span class="price">Paid</span></div>
+          <p class="desc">195+ drills; build and organize multiple practices with notes.</p>
+          <span class="tag">Drill library</span>
+        </div>
+        <div class="card">
+          <div class="name-row"><span class="name">SoccerDrive</span><span class="price">Paid</span></div>
+          <p class="desc">3D-animated drills and tactics boards, shareable with the team.</p>
+          <span class="tag">Tactics + drills</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sport-group">
+      <h3>🏊 Swimming</h3>
+      <div class="card-grid">
+        <div class="card">
+          <div class="name-row"><span class="name">SwimShare</span><span class="price">Paid</span></div>
+          <p class="desc">Workout-writing software — predicted intervals/intensities, auto training-group variations.</p>
+          <span class="tag">ClubAssistant</span>
+        </div>
+        <div class="card">
+          <div class="name-row"><span class="name">MySwimPro</span><span class="price">Freemium</span></div>
+          <p class="desc">Athlete-facing training plans + logging; coaches get remote progress tracking.</p>
+          <span class="tag">Athlete-first</span>
+        </div>
+        <div class="card">
+          <div class="name-row"><span class="name">Swim Coach App</span><span class="price">Paid</span></div>
+          <p class="desc">Smart training generation for swimming and triathlon squads.</p>
+          <span class="tag">Squad training</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Multi-sport platforms</h2>
+      <span class="count">6 apps · the real comp set</span>
+    </div>
+    <p class="section-note">
+      These are the ones actually solving "one place for every sport" — the
+      direction the basketball app is headed. Worth studying line-by-line.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>App</th>
+            <th>Sports</th>
+            <th>Core focus</th>
+            <th>Pricing</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="name-cell">TeamSnap</td>
+            <td><div class="sport-pills"><span class="pill">8+ sports</span></div></td>
+            <td>Team management + league-branded practice plans (MLB, Jr. NBA, NFL Flag partnerships)</td>
+            <td class="price-cell">Free tier + paid upgrades</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Coach Planner</td>
+            <td><div class="sport-pills"><span class="pill">15 sports</span></div></td>
+            <td>Periodized, multi-week season planning across disciplines incl. swimming, cycling, track</td>
+            <td class="price-cell">n/a — paywalled</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Practice Plan App</td>
+            <td><div class="sport-pills"><span class="pill">10 sports</span></div></td>
+            <td>Practice-plan-first — templates, timed periods, PDF export, program branding</td>
+            <td class="price-cell">$5.99/mo solo · $29+/mo program</td>
+          </tr>
+          <tr>
+            <td class="name-cell">MOJO Sports</td>
+            <td><div class="sport-pills"><span class="pill">Expanding</span></div></td>
+            <td>Free all-in-one for youth coaches — scheduling, attendance, messaging, NBA/NFL-backed drills</td>
+            <td class="price-cell">Free · MOJO+ $19.99/yr</td>
+          </tr>
+          <tr>
+            <td class="name-cell">Sportlingo</td>
+            <td><div class="sport-pills"><span class="pill">Basketball</span><span class="pill">Soccer</span></div></td>
+            <td>AI coaching support + practice plans + player development tracking + comms</td>
+            <td class="price-cell">n/a</td>
+          </tr>
+          <tr>
+            <td class="name-cell">planet.training</td>
+            <td><div class="sport-pills"><span class="pill">4 sports</span></div></td>
+            <td>Community drill database shared across coaches, more sports "coming soon"</td>
+            <td class="price-cell">n/a</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Where the gap actually is</h2>
+    </div>
+    <p class="section-note">
+      Every platform above requires an account, and most collect player/parent PII to run
+      attendance, messaging, or payments. The one close analog on the simplicity axis —
+      <strong style="color:var(--ink)">RosterPro</strong> — still centers on RSVP/scheduling, not a shared drill-based plan.
+    </p>
+
+    <div class="gap-grid">
+      <div class="gap-card them">
+        <h4>What the field converges on</h4>
+        <ul>
+          <li>Account + login for every coach and often every parent</li>
+          <li>Attendance, messaging, and payments bundled in, whether needed or not</li>
+          <li>Monetizes via subscriptions once a team grows past the free tier</li>
+          <li>"Multi-sport" mostly means separate drill libraries behind one login</li>
+        </ul>
+      </div>
+      <div class="gap-card us">
+        <h4>What sports-training-planner already does differently</h4>
+        <ul>
+          <li>Zero accounts — public read, passcode-only writes, nobody signs up</li>
+          <li>Stores no PII at all, not even names (see PRIVACY.md) — nothing to leak, nothing to migrate for GDPR</li>
+          <li>One shared calendar per group, not a bundled suite nobody asked for</li>
+          <li>Genuinely free — no tier to hit, no upgrade prompt</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="recommend">
+    <h2>Read for the multi-sport milestone</h2>
+    <p>
+      "Support more sports" alone doesn't differentiate — six competitors already claim
+      it. The defensible angle is <strong>the only multi-sport planner that needs no
+      account and stores no personal data</strong>, aimed squarely at volunteer coaches
+      who'd rather text a passcode than onboard a platform.
+    </p>
+    <p>
+      Concretely: generalize the schema (per the open milestone), but keep every
+      generalization compatible with the zero-signup / zero-PII model — that's the
+      one property nothing in this table has, and it's cheap to keep as the sport list grows.
+    </p>
+  </div>
+
+  <footer class="sources">
+    Sources: <a href="https://www.levelupbasket.com/">levelupbasket.com</a>,
+    <a href="https://www.teamsnap.com/teams">teamsnap.com</a>,
+    <a href="https://coachplanner.app/">coachplanner.app</a>,
+    <a href="https://www.practiceplan.app/">practiceplan.app</a>,
+    <a href="https://mojo.sport/">mojo.sport</a>,
+    <a href="https://sportlingo.ai/">sportlingo.ai</a>,
+    <a href="https://planet.training/">planet.training</a>,
+    <a href="https://getrosterpro.com/">getrosterpro.com</a>,
+    <a href="https://www.spond.com/">spond.com</a> — reviewed Sep 2026, pricing/features may have changed since.
+  </footer>
+
+</div>
