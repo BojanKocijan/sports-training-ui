@@ -49,7 +49,7 @@ const NUMBER_LAYOUT: Record<
   red: { centerX: 0.53, numberY: 0.6, maxWidth: 0.24, rotateDeg: -5, ink: 'light' },
   blue: { centerX: 0.5, numberY: 0.625, maxWidth: 0.24, rotateDeg: -3, ink: 'light' },
   green: { centerX: 0.47, numberY: 0.57, maxWidth: 0.26, rotateDeg: -8, ink: 'light' },
-  purple: { centerX: 0.5, numberY: 0.62, maxWidth: 0.24, rotateDeg: 0, ink: 'light' },
+  purple: { centerX: 0.57, numberY: 0.62, maxWidth: 0.2, rotateDeg: 0, ink: 'light' },
   black: { centerX: 0.44, numberY: 0.625, maxWidth: 0.24, rotateDeg: -3, ink: 'light' },
   white: { centerX: 0.51, numberY: 0.62, maxWidth: 0.24, rotateDeg: 0, ink: 'dark' },
   yellow: { centerX: 0.47, numberY: 0.62, maxWidth: 0.24, rotateDeg: 3, ink: 'dark' },
