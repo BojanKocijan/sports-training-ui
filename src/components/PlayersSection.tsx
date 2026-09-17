@@ -1,45 +1,35 @@
 import { useState } from 'react'
-import { useGroups } from '../hooks/useGroups'
-import { usePlayers, type JerseyColor } from '../hooks/usePlayers'
-import { usePlans } from '../hooks/usePlans'
+import { type JerseyColor, type Player, type usePlayers } from '../hooks/usePlayers'
 import { CreatePlayerForm } from './CreatePlayerForm'
 import { JerseyGraphic } from './JerseyGraphic'
-import { PlayerDetailModal } from './PlayerDetailModal'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { Skeleton } from './ui/skeleton'
 
-/** A group's roster — add/edit/remove the kids (tracked only by nickname, never a real name)
- * training in this group. Gated behind the trainer passcode, same as plans. Editing an existing
- * player happens in place inside PlayerDetailModal (see EditPlayerForm) rather than here —
- * closing the details view to edit elsewhere read as the screen changing out from under you. */
+/** A group's roster grid — add a new kid (tracked only by nickname, never a real name), or tap an
+ * existing one to open PlayerDetailScreen. That screen is a sibling top-level screen rendered by
+ * App.tsx, not a modal nested in here (see #73) — this section only owns the create form and the
+ * grid itself, not the player data (App.tsx owns the single `usePlayers` instance and passes it
+ * down, since PlayerDetailScreen needs it too). Gated behind the trainer passcode, same as
+ * plans. */
 export function PlayersSection({
-  groupId,
   passcode,
+  players,
+  loading,
+  error,
+  createPlayer,
+  onViewPlayer,
 }: {
-  groupId: string
   passcode: () => string
+  players: Player[]
+  loading: boolean
+  error: string | null
+  createPlayer: ReturnType<typeof usePlayers>['createPlayer']
+  onViewPlayer: (id: string) => void
 }) {
-  const {
-    players,
-    loading,
-    error,
-    refresh,
-    createPlayer,
-    updatePlayer,
-    deletePlayer,
-  } = usePlayers(groupId)
-  const { plans } = usePlans(groupId)
-  const { groups } = useGroups()
-
   const [adding, setAdding] = useState(false)
-  const [viewingId, setViewingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const [removingId, setRemovingId] = useState<string | null>(null)
-
-  const viewingPlayer =
-    players.find((player) => player.id === viewingId) ?? null
 
   function startAdding() {
     setSaveError(null)
@@ -77,54 +67,6 @@ export function PlayersSection({
       setSaveError(e instanceof Error ? e.message : 'Could not save player')
     } finally {
       setSaving(false)
-    }
-  }
-
-  /** Passed to PlayerDetailModal as onSaveEdit — rethrows on failure so the modal knows to stay
-   * in edit mode instead of exiting on a failed save (the error is already reflected via the
-   * shared `saveError` state passed down alongside it). */
-  async function handleEdit(
-    playerId: string,
-    nickname: string,
-    jerseyNumber: number | null,
-    jerseyColor: JerseyColor | null,
-    heightCm: number | null,
-    weightKg: number | null,
-    targetGroupId: string,
-    mascotId: string | null,
-  ) {
-    setSaving(true)
-    setSaveError(null)
-
-    try {
-      await updatePlayer(
-        passcode(),
-        playerId,
-        targetGroupId,
-        nickname,
-        jerseyNumber,
-        jerseyColor,
-        heightCm,
-        weightKg,
-        mascotId,
-      )
-    } catch (e) {
-      setSaveError(e instanceof Error ? e.message : 'Could not save player')
-      throw e
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  async function handleRemove(id: string) {
-    setRemovingId(id)
-
-    try {
-      await deletePlayer(passcode(), id)
-    } catch {
-      // surfaced via the shared `error` from usePlayers on next refresh
-    } finally {
-      setRemovingId(null)
     }
   }
 
@@ -178,7 +120,7 @@ export function PlayersSection({
             >
               <button
                 type="button"
-                onClick={() => setViewingId(player.id)}
+                onClick={() => onViewPlayer(player.id)}
                 className="flex flex-col items-center gap-2"
                 aria-label={`View ${player.nickname}'s details`}
               >
@@ -221,25 +163,6 @@ export function PlayersSection({
             onSave={handleCreate}
           />
         </div>
-      )}
-
-      {viewingPlayer && (
-        <PlayerDetailModal
-          player={viewingPlayer}
-          plans={plans}
-          groups={groups}
-          passcode={passcode}
-          onClose={() => setViewingId(null)}
-          onRosterChange={refresh}
-          onSaveEdit={(...args) => handleEdit(viewingPlayer.id, ...args)}
-          saving={saving}
-          saveError={saveError}
-          onRemove={async () => {
-            await handleRemove(viewingPlayer.id)
-            setViewingId(null)
-          }}
-          removing={removingId === viewingPlayer.id}
-        />
       )}
     </section>
   )

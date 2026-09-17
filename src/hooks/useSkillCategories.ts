@@ -82,7 +82,7 @@ export function useSkillCategories() {
 }
 
 /** Top-level categories (parentId === null), each with its own sub-skills (if any) attached —
- * what PlayerDetailModal actually renders: a parent row, then its children indented under it. */
+ * what PlayerDetailScreen actually renders: a parent row, then its children indented under it. */
 export function groupSkillCategories(categories: SkillCategory[]) {
   const topLevel = categories.filter((c) => c.parentId === null)
   return topLevel.map((parent) => ({
