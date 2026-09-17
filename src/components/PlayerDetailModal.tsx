@@ -216,26 +216,25 @@ export function PlayerDetailModal({
             {player.nickname}
           </h1>
 
-          <div className="flex w-full items-center justify-center gap-4">
+          <div className="flex items-center gap-8">
             <div className="text-center">
               <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
                 {categoriesTried}/{totalCategories || '—'}
               </p>
               <p className="text-xs font-semibold text-neutral-400">skills tried</p>
             </div>
-
-            <JerseyGraphic
-              color={player.jersey_color}
-              number={player.jersey_number}
-              nickname={player.nickname}
-              size="lg"
-            />
-
             <div className="text-center">
               <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">{totalRatings}</p>
               <p className="text-xs font-semibold text-neutral-400">ratings logged</p>
             </div>
           </div>
+
+          <JerseyGraphic
+            color={player.jersey_color}
+            number={player.jersey_number}
+            nickname={player.nickname}
+            size="xl"
+          />
 
           <div className="flex gap-3">
             {badges.map((b) => (

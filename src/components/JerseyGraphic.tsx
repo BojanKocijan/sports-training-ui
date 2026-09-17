@@ -96,6 +96,7 @@ function useFitText(displayText: string, viewBoxW: number, maxWidthFrac: number,
 const SIZE_CLASSES = {
   md: 'h-56 w-40',
   lg: 'h-72 w-52',
+  xl: 'h-[27rem] w-[19.5rem]',
 } as const
 
 export function JerseyGraphic({
