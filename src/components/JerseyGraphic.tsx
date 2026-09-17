@@ -45,14 +45,14 @@ const NUMBER_LAYOUT: Record<
   JerseyColor,
   { centerX: number; numberY: number; maxWidth: number; rotateDeg: number; ink: 'light' | 'dark' }
 > = {
-  orange: { centerX: 0.53, numberY: 0.6, maxWidth: 0.24, rotateDeg: -5, ink: 'light' },
-  red: { centerX: 0.53, numberY: 0.6, maxWidth: 0.24, rotateDeg: -5, ink: 'light' },
-  blue: { centerX: 0.5, numberY: 0.625, maxWidth: 0.24, rotateDeg: -3, ink: 'light' },
-  green: { centerX: 0.47, numberY: 0.57, maxWidth: 0.26, rotateDeg: -8, ink: 'light' },
+  orange: { centerX: 0.575, numberY: 0.58, maxWidth: 0.22, rotateDeg: -5, ink: 'light' },
+  red: { centerX: 0.575, numberY: 0.58, maxWidth: 0.22, rotateDeg: -5, ink: 'light' },
+  blue: { centerX: 0.58, numberY: 0.56, maxWidth: 0.22, rotateDeg: -3, ink: 'light' },
+  green: { centerX: 0.5, numberY: 0.6, maxWidth: 0.24, rotateDeg: -8, ink: 'light' },
   purple: { centerX: 0.57, numberY: 0.62, maxWidth: 0.2, rotateDeg: 0, ink: 'light' },
-  black: { centerX: 0.44, numberY: 0.625, maxWidth: 0.24, rotateDeg: -3, ink: 'light' },
-  white: { centerX: 0.51, numberY: 0.62, maxWidth: 0.24, rotateDeg: 0, ink: 'dark' },
-  yellow: { centerX: 0.47, numberY: 0.62, maxWidth: 0.24, rotateDeg: 3, ink: 'dark' },
+  black: { centerX: 0.45, numberY: 0.585, maxWidth: 0.22, rotateDeg: -3, ink: 'light' },
+  white: { centerX: 0.53, numberY: 0.53, maxWidth: 0.22, rotateDeg: 0, ink: 'dark' },
+  yellow: { centerX: 0.485, numberY: 0.62, maxWidth: 0.22, rotateDeg: 3, ink: 'dark' },
 }
 
 const INK = {
@@ -93,14 +93,24 @@ function useFitText(displayText: string, viewBoxW: number, maxWidthFrac: number,
  * every call site already shows it there. Each color's number position/rotation is tuned to
  * that pose's chest plate (see NUMBER_LAYOUT) rather than a single shared offset, since the
  * source art isn't one template recolored -- it's a different pose per color. */
+const SIZE_CLASSES = {
+  md: 'h-56 w-40',
+  lg: 'h-72 w-52',
+} as const
+
 export function JerseyGraphic({
   color,
   number,
   nickname,
+  size = 'md',
 }: {
   color: JerseyColor | null
   number: number | null
   nickname: string
+  /** 'lg' is for hero/detail placements where the jersey is the focal point -- the number's
+   * fontSize is a fraction of the viewBox, so it scales up with the art automatically and never
+   * needs its own size prop. */
+  size?: keyof typeof SIZE_CLASSES
 }) {
   const resolvedColor = color ?? FALLBACK_COLOR
   const { w, h } = NATIVE_SIZE[resolvedColor]
@@ -115,7 +125,7 @@ export function JerseyGraphic({
   return (
     <svg
       viewBox={`0 0 ${w} ${h}`}
-      className="h-56 w-40"
+      className={SIZE_CLASSES[size]}
       role="img"
       aria-label={`${nickname}'s jersey${number !== null ? `, number ${number}` : ''}`}
     >

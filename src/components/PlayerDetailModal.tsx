@@ -224,7 +224,12 @@ export function PlayerDetailModal({
               <p className="text-xs font-semibold text-neutral-400">skills tried</p>
             </div>
 
-            <JerseyGraphic color={player.jersey_color} number={player.jersey_number} nickname={player.nickname} />
+            <JerseyGraphic
+              color={player.jersey_color}
+              number={player.jersey_number}
+              nickname={player.nickname}
+              size="lg"
+            />
 
             <div className="text-center">
               <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">{totalRatings}</p>
