@@ -130,6 +130,7 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 | A11y/interaction-state pass done slice-by-slice (nav shell → widgets → forms), one PR per slice | Keeps each PR reviewable; nav shell first since every screen shares it | 2026-09-16 |
 | Shared `src/components/ui/` primitives layer: `Button`, `Chip`, `Card`, `Modal` | Real duplication found across 30 components — 22 files hand-roll `type="button"`, the same `rounded-2xl border ... bg-white p-3` card shell appears 11+ times, pill/chip styling repeats, 3 separate modal overlays each reimplement `fixed inset-0`. Building hover/focus-visible/active/disabled/aria into each primitive once, rather than fixing every copy separately, is what makes the a11y pass tractable | 2026-09-16 |
 | Primitives ship in the same PR as the nav-shell slice, not alone | Proves each primitive against a real screen immediately instead of shipping unused components | 2026-09-16 |
+| First-pass gamification badges in `PlayerDetailModal` ("Tried it all", "Consistent", "Rising star") | Pulls forward a slice of the Milestone 1 gamification plan (per-category badges, confirmed-ideas-only, no leaderboards) using data already loaded for the Stats tab — no new endpoint. Thresholds (5 ratings, 2.5 avg) are a first guess, not user-tested; revisit once real usage data exists | 2026-09-17 |
 
 ---
 

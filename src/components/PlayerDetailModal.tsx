@@ -7,7 +7,7 @@ import {
   revokeParentCode,
   type Player,
 } from '../hooks/usePlayers'
-import { usePlayerProgress } from '../hooks/usePlayerProgress'
+import { usePlayerProgress, type PlayerCategoryStat } from '../hooks/usePlayerProgress'
 import type { TrainingPlan } from '../hooks/usePlans'
 import { groupSkillCategories, useSkillCategories } from '../hooks/useSkillCategories'
 import { formatDate, toLocalIso } from '../utils/format'
@@ -119,6 +119,25 @@ export function PlayerDetailModal({
           .filter((c) => c.id !== 'warmup')
           .map((c) => ({ parent: { id: c.id, label: c.label, emoji: c.emoji }, children: [] as never[] }))
 
+  // Hero stats/badges are derived entirely from data already loaded for the Stats tab — no new
+  // endpoint, and deliberately not comparative (no ranking against teammates) per the
+  // gamification notes in PROJECT_KNOWLEDGE.md: achievements against yourself, not a leaderboard.
+  const categoriesTried = byCategory.length
+  const totalCategories = groupedSkills.length
+  const totalRatings = byCategory.reduce((sum, c) => sum + c.count, 0)
+  const avgRating = totalRatings > 0 ? byCategory.reduce((sum, c) => sum + c.average * c.count, 0) / totalRatings : 0
+
+  const badges = [
+    {
+      id: 'tried-it-all',
+      emoji: '🎯',
+      label: 'Tried it all',
+      earned: totalCategories > 0 && categoriesTried >= totalCategories,
+    },
+    { id: 'consistent', emoji: '🔥', label: 'Consistent', earned: totalRatings >= 5 },
+    { id: 'rising-star', emoji: '🤩', label: 'Rising star', earned: totalRatings > 0 && avgRating >= 2.5 },
+  ]
+
   const sortedPlans = [...plans].sort((a, b) => a.training_date.localeCompare(b.training_date))
   const today = toLocalIso(new Date())
   const defaultPlan = sortedPlans.find((p) => p.training_date >= today) ?? sortedPlans[sortedPlans.length - 1]
@@ -147,8 +166,30 @@ export function PlayerDetailModal({
     return byCategory.find((c) => c.categoryId === categoryId)
   }
 
-  function SkillBar({ id, label, emoji }: { id: string; label: string; emoji: string }) {
-    const stat = statFor(id)
+  /** A parent category (e.g. "Dribbling") is never rated directly -- trainers rate its
+   * sub-skills (Strong-hand, Weak-hand, Change of direction). Without this, the parent row
+   * always read as unrated ("—") even when every child had ratings, which looked like a bug
+   * rather than the grouping header it actually is. Falls back to a count-weighted average
+   * across the children's own stats when the parent has no direct rating of its own. */
+  function statForParent(parentId: string, childIds: string[]) {
+    const direct = statFor(parentId)
+    if (direct) return direct
+    const childStats = childIds.map(statFor).filter((s): s is PlayerCategoryStat => s !== undefined)
+    if (childStats.length === 0) return undefined
+    const count = childStats.reduce((sum, s) => sum + s.count, 0)
+    const average = childStats.reduce((sum, s) => sum + s.average * s.count, 0) / count
+    return { categoryId: parentId, average, count, lastRatedAt: '' }
+  }
+
+  function SkillBar({
+    label,
+    emoji,
+    stat,
+  }: {
+    label: string
+    emoji: string
+    stat: PlayerCategoryStat | undefined
+  }) {
     const pct = stat ? (stat.average / 3) * 100 : 0
     return (
       <div className="flex items-center gap-2">
@@ -171,27 +212,75 @@ export function PlayerDetailModal({
   return (
     <div className="animate-in fade-in fixed inset-0 z-40 flex flex-col bg-neutral-50 duration-200 dark:bg-neutral-950">
       <header className="flex shrink-0 items-center justify-between border-b border-black/10 bg-white px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] dark:border-white/10 dark:bg-neutral-900">
-        <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-50">{player.nickname}</h2>
-        <Button variant="ghost" size="sm" onClick={onClose} className="text-neutral-400">
-          Close
-        </Button>
+        <h2 className="text-base font-bold text-neutral-400">Overview</h2>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={onEdit}>
+            Edit
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={removing}
+            onClick={onRemove}
+            className="text-red-600 dark:text-red-400"
+          >
+            {removing ? '…' : 'Remove'}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onClose} className="text-neutral-400">
+            Close
+          </Button>
+        </div>
       </header>
 
       <main className="animate-in zoom-in-95 slide-in-from-bottom-4 mx-auto w-full max-w-md flex-1 space-y-4 overflow-y-auto px-4 py-4 duration-300 md:max-w-lg">
-        <div className="flex flex-col items-center gap-2">
-          <JerseyGraphic color={player.jersey_color} number={player.jersey_number} nickname={player.nickname} />
-          <div className="flex gap-2">
-            <Button variant="secondary" size="sm" onClick={onEdit}>
-              Edit
-            </Button>
-            <Button variant="destructive" size="sm" disabled={removing} onClick={onRemove}>
-              {removing ? '…' : 'Remove'}
-            </Button>
+        <div className="flex flex-col items-center gap-3">
+          <h1 className="text-center text-3xl font-black uppercase tracking-tight text-neutral-900 dark:text-neutral-50">
+            {player.nickname}
+          </h1>
+
+          <div className="flex items-center gap-8">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
+                {categoriesTried}/{totalCategories || '—'}
+              </p>
+              <p className="text-xs font-semibold text-neutral-400">skills tried</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">{totalRatings}</p>
+              <p className="text-xs font-semibold text-neutral-400">ratings logged</p>
+            </div>
+          </div>
+
+          <JerseyGraphic
+            color={player.jersey_color}
+            number={player.jersey_number}
+            nickname={player.nickname}
+            size="xl"
+          />
+
+          <div className="flex gap-3">
+            {badges.map((b) => (
+              <div
+                key={b.id}
+                className={`flex w-20 flex-col items-center gap-1 rounded-2xl border px-2 py-2 text-center ${
+                  b.earned
+                    ? 'border-orange-200 bg-orange-50 dark:border-orange-500/30 dark:bg-orange-500/10'
+                    : 'border-black/10 bg-neutral-100 opacity-40 dark:border-white/10 dark:bg-neutral-900'
+                }`}
+              >
+                <span className="text-xl">{b.emoji}</span>
+                <span className="text-[10px] font-semibold leading-tight text-neutral-600 dark:text-neutral-300">
+                  {b.label}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
         <Tabs defaultValue="stats">
-          <TabsList className="w-full">
+          {/* Sticky so switching tabs never requires scrolling back up past the (now large)
+           * hero image -- the hero can grow freely without burying navigation. */}
+          <TabsList className="sticky top-0 z-10 w-full bg-neutral-50 dark:bg-neutral-950">
             <TabsTrigger value="stats">Stats</TabsTrigger>
             <TabsTrigger value="training">This training</TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
@@ -205,11 +294,18 @@ export function PlayerDetailModal({
             )}
             {groupedSkills.map(({ parent, children }) => (
               <Card key={parent.id} size="sm" className="gap-2 px-3">
-                <SkillBar id={parent.id} label={parent.label} emoji={parent.emoji} />
+                <SkillBar
+                  label={parent.label}
+                  emoji={parent.emoji}
+                  stat={statForParent(
+                    parent.id,
+                    children.map((c) => c.id),
+                  )}
+                />
                 {children.length > 0 && (
                   <div className="space-y-1.5 border-t border-black/5 pt-2 dark:border-white/5">
                     {children.map((child) => (
-                      <SkillBar key={child.id} id={child.id} label={child.label} emoji={child.emoji} />
+                      <SkillBar key={child.id} label={child.label} emoji={child.emoji} stat={statFor(child.id)} />
                     ))}
                   </div>
                 )}
