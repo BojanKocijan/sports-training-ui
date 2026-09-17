@@ -1,55 +1,96 @@
-import { useId, useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import type { JerseyColor } from '../hooks/usePlayers'
 
-// Actual fill values (not Tailwind classes — this renders as SVG, not DOM elements) matching
-// the JERSEY_COLORS palette's Tailwind swatches (*-500, yellow-400) elsewhere in the app.
-const FILL: Record<JerseyColor, string> = {
-  orange: '#f97316',
-  blue: '#3b82f6',
-  red: '#ef4444',
-  green: '#22c55e',
-  purple: '#a855f7',
-  black: '#171717',
-  white: '#ffffff',
-  yellow: '#facc15',
+// Served straight from public/ (Vite doesn't run public/ paths through the module graph, so
+// these are plain URL strings, not imports) -- spaces in the folder names need %20.
+const ASSET_BASE = '/images/basketball/u8%20u10/Leon/Web%20size'
+
+// Neutral gray placeholder art for "no jersey color chosen yet" would need its own asset; until
+// one exists, fall back to the palette's own white jersey rather than rendering nothing.
+const FALLBACK_COLOR: JerseyColor = 'white'
+
+/** One optimized artwork file per jersey color. Every file is a different pose (the source
+ * shoot wasn't a single template recolored 8 ways), so each needs its own text placement below
+ * -- there's no single offset that fits all of them. */
+const IMAGE_SRC: Record<JerseyColor, string> = {
+  orange: `${ASSET_BASE}/leon-red.webp`, // no dedicated orange pose yet -- closest warm tone
+  blue: `${ASSET_BASE}/leon-blue.webp`,
+  red: `${ASSET_BASE}/leon-red.webp`,
+  green: `${ASSET_BASE}/leon-green.webp`,
+  purple: `${ASSET_BASE}/leon-purple.webp`,
+  black: `${ASSET_BASE}/leon-black.webp`,
+  white: `${ASSET_BASE}/leon-white.webp`,
+  yellow: `${ASSET_BASE}/leon-yellow.webp`,
 }
 
-// Every real jersey is two deliberately paired colors (Lakers purple+gold, Celtics green+white,
-// Bulls red+black) — not a body color plus a tone-on-tone tint of itself. This pairs each of our
-// 8 body colors with a complementary trim color from the same palette, used for the collar/
-// armhole plates, edge piping, and the number.
-const ACCENT: Record<JerseyColor, string> = {
-  orange: '#171717',
-  blue: '#ffffff',
-  red: '#171717',
-  green: '#ffffff',
-  purple: '#facc15',
-  black: '#ffffff',
-  white: '#171717',
-  yellow: '#171717',
+// Each artwork file's native pixel size -- used as the SVG viewBox so the text-layout fractions
+// below map onto exact pixels instead of a letterboxed/cropped re-fit.
+const NATIVE_SIZE: Record<JerseyColor, { w: number; h: number }> = {
+  orange: { w: 480, h: 600 },
+  blue: { w: 480, h: 600 },
+  red: { w: 480, h: 600 },
+  green: { w: 480, h: 600 },
+  purple: { w: 480, h: 600 },
+  black: { w: 480, h: 640 },
+  white: { w: 480, h: 600 },
+  yellow: { w: 480, h: 600 },
 }
 
-// White/yellow are too light for white text; everything else gets white text.
-const LIGHT_COLORS = new Set<JerseyColor>(['white', 'yellow'])
-
-function textFill(color: JerseyColor | null) {
-  if (color === null) return '#525252' // neutral-600, readable on the "no color chosen" gray
-  return LIGHT_COLORS.has(color) ? '#171717' : '#ffffff'
+/** Where the jersey's chest plate actually sits in each pose (measured by flood-filling the
+ * jersey-color region of each source image and reading its bounding box) -- nameY/numberY/
+ * centerX/maxWidth are all fractions of the image, rotateDeg follows the torso's tilt in that
+ * specific pose. White/yellow read better with dark ink; the rest take white ink with a dark
+ * outline, same rule the old SVG-drawn jersey used. */
+const TEXT_LAYOUT: Record<
+  JerseyColor,
+  { centerX: number; nameY: number; numberY: number; maxWidth: number; rotateDeg: number; ink: 'light' | 'dark' }
+> = {
+  orange: { centerX: 0.53, nameY: 0.54, numberY: 0.62, maxWidth: 0.2, rotateDeg: -5, ink: 'light' },
+  red: { centerX: 0.53, nameY: 0.54, numberY: 0.62, maxWidth: 0.2, rotateDeg: -5, ink: 'light' },
+  blue: { centerX: 0.5, nameY: 0.52, numberY: 0.6, maxWidth: 0.2, rotateDeg: -3, ink: 'light' },
+  green: { centerX: 0.47, nameY: 0.5, numberY: 0.58, maxWidth: 0.22, rotateDeg: -8, ink: 'light' },
+  purple: { centerX: 0.5, nameY: 0.5, numberY: 0.6, maxWidth: 0.2, rotateDeg: 0, ink: 'light' },
+  black: { centerX: 0.44, nameY: 0.51, numberY: 0.61, maxWidth: 0.2, rotateDeg: -3, ink: 'light' },
+  white: { centerX: 0.51, nameY: 0.48, numberY: 0.58, maxWidth: 0.2, rotateDeg: 0, ink: 'dark' },
+  yellow: { centerX: 0.47, nameY: 0.52, numberY: 0.63, maxWidth: 0.2, rotateDeg: 3, ink: 'dark' },
 }
 
-// The plaque's readable width (280 wide, minus margins) — used to scale long nicknames down to
-// fit instead of spilling past the card's own edge. Font-size alone can't reliably predict a
-// bold sans-serif string's rendered width across browsers, so this fits it precisely instead.
-const MAX_TEXT_WIDTH = 180
+const INK = {
+  light: { fill: '#ffffff', stroke: '#171717' },
+  dark: { fill: '#171717', stroke: '#ffffff' },
+} as const
 
-/** A "trading card" jersey mesh — a proper plaque silhouette with elongated capsule armholes, a
- * rounded collar plate, and edge piping, modeled directly on real two-tone team jersey designs
- * (body color + one paired trim color, used for the collar/armholes/piping/number). Rendered on
- * a light background (the app's own card, not a baked-in dark backdrop) with the player's
- * nickname and number as real, resizable `<text>` (not baked-in vector glyphs) so both update
- * per player. `color: null` (no jersey color chosen yet) renders a neutral gray placeholder
- * rather than defaulting into the palette. Long nicknames are measured at runtime
- * (`getComputedTextLength`) and scaled down to fit the plaque's width. */
+const JERSEY_FONT = '"Anton", "Arial Narrow Bold", Impact, "Haettenschweiler", sans-serif'
+
+/** Fits a `<text>` to `maxWidth` (a fraction of the viewBox) by measuring its rendered length
+ * at runtime and scaling down -- font metrics for a condensed display face vary enough across
+ * browsers that a fixed font-size guess isn't reliable for names/numbers of any length. */
+function useFitText(displayText: string, viewBoxW: number, maxWidthFrac: number, anchorX: number) {
+  const ref = useRef<SVGTextElement>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.removeAttribute('transform')
+    try {
+      const natural = el.getComputedTextLength()
+      const maxWidth = viewBoxW * maxWidthFrac
+      if (natural > maxWidth) {
+        const scale = maxWidth / natural
+        el.setAttribute('transform', `translate(${anchorX},0) scale(${scale},1) translate(${-anchorX},0)`)
+      }
+    } catch {
+      // getComputedTextLength unsupported (e.g. a test environment) -- leave unscaled.
+    }
+  }, [displayText, viewBoxW, maxWidthFrac, anchorX])
+  return ref
+}
+
+/** The player's jersey, rendered from real mascot artwork (currently a single "Leon" the lion,
+ * one pose+file per jersey color -- more animals will be added later and assigned per player,
+ * see PROJECT_KNOWLEDGE.md) with the nickname and number drawn on top as real `<text>` so both
+ * stay editable per player. Each color's text position/rotation is tuned to that pose's chest
+ * plate (see TEXT_LAYOUT) rather than a single shared offset, since the source art isn't one
+ * template recolored -- it's a different pose per color. */
 export function JerseyGraphic({
   color,
   number,
@@ -59,108 +100,69 @@ export function JerseyGraphic({
   number: number | null
   nickname: string
 }) {
-  const textRef = useRef<SVGTextElement>(null)
-  const uid = useId()
-  const shineId = `jersey-shine-${uid}`
-  const shadowId = `jersey-shadow-${uid}`
-  const clipId = `jersey-clip-${uid}`
-  const fill = color === null ? '#d4d4d4' : FILL[color]
-  const accent = color === null ? '#a3a3a3' : ACCENT[color]
-  const textColor = textFill(color)
+  const resolvedColor = color ?? FALLBACK_COLOR
+  const { w, h } = NATIVE_SIZE[resolvedColor]
+  const layout = TEXT_LAYOUT[resolvedColor]
+  const ink = INK[layout.ink]
+
   const upper = nickname.toUpperCase()
-  const displayText = upper.length > 14 ? `${upper.slice(0, 13)}…` : upper
+  const displayName = upper.length > 12 ? `${upper.slice(0, 11)}…` : upper
+  const displayNumber = number !== null ? String(number) : ''
 
-  useLayoutEffect(() => {
-    const el = textRef.current
-    if (!el) return
-    el.removeAttribute('transform')
-    try {
-      const natural = el.getComputedTextLength()
-      if (natural > MAX_TEXT_WIDTH) {
-        const scale = MAX_TEXT_WIDTH / natural
-        el.setAttribute('transform', `translate(140,0) scale(${scale},1) translate(-140,0)`)
-      }
-    } catch {
-      // getComputedTextLength unsupported (e.g. a test environment) — leave unscaled.
-    }
-  }, [displayText])
+  const nameX = layout.centerX * w
+  const nameY = layout.nameY * h
+  const numberX = layout.centerX * w
+  const numberY = layout.numberY * h
 
-  const plaquePath =
-    'M0 32C0 14.3269 14.3269 0 32 0H248C265.673 0 280 14.3269 280 32V352C280 378.51 258.51 400 232 400H48C21.4903 400 0 378.51 0 352V32Z'
-  const leftCapsulePath =
-    'M-5 36.5C0.953613 36.5 6.83418 41.8773 11.3125 51.7295C15.7293 61.4464 18.5 74.9759 18.5 90C18.5 105.024 15.7293 118.554 11.3125 128.271C6.83418 138.123 0.953613 143.5 -5 143.5C-10.9536 143.5 -16.8342 138.123 -21.3125 128.271C-25.7293 118.554 -28.5 105.024 -28.5 90C-28.5 74.9759 -25.7293 61.4464 -21.3125 51.7295C-16.8342 41.8773 -10.9536 36.5 -5 36.5Z'
-  const rightCapsulePath =
-    'M285 36.5C290.954 36.5 296.834 41.8773 301.312 51.7295C305.729 61.4464 308.5 74.9759 308.5 90C308.5 105.024 305.729 118.554 301.312 128.271C296.834 138.123 290.954 143.5 285 143.5C279.046 143.5 273.166 138.123 268.688 128.271C264.271 118.554 261.5 105.024 261.5 90C261.5 74.9759 264.271 61.4464 268.688 51.7295C273.166 41.8773 279.046 36.5 285 36.5Z'
-  const collarPath =
-    'M188.477 -0.5C187.684 25.5918 166.284 46.5 140 46.5C113.716 46.5 92.3161 25.5918 91.5234 -0.5H188.477Z'
-  const collarSeamPath =
-    'M189.5 -1.5V6C189.5 28.9198 170.92 47.5 148 47.5H132C109.08 47.5 90.5 28.9198 90.5 6V-1.5H189.5Z'
+  const nameRef = useFitText(displayName, w, layout.maxWidth, nameX)
+  const numberRef = useFitText(displayNumber, w, layout.maxWidth * 0.85, numberX)
 
   return (
     <svg
-      viewBox="0 0 280 400"
-      className="h-40 w-28"
-      fill="none"
+      viewBox={`0 0 ${w} ${h}`}
+      className="h-52 w-36"
       role="img"
       aria-label={`${nickname}'s jersey${number !== null ? `, number ${number}` : ''}`}
     >
-      <defs>
-        <clipPath id={clipId}>
-          <path d={plaquePath} />
-        </clipPath>
-        {/* Diagonal sheen — light top-left fading to dark bottom-right — is what reads as
-         * "material under light" instead of a flat vector fill. */}
-        <linearGradient id={shineId} x1="15%" y1="0%" x2="85%" y2="100%">
-          <stop offset="0%" stopColor="#fff" stopOpacity="0.45" />
-          <stop offset="35%" stopColor="#fff" stopOpacity="0.06" />
-          <stop offset="65%" stopColor="#000" stopOpacity="0" />
-          <stop offset="100%" stopColor="#000" stopOpacity="0.22" />
-        </linearGradient>
-        <linearGradient id={shadowId} x1="0%" y1="75%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#000" stopOpacity="0" />
-          <stop offset="100%" stopColor="#000" stopOpacity="0.18" />
-        </linearGradient>
-      </defs>
-
-      <path d={plaquePath} fill={fill} />
-      <rect x="0" y="80" width="12" height="320" fill={accent} clipPath={`url(#${clipId})`} />
-      <rect x="268" y="80" width="12" height="320" fill={accent} clipPath={`url(#${clipId})`} />
-      <path d={leftCapsulePath} fill="#fff" stroke={accent} strokeWidth="3" />
-      <path d={rightCapsulePath} fill="#fff" stroke={accent} strokeWidth="3" />
-      <path d={collarPath} fill="#fff" stroke={accent} strokeWidth="3" clipPath={`url(#${clipId})`} />
-      <path d={collarSeamPath} stroke="#fff" clipPath={`url(#${clipId})`} />
-
-      {/* Fabric sheen + hem shadow, on top of the flat fill for a bit of 3D lift. */}
-      <path d={plaquePath} fill={`url(#${shineId})`} />
-      <path d={plaquePath} fill={`url(#${shadowId})`} />
-
+      <image
+        href={IMAGE_SRC[resolvedColor]}
+        x="0"
+        y="0"
+        width={w}
+        height={h}
+        preserveAspectRatio="xMidYMid meet"
+      />
       <text
-        ref={textRef}
-        x="140"
-        y="108"
+        ref={nameRef}
+        x={nameX}
+        y={nameY}
         textAnchor="middle"
-        fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
-        fontSize="34"
-        fontWeight="900"
-        fill={textColor}
+        fontFamily={JERSEY_FONT}
+        fontSize={h * 0.052}
+        fill={ink.fill}
+        stroke={ink.stroke}
+        strokeWidth={h * 0.004}
+        paintOrder="stroke"
         letterSpacing="0.5"
+        transform={`rotate(${layout.rotateDeg} ${nameX} ${nameY})`}
       >
-        {displayText}
+        {displayName}
       </text>
       {number !== null && (
         <text
-          x="140"
-          y="225"
+          ref={numberRef}
+          x={numberX}
+          y={numberY}
           textAnchor="middle"
-          fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
-          fontSize="120"
-          fontWeight="900"
-          letterSpacing="-3"
-          fill={accent}
-          stroke={textColor}
-          strokeWidth="1.5"
+          fontFamily={JERSEY_FONT}
+          fontSize={h * 0.1}
+          fill={ink.fill}
+          stroke={ink.stroke}
+          strokeWidth={h * 0.006}
+          paintOrder="stroke"
+          transform={`rotate(${layout.rotateDeg} ${numberX} ${numberY})`}
         >
-          {number}
+          {displayNumber}
         </text>
       )}
     </svg>
