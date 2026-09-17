@@ -329,6 +329,8 @@ export function PlayerDetailScreen({
             number={player.jersey_number}
             nickname={player.nickname}
             size="xl"
+            groupId={player.group_id}
+            mascotId={player.mascot_id}
           />
 
           <div className="flex gap-3">

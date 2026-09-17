@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { JerseyColor } from '../hooks/usePlayers'
+import { useMascotAvatars } from '../hooks/useMascotAvatars'
+import { DEFAULT_MASCOT_ID, type JerseyColor } from '../hooks/usePlayers'
 import { Skeleton } from './ui/skeleton'
 
 // Served straight from public/ (Vite doesn't run public/ paths through the module graph, so
@@ -123,6 +124,8 @@ export function JerseyGraphic({
   number,
   nickname,
   size = 'md',
+  groupId,
+  mascotId,
 }: {
   color: JerseyColor | null
   number: number | null
@@ -131,6 +134,12 @@ export function JerseyGraphic({
    * fontSize is a fraction of the viewBox, so it scales up with the art automatically and never
    * needs its own size prop. */
   size?: keyof typeof SIZE_CLASSES
+  /** Resolves the artwork through the group's mascot_avatars (sport + age stage, see
+   * sports-training-api#49/#52) instead of the hardcoded Leon set below. Omit for contexts with
+   * no group yet (e.g. the live preview in CreatePlayerForm/EditPlayerForm) -- falls back to
+   * IMAGE_SRC, same as when the group's stage has no seeded art of its own. */
+  groupId?: string
+  mascotId?: string | null
 }) {
   const resolvedColor = color ?? FALLBACK_COLOR
   const { w, h } = NATIVE_SIZE[resolvedColor]
@@ -142,11 +151,22 @@ export function JerseyGraphic({
   const numberY = layout.numberY * h
   const numberRef = useFitText(displayNumber, w, layout.maxWidth, numberX)
 
+  // Only fetches when a groupId is actually passed in -- useMascotAvatars('') would otherwise
+  // fire a request keyed on an empty group. The hook's own per-group cache means many jersey
+  // cards for the same group (a roster grid) share one request, not one each.
+  const { avatars } = useMascotAvatars(groupId ?? '')
+  const resolvedMascotId = mascotId ?? DEFAULT_MASCOT_ID
+  const apiMatch = groupId
+    ? avatars.find((a) => a.mascot_id === resolvedMascotId && a.jersey_color === resolvedColor)
+    : undefined
+
   // The artwork itself is a real network fetch (a ~70-90KB webp per color, see ASSET_BASE) --
   // separate from any API loading state, this tracks whether THIS image has actually painted
   // so a skeleton can stand in for it, not just for the surrounding card/data. Resets whenever
   // the color (and therefore the src) changes, e.g. live-previewing a different jersey color.
-  const imageSrc = IMAGE_SRC[resolvedColor]
+  const imageSrc = apiMatch
+    ? `${import.meta.env.BASE_URL}${apiMatch.image_url}`
+    : IMAGE_SRC[resolvedColor]
   const [loaded, setLoaded] = useState(false)
   useEffect(() => {
     setLoaded(false)

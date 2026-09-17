@@ -128,6 +128,8 @@ export function PlayersSection({
                   color={player.jersey_color}
                   number={player.jersey_number}
                   nickname={player.nickname}
+                  groupId={player.group_id}
+                  mascotId={player.mascot_id}
                 />
 
                 <p className="max-w-full truncate text-xs font-semibold text-neutral-500 dark:text-neutral-400">
