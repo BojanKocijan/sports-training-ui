@@ -5,12 +5,14 @@ import {
   issueParentCode,
   ratePlayerProgress,
   revokeParentCode,
+  type JerseyColor,
   type Player,
 } from '../hooks/usePlayers'
 import { usePlayerProgress, type PlayerCategoryStat } from '../hooks/usePlayerProgress'
 import type { TrainingPlan } from '../hooks/usePlans'
 import { groupSkillCategories, useSkillCategories } from '../hooks/useSkillCategories'
 import { formatDate, toLocalIso } from '../utils/format'
+import { EditPlayerForm } from './EditPlayerForm'
 import { JerseyGraphic } from './JerseyGraphic'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
@@ -33,26 +35,63 @@ const SCALE = [
 export function PlayerDetailModal({
   player,
   plans,
+  groups,
   passcode,
   onClose,
   onRosterChange,
-  onEdit,
+  onSaveEdit,
+  saving,
+  saveError,
   onRemove,
   removing,
 }: {
   player: Player
   plans: TrainingPlan[]
+  groups: { id: string; name: string; status: 'available' | 'coming_soon' }[]
   passcode: () => string
   onClose: () => void
-  /** Refreshes the roster (see usePlayers) — called after issuing/revoking a parent code so
-   * the "has a code" badge here reflects it without a manual reopen. */
+  /** Refreshes the roster (see usePlayers) — called after issuing/revoking a parent code, and
+   * after a successful edit, so this view's own `player` prop (and the "has a code" badge)
+   * reflect the change without a manual reopen. */
   onRosterChange: () => void
-  /** Edit/remove now live only here, inside the detail view, instead of on every roster card —
-   * one tap on a jersey shouldn't put a delete button in reach by accident. */
-  onEdit: () => void
+  /** Edit now happens in place, right here — Edit switches this view into EditPlayerForm
+   * instead of closing the modal and jumping back to the roster grid (see #68 follow-up:
+   * editing used to visibly swap screens, which read as a bug). Remove still lives only here,
+   * not on every roster card — one tap on a jersey shouldn't put a delete button in reach by
+   * accident. */
+  onSaveEdit: (
+    nickname: string,
+    jerseyNumber: number | null,
+    jerseyColor: JerseyColor | null,
+    heightCm: number | null,
+    weightKg: number | null,
+    groupId: string,
+    mascotId: string | null,
+  ) => Promise<void>
+  saving: boolean
+  saveError: string | null
   onRemove: () => void
   removing: boolean
 }) {
+  const [editing, setEditing] = useState(false)
+
+  async function handleSaveEdit(
+    nickname: string,
+    jerseyNumber: number | null,
+    jerseyColor: JerseyColor | null,
+    heightCm: number | null,
+    weightKg: number | null,
+    groupId: string,
+    mascotId: string | null,
+  ) {
+    try {
+      await onSaveEdit(nickname, jerseyNumber, jerseyColor, heightCm, weightKg, groupId, mascotId)
+      setEditing(false)
+    } catch {
+      // Stay in edit mode — `saveError` (lifted state from the parent) already reflects why.
+    }
+  }
+
   const { byCategory, loading, error, refresh } = usePlayerProgress(player.id)
   const [parentCode, setParentCode] = useState<string | null>(null)
   const [parentCodeLoading, setParentCodeLoading] = useState(true)
@@ -212,27 +251,46 @@ export function PlayerDetailModal({
   return (
     <div className="animate-in fade-in fixed inset-0 z-40 flex flex-col bg-neutral-50 duration-200 dark:bg-neutral-950">
       <header className="flex shrink-0 items-center justify-between border-b border-black/10 bg-white px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] dark:border-white/10 dark:bg-neutral-900">
-        <h2 className="text-base font-bold text-neutral-400">Overview</h2>
+        <h2 className="text-base font-bold text-neutral-400">{editing ? 'Edit player' : 'Overview'}</h2>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" onClick={onEdit}>
-            Edit
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={removing}
-            onClick={onRemove}
-            className="text-red-600 dark:text-red-400"
-          >
-            {removing ? '…' : 'Remove'}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onClose} className="text-neutral-400">
-            Close
-          </Button>
+          {editing ? (
+            <Button variant="ghost" size="sm" onClick={() => setEditing(false)} className="text-neutral-400">
+              Cancel
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
+                Edit
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={removing}
+                onClick={onRemove}
+                className="text-red-600 dark:text-red-400"
+              >
+                {removing ? '…' : 'Remove'}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={onClose} className="text-neutral-400">
+                Close
+              </Button>
+            </>
+          )}
         </div>
       </header>
 
       <main className="animate-in zoom-in-95 slide-in-from-bottom-4 mx-auto w-full max-w-md flex-1 space-y-4 overflow-y-auto px-4 py-4 duration-300 md:max-w-lg">
+        {editing ? (
+          <EditPlayerForm
+            player={player}
+            groups={groups}
+            saving={saving}
+            saveError={saveError}
+            onCancel={() => setEditing(false)}
+            onSave={handleSaveEdit}
+          />
+        ) : (
+        <>
         <div className="flex flex-col items-center gap-3">
           <h1 className="text-center text-3xl font-black uppercase tracking-tight text-neutral-900 dark:text-neutral-50">
             {player.nickname}
@@ -454,6 +512,8 @@ export function PlayerDetailModal({
             </Card>
           </TabsContent>
         </Tabs>
+        </>
+        )}
       </main>
     </div>
   )

@@ -71,6 +71,7 @@ export function usePlayers(groupId: string) {
     jerseyColor: JerseyColor | null,
     heightCm: number | null = null,
     weightKg: number | null = null,
+    mascotId: string | null = DEFAULT_MASCOT_ID,
   ) {
     await api.post('/players', {
       passcode,
@@ -80,7 +81,7 @@ export function usePlayers(groupId: string) {
       jerseyColor,
       heightCm,
       weightKg,
-      mascotId: DEFAULT_MASCOT_ID,
+      mascotId,
     })
     await refresh()
   }
