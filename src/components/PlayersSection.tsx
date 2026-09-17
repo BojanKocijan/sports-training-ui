@@ -7,6 +7,7 @@ import { JerseyGraphic } from './JerseyGraphic'
 import { PlayerDetailModal } from './PlayerDetailModal'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
+import { Skeleton } from './ui/skeleton'
 
 /** A group's roster — add/edit/remove the kids (tracked only by nickname, never a real name)
  * training in this group. Gated behind the trainer passcode, same as plans. Editing an existing
@@ -142,7 +143,14 @@ export function PlayersSection({
       )}
 
       {loading ? (
-        <p className="text-sm text-neutral-400">Loading…</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <Card key={i} size="sm" className="flex flex-col items-center gap-2 px-3">
+              <Skeleton className="h-56 w-40 rounded-xl" />
+              <Skeleton className="h-3 w-16" />
+            </Card>
+          ))}
+        </div>
       ) : players.length === 0 && !adding ? (
         <Card className="flex flex-col items-center gap-2 py-8 text-center">
           <span className="text-4xl">🏀</span>

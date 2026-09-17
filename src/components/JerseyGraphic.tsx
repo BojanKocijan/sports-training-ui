@@ -1,5 +1,6 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { JerseyColor } from '../hooks/usePlayers'
+import { Skeleton } from './ui/skeleton'
 
 // Served straight from public/ (Vite doesn't run public/ paths through the module graph, so
 // these are plain URL strings, not imports) -- spaces in the folder names need %20.
@@ -141,20 +142,33 @@ export function JerseyGraphic({
   const numberY = layout.numberY * h
   const numberRef = useFitText(displayNumber, w, layout.maxWidth, numberX)
 
+  // The artwork itself is a real network fetch (a ~70-90KB webp per color, see ASSET_BASE) --
+  // separate from any API loading state, this tracks whether THIS image has actually painted
+  // so a skeleton can stand in for it, not just for the surrounding card/data. Resets whenever
+  // the color (and therefore the src) changes, e.g. live-previewing a different jersey color.
+  const imageSrc = IMAGE_SRC[resolvedColor]
+  const [loaded, setLoaded] = useState(false)
+  useEffect(() => {
+    setLoaded(false)
+  }, [imageSrc])
+
   return (
-    <svg
-      viewBox={`0 0 ${w} ${h}`}
-      className={SIZE_CLASSES[size]}
-      role="img"
-      aria-label={`${nickname}'s jersey${number !== null ? `, number ${number}` : ''}`}
-    >
+    <div className={`relative ${SIZE_CLASSES[size]}`}>
+      {!loaded && <Skeleton className="absolute inset-0 rounded-xl" />}
+      <svg
+        viewBox={`0 0 ${w} ${h}`}
+        className={`h-full w-full ${loaded ? '' : 'invisible'}`}
+        role="img"
+        aria-label={`${nickname}'s jersey${number !== null ? `, number ${number}` : ''}`}
+      >
       <image
-        href={IMAGE_SRC[resolvedColor]}
+        href={imageSrc}
         x="0"
         y="0"
         width={w}
         height={h}
         preserveAspectRatio="xMidYMid meet"
+        onLoad={() => setLoaded(true)}
       />
       {number !== null && (
         <text
@@ -173,6 +187,7 @@ export function JerseyGraphic({
           {displayNumber}
         </text>
       )}
-    </svg>
+      </svg>
+    </div>
   )
 }

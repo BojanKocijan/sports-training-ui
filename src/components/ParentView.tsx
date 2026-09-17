@@ -4,6 +4,7 @@ import { usePlayerProgress } from '../hooks/usePlayerProgress'
 import { usePlans } from '../hooks/usePlans'
 import { formatDate } from '../utils/format'
 import { GroupProgressSummary } from './GroupProgressSummary'
+import { SportLoader } from './SportLoader'
 import { Card } from './ui/card'
 
 /** Read-only view unlocked by a parent code (see sports-training-api#20) — scoped to one child
@@ -38,7 +39,7 @@ export function ParentView({
         </h2>
         {error && <p className="mb-2 text-sm text-red-600">Could not load progress: {error}</p>}
         {loading ? (
-          <p className="text-sm text-neutral-400">Loading…</p>
+          <SportLoader />
         ) : byCategory.length === 0 ? (
           <p className="text-sm text-neutral-400">No ratings logged yet.</p>
         ) : (
@@ -73,7 +74,7 @@ export function ParentView({
           Upcoming trainings
         </h2>
         {plansLoading ? (
-          <p className="text-sm text-neutral-400">Loading…</p>
+          <SportLoader />
         ) : upcoming.length === 0 ? (
           <p className="text-sm text-neutral-400">Nothing scheduled yet.</p>
         ) : (

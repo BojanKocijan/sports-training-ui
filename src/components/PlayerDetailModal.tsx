@@ -14,6 +14,7 @@ import { groupSkillCategories, useSkillCategories } from '../hooks/useSkillCateg
 import { formatDate, toLocalIso } from '../utils/format'
 import { EditPlayerForm } from './EditPlayerForm'
 import { JerseyGraphic } from './JerseyGraphic'
+import { SportLoader } from './SportLoader'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
@@ -279,7 +280,11 @@ export function PlayerDetailModal({
         </div>
       </header>
 
-      <main className="animate-in zoom-in-95 slide-in-from-bottom-4 mx-auto w-full max-w-md flex-1 space-y-4 overflow-y-auto px-4 py-4 duration-300 md:max-w-lg">
+      {/* overflow-y-auto lives on this full-width element, not the centered column below, so
+       * the scrollbar renders at the true edge of the screen instead of floating next to a
+       * max-w-md/lg content column on wide viewports. */}
+      <main className="flex-1 overflow-y-auto">
+      <div className="animate-in zoom-in-95 slide-in-from-bottom-4 mx-auto w-full max-w-md space-y-4 px-4 py-4 duration-300 md:max-w-lg">
         {editing ? (
           <EditPlayerForm
             player={player}
@@ -477,7 +482,7 @@ export function PlayerDetailModal({
                 Parent code · visible to trainers only
               </p>
               {parentCodeLoading ? (
-                <p className="mt-1 text-sm text-neutral-400">Loading…</p>
+                <SportLoader />
               ) : parentCode ? (
                 <div className="mt-1.5 rounded-xl bg-orange-50 p-2.5 dark:bg-orange-500/10">
                   <p className="font-mono text-lg font-bold tracking-widest text-orange-700 dark:text-orange-300">
@@ -514,6 +519,7 @@ export function PlayerDetailModal({
         </Tabs>
         </>
         )}
+      </div>
       </main>
     </div>
   )
