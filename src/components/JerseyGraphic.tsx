@@ -37,22 +37,27 @@ const NATIVE_SIZE: Record<JerseyColor, { w: number; h: number }> = {
   yellow: { w: 480, h: 600 },
 }
 
-/** Where the jersey's chest plate actually sits in each pose (measured by flood-filling the
- * jersey-color region of each source image and reading its bounding box) -- centerX/numberY/
- * maxWidth are all fractions of the image, rotateDeg follows the torso's tilt in that specific
- * pose. White/yellow read better with dark ink; the rest take white ink with a dark outline. */
+/** Where the jersey's chest plate sits in each pose -- taken directly from the designer's own
+ * placement boxes in Figma (node 4001:253, one "Frame 7" box per color drawn over that color's
+ * art), converted from absolute Figma coordinates to fractions of the image. numberY is a
+ * baseline (SVG text y), not the box's visual center -- it's the box center plus a fixed +0.06
+ * offset for the font's ascender height, the same offset validated against the purple box
+ * earlier (box center 0.560 + 0.06 = the 0.62 baseline that already looked right). The
+ * reference boxes are all axis-aligned (no rotation), so the numbers are rendered upright
+ * rather than tilted to match each torso. White/yellow read better with dark ink; the rest take
+ * white ink with a dark outline. */
 const NUMBER_LAYOUT: Record<
   JerseyColor,
   { centerX: number; numberY: number; maxWidth: number; rotateDeg: number; ink: 'light' | 'dark' }
 > = {
-  orange: { centerX: 0.575, numberY: 0.58, maxWidth: 0.22, rotateDeg: -5, ink: 'light' },
-  red: { centerX: 0.575, numberY: 0.58, maxWidth: 0.22, rotateDeg: -5, ink: 'light' },
-  blue: { centerX: 0.58, numberY: 0.56, maxWidth: 0.22, rotateDeg: -3, ink: 'light' },
-  green: { centerX: 0.5, numberY: 0.6, maxWidth: 0.24, rotateDeg: -8, ink: 'light' },
-  purple: { centerX: 0.57, numberY: 0.62, maxWidth: 0.2, rotateDeg: 0, ink: 'light' },
-  black: { centerX: 0.45, numberY: 0.585, maxWidth: 0.22, rotateDeg: -3, ink: 'light' },
-  white: { centerX: 0.53, numberY: 0.53, maxWidth: 0.22, rotateDeg: 0, ink: 'dark' },
-  yellow: { centerX: 0.485, numberY: 0.62, maxWidth: 0.22, rotateDeg: 3, ink: 'dark' },
+  orange: { centerX: 0.609, numberY: 0.609, maxWidth: 0.187, rotateDeg: 0, ink: 'light' },
+  red: { centerX: 0.609, numberY: 0.609, maxWidth: 0.187, rotateDeg: 0, ink: 'light' },
+  blue: { centerX: 0.577, numberY: 0.607, maxWidth: 0.187, rotateDeg: 0, ink: 'light' },
+  green: { centerX: 0.535, numberY: 0.604, maxWidth: 0.187, rotateDeg: 0, ink: 'light' },
+  purple: { centerX: 0.569, numberY: 0.62, maxWidth: 0.2, rotateDeg: 0, ink: 'light' },
+  black: { centerX: 0.46, numberY: 0.661, maxWidth: 0.192, rotateDeg: 0, ink: 'light' },
+  white: { centerX: 0.516, numberY: 0.683, maxWidth: 0.183, rotateDeg: 0, ink: 'dark' },
+  yellow: { centerX: 0.511, numberY: 0.654, maxWidth: 0.192, rotateDeg: 0, ink: 'dark' },
 }
 
 const INK = {
@@ -60,7 +65,9 @@ const INK = {
   dark: { fill: '#171717', stroke: '#ffffff' },
 } as const
 
-const JERSEY_FONT = '"Anton", "Arial Narrow Bold", Impact, "Haettenschweiler", sans-serif'
+// Bevan is a bold slab-serif face -- the block-serif numeral shape (not a plain sans) is what
+// reads as a "varsity"/collegiate jersey number rather than a condensed UI display font.
+const JERSEY_FONT = '"Bevan", "Arial Black", Impact, "Haettenschweiler", sans-serif'
 
 /** Fits a `<text>` to `maxWidth` (a fraction of the viewBox) by measuring its rendered length
  * at runtime and scaling down -- font metrics for a condensed display face vary enough across
