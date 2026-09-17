@@ -134,10 +134,10 @@ export function JerseyGraphic({
           y={numberY}
           textAnchor="middle"
           fontFamily={JERSEY_FONT}
-          fontSize={h * 0.11}
+          fontSize={h * 0.135}
           fill={ink.fill}
           stroke={ink.stroke}
-          strokeWidth={h * 0.007}
+          strokeWidth={h * 0.009}
           paintOrder="stroke"
           transform={`rotate(${layout.rotateDeg} ${numberX} ${numberY})`}
         >

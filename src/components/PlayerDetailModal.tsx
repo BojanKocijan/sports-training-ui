@@ -119,6 +119,25 @@ export function PlayerDetailModal({
           .filter((c) => c.id !== 'warmup')
           .map((c) => ({ parent: { id: c.id, label: c.label, emoji: c.emoji }, children: [] as never[] }))
 
+  // Hero stats/badges are derived entirely from data already loaded for the Stats tab — no new
+  // endpoint, and deliberately not comparative (no ranking against teammates) per the
+  // gamification notes in PROJECT_KNOWLEDGE.md: achievements against yourself, not a leaderboard.
+  const categoriesTried = byCategory.length
+  const totalCategories = groupedSkills.length
+  const totalRatings = byCategory.reduce((sum, c) => sum + c.count, 0)
+  const avgRating = totalRatings > 0 ? byCategory.reduce((sum, c) => sum + c.average * c.count, 0) / totalRatings : 0
+
+  const badges = [
+    {
+      id: 'tried-it-all',
+      emoji: '🎯',
+      label: 'Tried it all',
+      earned: totalCategories > 0 && categoriesTried >= totalCategories,
+    },
+    { id: 'consistent', emoji: '🔥', label: 'Consistent', earned: totalRatings >= 5 },
+    { id: 'rising-star', emoji: '🤩', label: 'Rising star', earned: totalRatings > 0 && avgRating >= 2.5 },
+  ]
+
   const sortedPlans = [...plans].sort((a, b) => a.training_date.localeCompare(b.training_date))
   const today = toLocalIso(new Date())
   const defaultPlan = sortedPlans.find((p) => p.training_date >= today) ?? sortedPlans[sortedPlans.length - 1]
@@ -171,7 +190,7 @@ export function PlayerDetailModal({
   return (
     <div className="animate-in fade-in fixed inset-0 z-40 flex flex-col bg-neutral-50 duration-200 dark:bg-neutral-950">
       <header className="flex shrink-0 items-center justify-between border-b border-black/10 bg-white px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] dark:border-white/10 dark:bg-neutral-900">
-        <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-50">{player.nickname}</h2>
+        <h2 className="text-base font-bold text-neutral-400">Overview</h2>
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="sm" onClick={onEdit}>
             Edit
@@ -192,9 +211,44 @@ export function PlayerDetailModal({
       </header>
 
       <main className="animate-in zoom-in-95 slide-in-from-bottom-4 mx-auto w-full max-w-md flex-1 space-y-4 overflow-y-auto px-4 py-4 duration-300 md:max-w-lg">
-        <div className="flex flex-col items-center gap-1">
-          <JerseyGraphic color={player.jersey_color} number={player.jersey_number} nickname={player.nickname} />
-          <p className="text-lg font-bold text-neutral-900 dark:text-neutral-50">{player.nickname}</p>
+        <div className="flex flex-col items-center gap-3">
+          <h1 className="text-center text-3xl font-black uppercase tracking-tight text-neutral-900 dark:text-neutral-50">
+            {player.nickname}
+          </h1>
+
+          <div className="flex w-full items-center justify-center gap-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
+                {categoriesTried}/{totalCategories || '—'}
+              </p>
+              <p className="text-xs font-semibold text-neutral-400">skills tried</p>
+            </div>
+
+            <JerseyGraphic color={player.jersey_color} number={player.jersey_number} nickname={player.nickname} />
+
+            <div className="text-center">
+              <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">{totalRatings}</p>
+              <p className="text-xs font-semibold text-neutral-400">ratings logged</p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            {badges.map((b) => (
+              <div
+                key={b.id}
+                className={`flex w-20 flex-col items-center gap-1 rounded-2xl border px-2 py-2 text-center ${
+                  b.earned
+                    ? 'border-orange-200 bg-orange-50 dark:border-orange-500/30 dark:bg-orange-500/10'
+                    : 'border-black/10 bg-neutral-100 opacity-40 dark:border-white/10 dark:bg-neutral-900'
+                }`}
+              >
+                <span className="text-xl">{b.emoji}</span>
+                <span className="text-[10px] font-semibold leading-tight text-neutral-600 dark:text-neutral-300">
+                  {b.label}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         <Tabs defaultValue="stats">
