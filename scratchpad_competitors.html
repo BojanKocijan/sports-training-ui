@@ -343,12 +343,14 @@
 
   <header class="masthead">
     <div class="eyebrow">Competitive Scouting Report</div>
-    <h1>Who else is planning the practice?</h1>
+    <h1>Who else is telling parents how their kid is doing?</h1>
     <p class="subhead">
       A scan of the youth-sports coaching-app market, triggered by
       <a href="https://www.levelupbasket.com/" style="color:inherit">levelupbasket.com</a> —
-      framed against the plan to grow <strong>sports-training-planner</strong> from a
-      basketball-only tool into a group-any-sport-in-one planner.
+      framed against what this app actually is at heart: not a practice-planning tool
+      that happens to have a parent view, but a <strong>child development &amp; progress-sharing
+      tool</strong> that happens to be delivered through training sessions. The session is the data
+      collection moment; the parent view is the product.
     </p>
     <div class="meta-row">
       <span><b>Scope:</b> basketball, soccer, swimming, multi-sport platforms</span>
@@ -363,7 +365,9 @@
       <strong>The "group every sport in one place" idea already has direct competitors.</strong>
       TeamSnap, Coach&nbsp;Planner, MOJO, Practice&nbsp;Plan&nbsp;App, Sportlingo, and planet.training
       all plan practices across multiple sports today. The open ground isn't
-      "supports many sports" — it's <em>how little friction</em> it takes to use one.
+      "supports many sports," and it isn't practice-planning friction either — almost none of
+      them turn what happens at practice into something a <em>parent</em> can see and understand
+      about their own kid's development.
     </p>
   </div>
 
@@ -508,28 +512,30 @@
       <h2>Where the gap actually is</h2>
     </div>
     <p class="section-note">
-      Every platform above requires an account, and most collect player/parent PII to run
-      attendance, messaging, or payments. The one close analog on the simplicity axis —
-      <strong style="color:var(--ink)">RosterPro</strong> — still centers on RSVP/scheduling, not a shared drill-based plan.
+      Almost every platform above is built coach-outward: plan the practice, run the roster,
+      keep the team organized. The parent, if they get a view at all, sees a schedule and an
+      attendance log — not what their kid is actually learning, how they're developing, or how
+      to feel good about a session that "didn't go well." Athlete-facing apps like MySwimPro get
+      closer, but for adults training themselves, not a coach reporting on a child.
     </p>
 
     <div class="gap-grid">
       <div class="gap-card them">
         <h4>What the field converges on</h4>
         <ul>
-          <li>Account + login for every coach and often every parent</li>
-          <li>Attendance, messaging, and payments bundled in, whether needed or not</li>
-          <li>Monetizes via subscriptions once a team grows past the free tier</li>
-          <li>"Multi-sport" mostly means separate drill libraries behind one login</li>
+          <li>Built for the coach's logistics — planning, roster, attendance, comms</li>
+          <li>Parent view (where it exists) = schedule + RSVP, not development</li>
+          <li>No per-skill tracking a parent could actually read and understand</li>
+          <li>Nothing designed around how a young kid experiences being coached — no age-appropriate framing, no encouragement layer, no way to see progress instead of a scoreboard</li>
         </ul>
       </div>
       <div class="gap-card us">
-        <h4>What sports-training-planner already does differently</h4>
+        <h4>What this app already does differently</h4>
         <ul>
-          <li>Zero accounts — public read, passcode-only writes, nobody signs up</li>
-          <li>Stores no PII at all, not even names (see PRIVACY.md) — nothing to leak, nothing to migrate for GDPR</li>
-          <li>One shared calendar per group, not a bundled suite nobody asked for</li>
-          <li>Genuinely free — no tier to hit, no upgrade prompt</li>
+          <li>Per-skill, per-kid progress tracking is the core data model, not a bolt-on</li>
+          <li>A trainer-issued code gives a parent a direct, readable view of their own child's development — not a team feed to scroll through</li>
+          <li>Age-scoped, no-leaderboard framing — progress against yourself, not ranked against teammates, which matters for how young kids relate to being coached</li>
+          <li>Zero accounts, zero PII (nickname only, see PRIVACY.md) — the sharing mechanism is a code, not a login a parent has to manage</li>
         </ul>
       </div>
     </div>
@@ -538,15 +544,19 @@
   <div class="recommend">
     <h2>Read for the multi-sport milestone</h2>
     <p>
-      "Support more sports" alone doesn't differentiate — six competitors already claim
-      it. The defensible angle is <strong>the only multi-sport planner that needs no
-      account and stores no personal data</strong>, aimed squarely at volunteer coaches
-      who'd rather text a passcode than onboard a platform.
+      This isn't a practice planner with a parent screen attached — it's a
+      <strong>child development &amp; progress-sharing tool</strong>, and the training session
+      is just where the data comes from. None of the 19 apps reviewed lead with that: they lead
+      with the coach's logistics and treat the parent as an afterthought. The gamification and
+      pedagogical-guidance work already planned for this milestone (age-scoped badges, "how to
+      coach it at this age") is the psychology layer that makes the progress data mean something
+      to a parent, not just a number.
     </p>
     <p>
-      Concretely: generalize the schema (per the open milestone), but keep every
-      generalization compatible with the zero-signup / zero-PII model — that's the
-      one property nothing in this table has, and it's cheap to keep as the sport list grows.
+      Concretely: as the schema generalizes across sports, protect the per-skill progress
+      model and the parent-code sharing flow as the load-bearing feature — not the exercise
+      library, and not "how many sports we support." Sport count is table stakes; six
+      competitors already have it. Nobody else is doing progress-and-psychology for parents.
     </p>
   </div>
 
