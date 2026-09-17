@@ -7,6 +7,7 @@ import { formatDate } from '../utils/format'
 import { PlanTrainingWizard } from './PlanTrainingWizard'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
+import { Skeleton } from './ui/skeleton'
 
 export function GroupsScreen({
   groupId,
@@ -101,7 +102,14 @@ export function GroupsScreen({
           Next training
         </h2>
         {loading ? (
-          <p className="text-sm text-neutral-400">Loading…</p>
+          <Card className="gap-1 rounded-3xl px-4">
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-64" />
+            <div className="mt-2 flex gap-2">
+              <Skeleton className="h-8 w-14 rounded-full" />
+              <Skeleton className="h-8 w-16 rounded-full" />
+            </div>
+          </Card>
         ) : !nextTraining ? (
           <p className="text-sm text-neutral-400">Nothing scheduled yet.</p>
         ) : (
@@ -162,7 +170,18 @@ export function GroupsScreen({
           )}
         </div>
 
-        {!loading && restUpcoming.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            {[0, 1].map((i) => (
+              <Card key={i} size="sm" className="flex-row items-center justify-between gap-2 px-3">
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : restUpcoming.length === 0 ? (
           <p className="text-sm text-neutral-400">No other trainings scheduled.</p>
         ) : (
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">

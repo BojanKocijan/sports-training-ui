@@ -1,4 +1,5 @@
 import { useGroupProgress } from '../hooks/useGroupProgress'
+import { SportLoader } from './SportLoader'
 
 /** Group-level rollup of every rating logged for this group's players — the "individual
  * players as a team" payoff: not any one kid's report card, just an at-a-glance sense of
@@ -15,7 +16,7 @@ export function GroupProgressSummary({ groupId }: { groupId: string }) {
       {error && <p className="mb-2 text-sm text-red-600">Could not load progress: {error}</p>}
 
       {loading ? (
-        <p className="text-sm text-neutral-400">Loading…</p>
+        <SportLoader />
       ) : byCategory.length === 0 ? (
         <p className="text-sm text-neutral-400">
           No ratings logged yet — rate players during a training to build this up.
