@@ -48,16 +48,27 @@ const NATIVE_SIZE: Record<JerseyColor, { w: number; h: number }> = {
  * white ink with a dark outline. */
 const NUMBER_LAYOUT: Record<
   JerseyColor,
-  { centerX: number; numberY: number; maxWidth: number; rotateDeg: number; ink: 'light' | 'dark' }
+  {
+    centerX: number
+    numberY: number
+    maxWidth: number
+    /** Font size as a fraction of image height -- taken from each color's own Frame 7 box
+     * height in Figma (box height / 1402), not a single flat size for every pose. The designer
+     * sized each placement box to that pose's actual chest plate, and smaller poses (e.g. the
+     * green/red dribbling lunges) got visibly smaller boxes than the more upright ones. */
+    fontScale: number
+    rotateDeg: number
+    ink: 'light' | 'dark'
+  }
 > = {
-  orange: { centerX: 0.609, numberY: 0.609, maxWidth: 0.187, rotateDeg: 0, ink: 'light' },
-  red: { centerX: 0.609, numberY: 0.609, maxWidth: 0.187, rotateDeg: 0, ink: 'light' },
-  blue: { centerX: 0.577, numberY: 0.607, maxWidth: 0.187, rotateDeg: 0, ink: 'light' },
-  green: { centerX: 0.535, numberY: 0.604, maxWidth: 0.187, rotateDeg: 0, ink: 'light' },
-  purple: { centerX: 0.569, numberY: 0.62, maxWidth: 0.2, rotateDeg: 0, ink: 'light' },
-  black: { centerX: 0.46, numberY: 0.661, maxWidth: 0.192, rotateDeg: 0, ink: 'light' },
-  white: { centerX: 0.516, numberY: 0.683, maxWidth: 0.183, rotateDeg: 0, ink: 'dark' },
-  yellow: { centerX: 0.511, numberY: 0.654, maxWidth: 0.192, rotateDeg: 0, ink: 'dark' },
+  orange: { centerX: 0.609, numberY: 0.616, maxWidth: 0.187, fontScale: 0.13, rotateDeg: 0, ink: 'light' },
+  red: { centerX: 0.609, numberY: 0.616, maxWidth: 0.187, fontScale: 0.13, rotateDeg: 0, ink: 'light' },
+  blue: { centerX: 0.577, numberY: 0.614, maxWidth: 0.187, fontScale: 0.13, rotateDeg: 0, ink: 'light' },
+  green: { centerX: 0.542, numberY: 0.603, maxWidth: 0.181, fontScale: 0.126, rotateDeg: 0, ink: 'light' },
+  purple: { centerX: 0.577, numberY: 0.629, maxWidth: 0.2, fontScale: 0.138, rotateDeg: 0, ink: 'light' },
+  black: { centerX: 0.473, numberY: 0.662, maxWidth: 0.192, fontScale: 0.134, rotateDeg: 0, ink: 'light' },
+  white: { centerX: 0.516, numberY: 0.683, maxWidth: 0.183, fontScale: 0.127, rotateDeg: 0, ink: 'dark' },
+  yellow: { centerX: 0.511, numberY: 0.654, maxWidth: 0.192, fontScale: 0.134, rotateDeg: 0, ink: 'dark' },
 }
 
 const INK = {
@@ -152,10 +163,10 @@ export function JerseyGraphic({
           y={numberY}
           textAnchor="middle"
           fontFamily={JERSEY_FONT}
-          fontSize={h * 0.135}
+          fontSize={h * layout.fontScale}
           fill={ink.fill}
           stroke={ink.stroke}
-          strokeWidth={h * 0.009}
+          strokeWidth={h * layout.fontScale * 0.067}
           paintOrder="stroke"
           transform={`rotate(${layout.rotateDeg} ${numberX} ${numberY})`}
         >
