@@ -14,6 +14,7 @@ import { Skeleton } from './ui/skeleton'
  * plans. */
 export function PlayersSection({
   passcode,
+  groupId,
   players,
   loading,
   error,
@@ -21,6 +22,7 @@ export function PlayersSection({
   onViewPlayer,
 }: {
   passcode: () => string
+  groupId: string
   players: Player[]
   loading: boolean
   error: string | null
@@ -159,6 +161,7 @@ export function PlayersSection({
       {adding && (
         <div className="mt-2">
           <CreatePlayerForm
+            groupId={groupId}
             saving={saving}
             saveError={saveError}
             onCancel={closeForm}
