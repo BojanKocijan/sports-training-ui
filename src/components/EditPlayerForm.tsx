@@ -7,7 +7,7 @@ import { PlayerPreviewCard } from './player-form/PlayerPreviewCard'
 import { Card } from './ui/card'
 
 /** Edits an existing player, pre-filled from `player` — rendered in place inside
- * PlayerDetailModal (Edit no longer closes the details view/jumps to the roster grid). Also
+ * PlayerDetailScreen (Edit no longer closes the details view/jumps to the roster grid). Also
  * shows the group picker, since moving a player between groups only makes sense once they
  * already exist. */
 export function EditPlayerForm({

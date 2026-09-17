@@ -25,15 +25,18 @@ const SCALE = [
   { value: 3, emoji: '🤩' },
 ] as const
 
-/** A player's detail view — opened by tapping their jersey card on the Players tab. Three tabs:
- * "Stats" (read-only skill profile, at a glance), "This training" (rate a specific plan), and
- * "Details" (bio + parent code). Shows their rating history per skill category (via
- * usePlayerProgress) and lets a trainer log a new rating for any of the group's trainings, not
- * just the one just run in Session — the data is what feeds the group rollup and, eventually,
- * any real analysis of a group's progress over a season. Every rating still needs a plan_id
- * server-side, so "This training" defaults to the nearest training (soonest upcoming, else most
- * recent past) and lets the trainer pick a different one. */
-export function PlayerDetailModal({
+/** A player's full-screen detail view — a sibling of the other top-level screens (rendered by
+ * App.tsx, replacing the trainer layout entirely), not a modal overlaid on top of it. It used to
+ * be nested inside PlayersSection as a `fixed inset-0` overlay while that screen stayed mounted
+ * underneath, which is what caused the scroll glitches (see #73). Three tabs: "Stats" (read-only
+ * skill profile, at a glance), "This training" (rate a specific plan), and "Details" (bio +
+ * parent code). Shows rating history per skill category (via usePlayerProgress) and lets a
+ * trainer log a new rating for any of the group's trainings, not just the one just run in Session
+ * — the data is what feeds the group rollup and, eventually, any real analysis of a group's
+ * progress over a season. Every rating still needs a plan_id server-side, so "This training"
+ * defaults to the nearest training (soonest upcoming, else most recent past) and lets the trainer
+ * pick a different one. */
+export function PlayerDetailScreen({
   player,
   plans,
   groups,
@@ -56,7 +59,7 @@ export function PlayerDetailModal({
    * reflect the change without a manual reopen. */
   onRosterChange: () => void
   /** Edit now happens in place, right here — Edit switches this view into EditPlayerForm
-   * instead of closing the modal and jumping back to the roster grid (see #68 follow-up:
+   * instead of closing the screen and jumping back to the roster grid (see #68 follow-up:
    * editing used to visibly swap screens, which read as a bug). Remove still lives only here,
    * not on every roster card — one tap on a jersey shouldn't put a delete button in reach by
    * accident. */
@@ -74,6 +77,13 @@ export function PlayerDetailModal({
   onRemove: () => void
   removing: boolean
 }) {
+  // This screen replaces the roster grid outright (App.tsx swaps it in), but the browser doesn't
+  // reset scroll position on its own when a DOM subtree is swapped out for another — without
+  // this, opening a player from partway down the roster grid landed here already scrolled down.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
   const [editing, setEditing] = useState(false)
 
   async function handleSaveEdit(
@@ -250,7 +260,7 @@ export function PlayerDetailModal({
   }
 
   return (
-    <div className="animate-in fade-in fixed inset-0 z-40 flex flex-col bg-neutral-50 duration-200 dark:bg-neutral-950">
+    <div className="flex min-h-screen flex-col bg-neutral-50 dark:bg-neutral-950">
       <header className="flex shrink-0 items-center justify-between border-b border-black/10 bg-white px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] dark:border-white/10 dark:bg-neutral-900">
         <h2 className="text-base font-bold text-neutral-400">{editing ? 'Edit player' : 'Overview'}</h2>
         <div className="flex items-center gap-1">

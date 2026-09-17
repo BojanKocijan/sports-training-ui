@@ -13,7 +13,7 @@ const FALLBACK_COLOR: JerseyColor = 'white'
 /** One optimized artwork file per jersey color. Every file is a different pose (the source
  * shoot wasn't a single template recolored 8 ways), so each needs its own number placement
  * below -- there's no single offset that fits all of them. The nickname is shown as plain text
- * next to/under the card instead of drawn onto the jersey -- see PlayersSection/PlayerDetailModal. */
+ * next to/under the card instead of drawn onto the jersey -- see PlayersSection/PlayerDetailScreen. */
 const IMAGE_SRC: Record<JerseyColor, string> = {
   orange: `${ASSET_BASE}/leon-orange.webp`,
   blue: `${ASSET_BASE}/leon-blue.webp`,

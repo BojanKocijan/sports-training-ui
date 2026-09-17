@@ -10,7 +10,7 @@ const Z_INDEX = {
   40: "z-40",
 } as const
 
-/** Full-screen takeover sheet — the exact shell that PrivacyPolicyScreen, PlayerDetailModal, and
+/** Full-screen takeover sheet — the exact shell that PrivacyPolicyScreen, PlayerDetailScreen, and
  * PlanTrainingWizard each hand-rolled separately (`fixed inset-0 flex flex-col`, a header with a
  * title and a close button, safe-area top padding, a scrollable body). This is a mobile-first
  * app, so "modal" here means a full page takeover, not shadcn's own centered-card `DialogContent`

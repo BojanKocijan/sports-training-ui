@@ -1,3 +1,4 @@
+import type { Player, usePlayers } from '../hooks/usePlayers'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { GroupProgressSummary } from './GroupProgressSummary'
 import { PlayersSection } from './PlayersSection'
@@ -6,9 +7,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 export function PlayersScreen({
   groupId,
   trainerAccess,
+  players,
+  loading,
+  error,
+  createPlayer,
+  onViewPlayer,
 }: {
   groupId: string
   trainerAccess: ReturnType<typeof useTrainerAccess>
+  players: Player[]
+  loading: boolean
+  error: string | null
+  createPlayer: ReturnType<typeof usePlayers>['createPlayer']
+  onViewPlayer: (id: string) => void
 }) {
   // Always unlocked here — the app-level gate in App.tsx (see LockScreen) never renders this
   // screen otherwise. Logging out is handled globally, via the ClubHeader trainer-access menu.
@@ -30,7 +41,14 @@ export function PlayersScreen({
         </TabsList>
 
         <TabsContent value="stats">
-          <PlayersSection groupId={groupId} passcode={passcode} />
+          <PlayersSection
+            passcode={passcode}
+            players={players}
+            loading={loading}
+            error={error}
+            createPlayer={createPlayer}
+            onViewPlayer={onViewPlayer}
+          />
         </TabsContent>
 
         <TabsContent value="progress">
