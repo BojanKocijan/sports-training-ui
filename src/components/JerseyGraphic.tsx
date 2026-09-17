@@ -15,7 +15,7 @@ const FALLBACK_COLOR: JerseyColor = 'white'
  * below -- there's no single offset that fits all of them. The nickname is shown as plain text
  * next to/under the card instead of drawn onto the jersey -- see PlayersSection/PlayerDetailModal. */
 const IMAGE_SRC: Record<JerseyColor, string> = {
-  orange: `${ASSET_BASE}/leon-red.webp`, // no dedicated orange pose yet -- closest warm tone
+  orange: `${ASSET_BASE}/leon-orange.webp`,
   blue: `${ASSET_BASE}/leon-blue.webp`,
   red: `${ASSET_BASE}/leon-red.webp`,
   green: `${ASSET_BASE}/leon-green.webp`,
