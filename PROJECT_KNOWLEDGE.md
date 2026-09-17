@@ -37,6 +37,22 @@ One subscription per **sport, per club** (`sport_subscriptions`, already in the 
    - **Club pays, becomes a reference** — every new paying club becomes proof for the next one (same school-by-school pattern Seesaw used).
 2. **Federation (NBB/Club.Basketball.nl) comes later** — once there are 5–10 paying clubs as proof, approach as a partner with a track record, not as an unknown competitor to their admin tool.
 
+### Competitive scouting (Sept 2026)
+
+A scan of 19 youth-sports coaching apps across basketball, soccer, swimming, and multi-sport platforms (full report: `scratchpad_competitors.html`, triggered by finding levelupbasket.com), framed against the plan to generalize this app beyond basketball-only.
+
+**Findings:**
+- 13 apps are sport-specific single-lane players (basketball: Level Up, Elite Hoops, Jr. NBA Coach, The Hoops Geek; soccer: SoccerXpert, SoccerDrive; swimming: SwimShare, MySwimPro, Swim Coach App).
+- 6 apps already do multi-sport practice planning: TeamSnap, Coach Planner, Practice Plan App, MOJO Sports, Sportlingo, planet.training. **"Supports many sports" alone is not a differentiator** — it already has six direct competitors.
+- Every one of those 19 apps is built coach-outward — planning, roster, attendance, comms. Where a parent view exists at all, it's a schedule/RSVP feed, not per-skill development. Athlete-facing apps (MySwimPro) get closer but serve adults training themselves, not a coach reporting on a child.
+
+**Reframed positioning (this is the actual product, not a side effect):** this app is a **child development & progress-sharing tool for parents**, not a practice planner that happens to have a parent screen. The training session is where the data comes from; the parent-facing progress view is the product. That reframes what's load-bearing for the multi-sport milestone:
+- **Per-skill, per-kid progress tracking** is the core data model, not a bolt-on — must generalize cleanly across sports.
+- **Parent-code sharing** (no login, no PII, nickname only — see `PRIVACY.md`) is the delivery mechanism for that progress data, and needs to stay zero-account as the sport list grows.
+- **Age-scoped, no-leaderboard framing** (progress against yourself, not ranked against teammates) is the psychology layer already planned in this milestone (pedagogical guidance, gamification) — it's what makes the progress data mean something to a parent instead of being a number. This is the piece nothing in the competitive set does.
+
+Sport count and exercise-library breadth are table stakes (six competitors already there); the progress-and-psychology layer for parents is not in any of the 19 apps reviewed.
+
 ### Proof this isn't just theory
 
 The first real club (Dunckers Hilversum, U8 + U10 groups) is already using the shipped product with real data: logged plans, rated player progress, an active live session. This milestone is about deepening that, not starting from zero.
@@ -144,3 +160,4 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 ## Changelog
 
 - **2026-09-16** — File created; captured current scope, architecture, the a11y/interaction-state gap found in this session, and the plan to descope Setup/Vocabulary.
+- **2026-09-17** — Added competitive scouting summary (§ Milestone 1); reframed positioning after review — this is a child development & progress-sharing tool for parents, not a practice planner with a parent screen attached. Per-skill progress tracking + parent-code sharing + age-scoped psychology framing are the load-bearing differentiators for the multi-sport milestone, not sport count or zero-PII alone.
