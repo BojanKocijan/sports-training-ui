@@ -295,6 +295,7 @@ export function PlayersSection({
           jerseyColor,
           heightCm,
           weightKg,
+          editingPlayer.mascot_id,
         )
       } else {
         await createPlayer(

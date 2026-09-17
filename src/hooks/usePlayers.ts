@@ -14,6 +14,12 @@ export const JERSEY_COLORS = [
 
 export type JerseyColor = (typeof JERSEY_COLORS)[number]
 
+/** The only entry in the `mascots` roster today (sports-training-api#43/#44) — every player
+ * gets it until more animals ship. Jersey art still resolves by jersey_color, not mascot_id;
+ * see JerseyGraphic.tsx. mascot_avatars has no seeded artwork yet, so this is data plumbing
+ * only, not a rendering change. */
+export const DEFAULT_MASCOT_ID = 'lion'
+
 export interface Player {
   id: string
   group_id: string
@@ -23,6 +29,7 @@ export interface Player {
   /** Optional bio details a trainer can fill in — nullable, metric (cm/kg). */
   height_cm: number | null
   weight_kg: number | null
+  mascot_id: string | null
   created_at: string
   updated_at: string
 }
@@ -73,6 +80,7 @@ export function usePlayers(groupId: string) {
       jerseyColor,
       heightCm,
       weightKg,
+      mascotId: DEFAULT_MASCOT_ID,
     })
     await refresh()
   }
@@ -86,7 +94,10 @@ export function usePlayers(groupId: string) {
     jerseyColor: JerseyColor | null,
     heightCm: number | null = null,
     weightKg: number | null = null,
+    mascotId: string | null = DEFAULT_MASCOT_ID,
   ) {
+    // update_player defaults mascot_id to null when omitted, so this must always be sent —
+    // otherwise every edit would silently clear the player's mascot.
     await api.put(`/players/${id}`, {
       passcode,
       groupId: targetGroupId,
@@ -95,6 +106,7 @@ export function usePlayers(groupId: string) {
       jerseyColor,
       heightCm,
       weightKg,
+      mascotId,
     })
 
     await refresh()
