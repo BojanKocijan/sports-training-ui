@@ -43,6 +43,7 @@ export function PlayersScreen({
         <TabsContent value="stats">
           <PlayersSection
             passcode={passcode}
+            groupId={groupId}
             players={players}
             loading={loading}
             error={error}

@@ -64,6 +64,8 @@ export function EditPlayerForm({
         nickname={nickname}
         jerseyColor={jerseyColor}
         jerseyNumber={toIntOrNull(jerseyNumber)}
+        groupId={groupId}
+        mascotId={mascotId}
       />
 
       <div className="flex gap-2">

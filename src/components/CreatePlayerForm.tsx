@@ -10,11 +10,13 @@ import { Card } from './ui/card'
  * scoped to the group you're already viewing (see EditPlayerForm for moving an existing
  * player between groups). */
 export function CreatePlayerForm({
+  groupId,
   saving,
   saveError,
   onCancel,
   onSave,
 }: {
+  groupId: string
   saving: boolean
   saveError: string | null
   onCancel: () => void
@@ -56,6 +58,8 @@ export function CreatePlayerForm({
         nickname={nickname}
         jerseyColor={jerseyColor}
         jerseyNumber={toIntOrNull(jerseyNumber)}
+        groupId={groupId}
+        mascotId={mascotId}
       />
 
       <div className="flex gap-2">

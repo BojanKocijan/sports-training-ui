@@ -8,10 +8,16 @@ export function PlayerPreviewCard({
   nickname,
   jerseyColor,
   jerseyNumber,
+  groupId,
+  mascotId,
 }: {
   nickname: string
   jerseyColor: JerseyColor | null
   jerseyNumber: number | null
+  /** Omit when no group is known yet (e.g. CreatePlayerForm) -- see JerseyGraphic's own doc
+   * comment on why that falls back to the shared stopgap art instead of erroring. */
+  groupId?: string
+  mascotId?: string | null
 }) {
   return (
     <div className="flex flex-col items-center gap-1">
@@ -20,6 +26,8 @@ export function PlayerPreviewCard({
         number={jerseyNumber}
         nickname={nickname.trim() || 'Preview'}
         size="lg"
+        groupId={groupId}
+        mascotId={mascotId}
       />
       <p className="max-w-full truncate text-xs font-semibold text-neutral-500 dark:text-neutral-400">
         {nickname.trim() || 'New player'}
