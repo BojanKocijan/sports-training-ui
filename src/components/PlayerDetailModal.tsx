@@ -172,22 +172,29 @@ export function PlayerDetailModal({
     <div className="animate-in fade-in fixed inset-0 z-40 flex flex-col bg-neutral-50 duration-200 dark:bg-neutral-950">
       <header className="flex shrink-0 items-center justify-between border-b border-black/10 bg-white px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] dark:border-white/10 dark:bg-neutral-900">
         <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-50">{player.nickname}</h2>
-        <Button variant="ghost" size="sm" onClick={onClose} className="text-neutral-400">
-          Close
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={onEdit}>
+            Edit
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={removing}
+            onClick={onRemove}
+            className="text-red-600 dark:text-red-400"
+          >
+            {removing ? '…' : 'Remove'}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onClose} className="text-neutral-400">
+            Close
+          </Button>
+        </div>
       </header>
 
       <main className="animate-in zoom-in-95 slide-in-from-bottom-4 mx-auto w-full max-w-md flex-1 space-y-4 overflow-y-auto px-4 py-4 duration-300 md:max-w-lg">
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-1">
           <JerseyGraphic color={player.jersey_color} number={player.jersey_number} nickname={player.nickname} />
-          <div className="flex gap-2">
-            <Button variant="secondary" size="sm" onClick={onEdit}>
-              Edit
-            </Button>
-            <Button variant="destructive" size="sm" disabled={removing} onClick={onRemove}>
-              {removing ? '…' : 'Remove'}
-            </Button>
-          </div>
+          <p className="text-lg font-bold text-neutral-900 dark:text-neutral-50">{player.nickname}</p>
         </div>
 
         <Tabs defaultValue="stats">

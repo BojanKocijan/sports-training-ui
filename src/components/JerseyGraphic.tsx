@@ -10,8 +10,9 @@ const ASSET_BASE = '/images/basketball/u8%20u10/Leon/Web%20size'
 const FALLBACK_COLOR: JerseyColor = 'white'
 
 /** One optimized artwork file per jersey color. Every file is a different pose (the source
- * shoot wasn't a single template recolored 8 ways), so each needs its own text placement below
- * -- there's no single offset that fits all of them. */
+ * shoot wasn't a single template recolored 8 ways), so each needs its own number placement
+ * below -- there's no single offset that fits all of them. The nickname is shown as plain text
+ * next to/under the card instead of drawn onto the jersey -- see PlayersSection/PlayerDetailModal. */
 const IMAGE_SRC: Record<JerseyColor, string> = {
   orange: `${ASSET_BASE}/leon-red.webp`, // no dedicated orange pose yet -- closest warm tone
   blue: `${ASSET_BASE}/leon-blue.webp`,
@@ -23,7 +24,7 @@ const IMAGE_SRC: Record<JerseyColor, string> = {
   yellow: `${ASSET_BASE}/leon-yellow.webp`,
 }
 
-// Each artwork file's native pixel size -- used as the SVG viewBox so the text-layout fractions
+// Each artwork file's native pixel size -- used as the SVG viewBox so the number-layout fractions
 // below map onto exact pixels instead of a letterboxed/cropped re-fit.
 const NATIVE_SIZE: Record<JerseyColor, { w: number; h: number }> = {
   orange: { w: 480, h: 600 },
@@ -37,22 +38,21 @@ const NATIVE_SIZE: Record<JerseyColor, { w: number; h: number }> = {
 }
 
 /** Where the jersey's chest plate actually sits in each pose (measured by flood-filling the
- * jersey-color region of each source image and reading its bounding box) -- nameY/numberY/
- * centerX/maxWidth are all fractions of the image, rotateDeg follows the torso's tilt in that
- * specific pose. White/yellow read better with dark ink; the rest take white ink with a dark
- * outline, same rule the old SVG-drawn jersey used. */
-const TEXT_LAYOUT: Record<
+ * jersey-color region of each source image and reading its bounding box) -- centerX/numberY/
+ * maxWidth are all fractions of the image, rotateDeg follows the torso's tilt in that specific
+ * pose. White/yellow read better with dark ink; the rest take white ink with a dark outline. */
+const NUMBER_LAYOUT: Record<
   JerseyColor,
-  { centerX: number; nameY: number; numberY: number; maxWidth: number; rotateDeg: number; ink: 'light' | 'dark' }
+  { centerX: number; numberY: number; maxWidth: number; rotateDeg: number; ink: 'light' | 'dark' }
 > = {
-  orange: { centerX: 0.53, nameY: 0.54, numberY: 0.62, maxWidth: 0.2, rotateDeg: -5, ink: 'light' },
-  red: { centerX: 0.53, nameY: 0.54, numberY: 0.62, maxWidth: 0.2, rotateDeg: -5, ink: 'light' },
-  blue: { centerX: 0.5, nameY: 0.52, numberY: 0.6, maxWidth: 0.2, rotateDeg: -3, ink: 'light' },
-  green: { centerX: 0.47, nameY: 0.5, numberY: 0.58, maxWidth: 0.22, rotateDeg: -8, ink: 'light' },
-  purple: { centerX: 0.5, nameY: 0.5, numberY: 0.6, maxWidth: 0.2, rotateDeg: 0, ink: 'light' },
-  black: { centerX: 0.44, nameY: 0.51, numberY: 0.61, maxWidth: 0.2, rotateDeg: -3, ink: 'light' },
-  white: { centerX: 0.51, nameY: 0.48, numberY: 0.58, maxWidth: 0.2, rotateDeg: 0, ink: 'dark' },
-  yellow: { centerX: 0.47, nameY: 0.52, numberY: 0.63, maxWidth: 0.2, rotateDeg: 3, ink: 'dark' },
+  orange: { centerX: 0.53, numberY: 0.58, maxWidth: 0.24, rotateDeg: -5, ink: 'light' },
+  red: { centerX: 0.53, numberY: 0.58, maxWidth: 0.24, rotateDeg: -5, ink: 'light' },
+  blue: { centerX: 0.5, numberY: 0.56, maxWidth: 0.24, rotateDeg: -3, ink: 'light' },
+  green: { centerX: 0.47, numberY: 0.54, maxWidth: 0.26, rotateDeg: -8, ink: 'light' },
+  purple: { centerX: 0.5, numberY: 0.55, maxWidth: 0.24, rotateDeg: 0, ink: 'light' },
+  black: { centerX: 0.44, numberY: 0.56, maxWidth: 0.24, rotateDeg: -3, ink: 'light' },
+  white: { centerX: 0.51, numberY: 0.555, maxWidth: 0.24, rotateDeg: 0, ink: 'dark' },
+  yellow: { centerX: 0.47, numberY: 0.555, maxWidth: 0.24, rotateDeg: 3, ink: 'dark' },
 }
 
 const INK = {
@@ -64,7 +64,7 @@ const JERSEY_FONT = '"Anton", "Arial Narrow Bold", Impact, "Haettenschweiler", s
 
 /** Fits a `<text>` to `maxWidth` (a fraction of the viewBox) by measuring its rendered length
  * at runtime and scaling down -- font metrics for a condensed display face vary enough across
- * browsers that a fixed font-size guess isn't reliable for names/numbers of any length. */
+ * browsers that a fixed font-size guess isn't reliable for a number of any length (99 vs 7). */
 function useFitText(displayText: string, viewBoxW: number, maxWidthFrac: number, anchorX: number) {
   const ref = useRef<SVGTextElement>(null)
   useLayoutEffect(() => {
@@ -87,10 +87,12 @@ function useFitText(displayText: string, viewBoxW: number, maxWidthFrac: number,
 
 /** The player's jersey, rendered from real mascot artwork (currently a single "Leon" the lion,
  * one pose+file per jersey color -- more animals will be added later and assigned per player,
- * see PROJECT_KNOWLEDGE.md) with the nickname and number drawn on top as real `<text>` so both
- * stay editable per player. Each color's text position/rotation is tuned to that pose's chest
- * plate (see TEXT_LAYOUT) rather than a single shared offset, since the source art isn't one
- * template recolored -- it's a different pose per color. */
+ * see PROJECT_KNOWLEDGE.md) with just the jersey number drawn on top as real `<text>` so it stays
+ * editable per player. The nickname is intentionally not drawn onto the artwork -- it reads
+ * better as plain text on the card/header around the jersey than squeezed onto the chest, and
+ * every call site already shows it there. Each color's number position/rotation is tuned to
+ * that pose's chest plate (see NUMBER_LAYOUT) rather than a single shared offset, since the
+ * source art isn't one template recolored -- it's a different pose per color. */
 export function JerseyGraphic({
   color,
   number,
@@ -102,25 +104,18 @@ export function JerseyGraphic({
 }) {
   const resolvedColor = color ?? FALLBACK_COLOR
   const { w, h } = NATIVE_SIZE[resolvedColor]
-  const layout = TEXT_LAYOUT[resolvedColor]
+  const layout = NUMBER_LAYOUT[resolvedColor]
   const ink = INK[layout.ink]
 
-  const upper = nickname.toUpperCase()
-  const displayName = upper.length > 12 ? `${upper.slice(0, 11)}…` : upper
   const displayNumber = number !== null ? String(number) : ''
-
-  const nameX = layout.centerX * w
-  const nameY = layout.nameY * h
   const numberX = layout.centerX * w
   const numberY = layout.numberY * h
-
-  const nameRef = useFitText(displayName, w, layout.maxWidth, nameX)
-  const numberRef = useFitText(displayNumber, w, layout.maxWidth * 0.85, numberX)
+  const numberRef = useFitText(displayNumber, w, layout.maxWidth, numberX)
 
   return (
     <svg
       viewBox={`0 0 ${w} ${h}`}
-      className="h-52 w-36"
+      className="h-56 w-40"
       role="img"
       aria-label={`${nickname}'s jersey${number !== null ? `, number ${number}` : ''}`}
     >
@@ -132,22 +127,6 @@ export function JerseyGraphic({
         height={h}
         preserveAspectRatio="xMidYMid meet"
       />
-      <text
-        ref={nameRef}
-        x={nameX}
-        y={nameY}
-        textAnchor="middle"
-        fontFamily={JERSEY_FONT}
-        fontSize={h * 0.052}
-        fill={ink.fill}
-        stroke={ink.stroke}
-        strokeWidth={h * 0.004}
-        paintOrder="stroke"
-        letterSpacing="0.5"
-        transform={`rotate(${layout.rotateDeg} ${nameX} ${nameY})`}
-      >
-        {displayName}
-      </text>
       {number !== null && (
         <text
           ref={numberRef}
@@ -155,10 +134,10 @@ export function JerseyGraphic({
           y={numberY}
           textAnchor="middle"
           fontFamily={JERSEY_FONT}
-          fontSize={h * 0.1}
+          fontSize={h * 0.11}
           fill={ink.fill}
           stroke={ink.stroke}
-          strokeWidth={h * 0.006}
+          strokeWidth={h * 0.007}
           paintOrder="stroke"
           transform={`rotate(${layout.rotateDeg} ${numberX} ${numberY})`}
         >
