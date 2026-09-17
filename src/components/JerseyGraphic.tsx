@@ -65,9 +65,9 @@ const INK = {
   dark: { fill: '#171717', stroke: '#ffffff' },
 } as const
 
-// Bevan is a bold slab-serif face -- the block-serif numeral shape (not a plain sans) is what
-// reads as a "varsity"/collegiate jersey number rather than a condensed UI display font.
-const JERSEY_FONT = '"Bevan", "Arial Black", Impact, "Haettenschweiler", sans-serif'
+// Alfa Slab One is a bold slab-serif face -- the flat block-serif numeral shape is what reads as
+// a "varsity"/collegiate jersey number rather than a plain condensed display font.
+const JERSEY_FONT = '"Alfa Slab One", "Arial Black", Impact, "Haettenschweiler", sans-serif'
 
 /** Fits a `<text>` to `maxWidth` (a fraction of the viewBox) by measuring its rendered length
  * at runtime and scaling down -- font metrics for a condensed display face vary enough across
