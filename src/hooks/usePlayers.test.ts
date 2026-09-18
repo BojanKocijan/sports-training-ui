@@ -24,6 +24,8 @@ const playerU8: Player = {
   nickname: 'Mila',
   jersey_number: 12,
   jersey_color: 'blue',
+  eye_color: null,
+  gender: null,
   height_cm: 128,
   weight_kg: 27,
   mascot_id: 'lion',
@@ -82,6 +84,8 @@ describe('usePlayers', () => {
       heightCm: 128,
       weightKg: 27,
       mascotId: 'lion',
+      eyeColor: null,
+      gender: null,
     })
 
     expect(getMock).toHaveBeenCalledTimes(2)
@@ -124,6 +128,8 @@ describe('usePlayers', () => {
       heightCm: 128,
       weightKg: 27,
       mascotId: 'lion',
+      eyeColor: null,
+      gender: null,
     })
 
     expect(getMock).toHaveBeenCalledTimes(2)
