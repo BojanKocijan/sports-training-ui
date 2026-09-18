@@ -28,6 +28,11 @@ export interface MascotAvatar {
   jersey_layout: AvatarLayoutBox | null
   /** Same template shape as jersey_mask_url, substituted with the eye color instead. */
   eyes_mask_url: string | null
+  /** The unblended white eye-shine dots, drawn over eyes_mask_url in the same eyes_layout box
+   * (multiplying white is a no-op, so they can't live inside the multiplied layer). Positions
+   * differ per animal/gender, so it's per row; optional because rows predating it (and older
+   * API responses) omit it -- JerseyGraphic falls back to the lion's. */
+  eyes_highlights_url?: string | null
   eyes_layout: AvatarLayoutBox | null
   number_layout: AvatarLayoutBox | null
   logo_layout: AvatarLayoutBox | null

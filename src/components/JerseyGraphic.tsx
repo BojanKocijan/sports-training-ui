@@ -106,45 +106,87 @@ const DYNAMIC_SIZE_CLASSES = {
 const DEFAULT_EYE_COLOR: EyeColor = 'blue'
 const DEFAULT_GENDER: NonNullable<MascotAvatar['gender']> = 'boy'
 
+// Legacy default for avatar rows that carry no eyes_highlights_url of their own (rows seeded
+// before that column existed) -- the lion's, which is what those rows were.
 const EYE_HIGHLIGHTS_URL = `${ASSET_BASE}/leon-baby-eyes-highlights.svg`
+
+const SHARK_ASSET_BASE = '/images/basketball/u8%20u10/Shark/Web%20size'
+
+type DynamicArt = Pick<
+  MascotAvatar,
+  | 'image_url'
+  | 'jersey_mask_url'
+  | 'jersey_layout'
+  | 'eyes_mask_url'
+  | 'eyes_highlights_url'
+  | 'eyes_layout'
+  | 'number_layout'
+  | 'logo_layout'
+>
+
+// Every mascot so far is drawn in the same pose, so the jersey/number/logo boxes are shared;
+// only the eyes differ per animal (and per gender for the shark), since the faces differ.
+const POSE_1_LAYOUT = {
+  jersey_layout: { left: 0.13815, top: 0.43723, width: 0.72415, height: 0.51805 },
+  number_layout: { left: 0.418, top: 0.53281, width: 0.15597, height: 0.12482 },
+  logo_layout: { left: 0.38324, top: 0.49287, width: 0.07388, height: 0.04708 },
+} as const
+
+const LION_EYES_LAYOUT = { left: 0.36275, top: 0.25678, width: 0.27807, height: 0.10449 }
+
+function lionArt(gender: 'boy' | 'girl'): DynamicArt {
+  return {
+    ...POSE_1_LAYOUT,
+    image_url: `${ASSET_BASE}/leon-baby-${gender}.webp`,
+    jersey_mask_url: `${ASSET_BASE}/leon-baby-jersey-{color}.svg`,
+    eyes_mask_url: `${ASSET_BASE}/leon-baby-eyes-{color}.svg`,
+    eyes_highlights_url: EYE_HIGHLIGHTS_URL,
+    eyes_layout: LION_EYES_LAYOUT,
+  }
+}
+
+function sharkArt(gender: 'boy' | 'girl', eyesLayout: AvatarLayoutBox): DynamicArt {
+  return {
+    ...POSE_1_LAYOUT,
+    image_url: `${SHARK_ASSET_BASE}/shark-baby-${gender}.webp`,
+    jersey_mask_url: `${SHARK_ASSET_BASE}/shark-baby-jersey-{color}.svg`,
+    eyes_mask_url: `${SHARK_ASSET_BASE}/shark-baby-eyes-${gender}-{color}.svg`,
+    eyes_highlights_url: `${SHARK_ASSET_BASE}/shark-baby-eyes-${gender}-highlights.svg`,
+    eyes_layout: eyesLayout,
+  }
+}
 
 // Mirrors the mascot_avatars 'baby' stage seed exactly -- used only when no groupId/apiMatch is
 // available (e.g. the live preview in CreatePlayerForm/EditPlayerForm), so that path never
-// depends on the retired per-color leon-{color}.webp files.
-const FALLBACK_DYNAMIC_AVATAR: Record<
-  NonNullable<MascotAvatar['gender']>,
-  Pick<
-    MascotAvatar,
-    'image_url' | 'jersey_mask_url' | 'jersey_layout' | 'eyes_mask_url' | 'eyes_layout' | 'number_layout' | 'logo_layout'
-  >
-> = {
-  boy: {
-    image_url: `${ASSET_BASE}/leon-baby-boy.webp`,
-    jersey_mask_url: `${ASSET_BASE}/leon-baby-jersey-{color}.svg`,
-    jersey_layout: { left: 0.13815, top: 0.43723, width: 0.72415, height: 0.51805 },
-    eyes_mask_url: `${ASSET_BASE}/leon-baby-eyes-{color}.svg`,
-    eyes_layout: { left: 0.36275, top: 0.25678, width: 0.27807, height: 0.10449 },
-    number_layout: { left: 0.418, top: 0.53281, width: 0.15597, height: 0.12482 },
-    logo_layout: { left: 0.38324, top: 0.49287, width: 0.07388, height: 0.04708 },
-  },
-  girl: {
-    image_url: `${ASSET_BASE}/leon-baby-girl.webp`,
-    jersey_mask_url: `${ASSET_BASE}/leon-baby-jersey-{color}.svg`,
-    jersey_layout: { left: 0.13815, top: 0.43723, width: 0.72415, height: 0.51805 },
-    eyes_mask_url: `${ASSET_BASE}/leon-baby-eyes-{color}.svg`,
-    eyes_layout: { left: 0.36275, top: 0.25678, width: 0.27807, height: 0.10449 },
-    number_layout: { left: 0.418, top: 0.53281, width: 0.15597, height: 0.12482 },
-    logo_layout: { left: 0.38324, top: 0.49287, width: 0.07388, height: 0.04708 },
+// depends on the retired per-color leon-{color}.webp files. Keyed by mascot id so choosing the
+// shark before its avatar rows have loaded doesn't flash a lion.
+const FALLBACK_DYNAMIC_AVATAR: Record<string, Record<NonNullable<MascotAvatar['gender']>, DynamicArt>> = {
+  lion: { boy: lionArt('boy'), girl: lionArt('girl') },
+  shark: {
+    // Placed from the designer's own boy layout in Figma (node 4029:2824, 410,330 333x164).
+    boy: sharkArt('boy', { left: 0.36542, top: 0.23538, width: 0.29679, height: 0.11698 }),
+    // The girl's eyes sit lower (left eye ~19px, right ~8px) than the boy's, so she needs her own
+    // box and a mask with the right eye re-offset -- measured from her highlight positions.
+    girl: sharkArt('girl', { left: 0.36096, top: 0.24893, width: 0.29768, height: 0.10841 }),
   },
 }
+
+/** Resolves a URL from the API (stored relative, like clubs.logo_url) or a fallback constant
+ * (already absolute) against the app's base path. */
+function assetUrl(url: string): string {
+  return /^(\/|https?:)/.test(url) ? url : `${import.meta.env.BASE_URL}${url}`
+}
+
+// Fractions -> CSS percentages, rounded so float noise (36.096000000000004%) never reaches the DOM.
+const pct = (fraction: number) => `${Number((fraction * 100).toFixed(4))}%`
 
 function boxStyle(box: AvatarLayoutBox): React.CSSProperties {
   return {
     position: 'absolute',
-    left: `${box.left * 100}%`,
-    top: `${box.top * 100}%`,
-    width: `${box.width * 100}%`,
-    height: `${box.height * 100}%`,
+    left: pct(box.left),
+    top: pct(box.top),
+    width: pct(box.width),
+    height: pct(box.height),
   }
 }
 
@@ -156,10 +198,7 @@ function DynamicJerseyGraphic({
   nickname,
   size,
 }: {
-  avatar: Pick<
-    MascotAvatar,
-    'image_url' | 'jersey_mask_url' | 'jersey_layout' | 'eyes_mask_url' | 'eyes_layout' | 'number_layout' | 'logo_layout'
-  >
+  avatar: DynamicArt
   jerseyColor: JerseyColor
   eyeColor?: EyeColor
   number: number | null
@@ -171,8 +210,10 @@ function DynamicJerseyGraphic({
     setLoaded(false)
   }, [avatar.image_url])
 
-  const jerseySrc = avatar.jersey_mask_url?.replace('{color}', jerseyColor)
-  const eyesSrc = avatar.eyes_mask_url?.replace('{color}', eyeColor)
+  const imageSrc = assetUrl(avatar.image_url)
+  const jerseySrc = avatar.jersey_mask_url && assetUrl(avatar.jersey_mask_url.replace('{color}', jerseyColor))
+  const eyesSrc = avatar.eyes_mask_url && assetUrl(avatar.eyes_mask_url.replace('{color}', eyeColor))
+  const highlightsSrc = assetUrl(avatar.eyes_highlights_url ?? EYE_HIGHLIGHTS_URL)
 
   return (
     <div
@@ -184,7 +225,7 @@ function DynamicJerseyGraphic({
       {!loaded && <Skeleton className="absolute inset-0 rounded-xl" />}
       <div className={loaded ? '' : 'invisible'}>
         <img
-          src={avatar.image_url}
+          src={imageSrc}
           alt=""
           className="absolute inset-0 h-full w-full object-contain"
           onLoad={() => setLoaded(true)}
@@ -195,7 +236,7 @@ function DynamicJerseyGraphic({
         {eyesSrc && avatar.eyes_layout && (
           <>
             <img src={eyesSrc} alt="" className="h-full w-full" style={{ ...boxStyle(avatar.eyes_layout), mixBlendMode: 'multiply' }} />
-            <img src={EYE_HIGHLIGHTS_URL} alt="" className="h-full w-full" style={boxStyle(avatar.eyes_layout)} />
+            <img src={highlightsSrc} alt="" className="h-full w-full" style={boxStyle(avatar.eyes_layout)} />
           </>
         )}
         {number !== null && avatar.number_layout && (
@@ -326,7 +367,7 @@ export function JerseyGraphic({
 
   return (
     <DynamicJerseyGraphic
-      avatar={dynamicMatch ?? FALLBACK_DYNAMIC_AVATAR[gender]}
+      avatar={dynamicMatch ?? (FALLBACK_DYNAMIC_AVATAR[resolvedMascotId] ?? FALLBACK_DYNAMIC_AVATAR[DEFAULT_MASCOT_ID])[gender]}
       jerseyColor={resolvedColor}
       eyeColor={eyeColor}
       number={number}
