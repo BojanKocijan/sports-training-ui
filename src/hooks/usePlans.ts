@@ -73,10 +73,25 @@ async function fetchPlans(
   }
 
   if (entry.inflight) {
-    return entry.inflight
+    const pending = entry.inflight
+
+    if (!force) {
+      return pending
+    }
+
+    try {
+      await pending
+    } catch {
+      // A forced refresh still needs fresh server state even if the older request failed.
+    }
+
+    // Another forced caller may already have started the fresh request while we were waiting.
+    if (entry.inflight) {
+      return entry.inflight
+    }
   }
 
-  if (entry.snapshot.plans.length === 0) {
+  if (entry.snapshot.updatedAt === 0) {
     entry.snapshot = {
       ...entry.snapshot,
       loading: true,
@@ -186,7 +201,7 @@ export function usePlans(groupId: string) {
   const today = toLocalIso(new Date())
   const upcoming = plans.filter((plan) => plan.training_date >= today)
   const past = plans.filter((plan) => plan.training_date < today)
-  const nextPlan = upcoming[0] ?? null
+  const nextPlan: TrainingPlan | null = upcoming.length > 0 ? upcoming[0] : null
 
   async function createPlan(
     passcode: string,
