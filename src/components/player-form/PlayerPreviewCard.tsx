@@ -1,4 +1,4 @@
-import type { EyeColor, JerseyColor } from '../../hooks/usePlayers'
+import type { EyeColor, Gender, JerseyColor } from '../../hooks/usePlayers'
 import { JerseyGraphic } from '../JerseyGraphic'
 
 /** Live preview of the jersey being built in a create/edit form — mirrors the in-progress
@@ -8,6 +8,7 @@ export function PlayerPreviewCard({
   nickname,
   jerseyColor,
   eyeColor,
+  gender,
   jerseyNumber,
   groupId,
   mascotId,
@@ -15,6 +16,7 @@ export function PlayerPreviewCard({
   nickname: string
   jerseyColor: JerseyColor | null
   eyeColor?: EyeColor | null
+  gender?: Gender | null
   jerseyNumber: number | null
   /** Omit when no group is known yet (e.g. CreatePlayerForm) -- see JerseyGraphic's own doc
    * comment on why that falls back to the shared stopgap art instead of erroring. */
@@ -26,6 +28,7 @@ export function PlayerPreviewCard({
       <JerseyGraphic
         color={jerseyColor}
         eyeColor={eyeColor ?? undefined}
+        gender={gender ?? undefined}
         number={jerseyNumber}
         nickname={nickname.trim() || 'Preview'}
         size="lg"

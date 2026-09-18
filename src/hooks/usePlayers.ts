@@ -19,6 +19,11 @@ export type JerseyColor = (typeof JERSEY_COLORS)[number]
 export const EYE_COLORS = ['blue', 'green', 'brown'] as const
 export type EyeColor = (typeof EYE_COLORS)[number]
 
+// Matches the 2 base poses actually produced (leon-baby-boy.webp / leon-baby-girl.webp), not a
+// general gender-identity field -- see JerseyGraphic.tsx's own DEFAULT_GENDER.
+export const GENDERS = ['boy', 'girl'] as const
+export type Gender = (typeof GENDERS)[number]
+
 /** The only entry in the `mascots` roster today (sports-training-api#43/#44) — every player
  * gets it until more animals ship. Jersey art still resolves by jersey_color, not mascot_id;
  * see JerseyGraphic.tsx. mascot_avatars has no seeded artwork yet, so this is data plumbing
@@ -32,6 +37,7 @@ export interface Player {
   jersey_number: number | null
   jersey_color: JerseyColor | null
   eye_color: EyeColor | null
+  gender: Gender | null
   /** Optional bio details a trainer can fill in — nullable, metric (cm/kg). */
   height_cm: number | null
   weight_kg: number | null
@@ -79,6 +85,7 @@ export function usePlayers(groupId: string) {
     weightKg: number | null = null,
     mascotId: string | null = DEFAULT_MASCOT_ID,
     eyeColor: EyeColor | null = null,
+    gender: Gender | null = null,
   ) {
     await api.post('/players', {
       passcode,
@@ -90,6 +97,7 @@ export function usePlayers(groupId: string) {
       weightKg,
       mascotId,
       eyeColor,
+      gender,
     })
     await refresh()
   }
@@ -105,9 +113,10 @@ export function usePlayers(groupId: string) {
     weightKg: number | null = null,
     mascotId: string | null = DEFAULT_MASCOT_ID,
     eyeColor: EyeColor | null = null,
+    gender: Gender | null = null,
   ) {
-    // update_player defaults mascot_id/eye_color to null when omitted, so these must always
-    // be sent — otherwise every edit would silently clear them.
+    // update_player defaults mascot_id/eye_color/gender to null when omitted, so these must
+    // always be sent — otherwise every edit would silently clear them.
     await api.put(`/players/${id}`, {
       passcode,
       groupId: targetGroupId,
@@ -118,6 +127,7 @@ export function usePlayers(groupId: string) {
       weightKg,
       mascotId,
       eyeColor,
+      gender,
     })
 
     await refresh()

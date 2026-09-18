@@ -101,9 +101,8 @@ const DYNAMIC_SIZE_CLASSES = {
  * color. Every layout box below is traced directly in Figma (J9dSOUC5az7RoMJlNegRtr, node
  * 4008:346), not eyeballed. */
 
-// No per-player gender field exists yet (see PROJECT_KNOWLEDGE.md) -- everyone gets 'boy'
-// until that's added. eye_color, unlike gender, IS a real per-player field now (see
-// EyeColorPicker) -- this default only applies when a caller omits the prop entirely.
+// gender and eye_color are both real per-player fields now (see GenderPicker/EyeColorPicker) --
+// these defaults only apply when a caller omits the prop entirely (e.g. no player object yet).
 const DEFAULT_EYE_COLOR: EyeColor = 'blue'
 const DEFAULT_GENDER: NonNullable<MascotAvatar['gender']> = 'boy'
 
@@ -288,10 +287,10 @@ export function JerseyGraphic({
    * no group yet (e.g. the live preview in CreatePlayerForm/EditPlayerForm). */
   groupId?: string
   mascotId?: string | null
-  /** No per-player gender field exists yet (see PROJECT_KNOWLEDGE.md) -- defaults to 'boy'
-   * until one does. */
+  /** Pass the player's real gender when known (see usePlayers' Gender type) -- defaults to
+   * 'boy' only when omitted entirely (no player object yet, e.g. a bare mascot preview). */
   gender?: NonNullable<MascotAvatar['gender']>
-  /** No per-player eye_color field exists yet either -- defaults to 'blue'. */
+  /** Pass the player's real eye_color when known -- defaults to 'blue' only when omitted. */
   eyeColor?: EyeColor
 }) {
   const resolvedColor = color ?? FALLBACK_COLOR

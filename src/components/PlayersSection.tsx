@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { type EyeColor, type JerseyColor, type Player, type usePlayers } from '../hooks/usePlayers'
+import { type Player, type usePlayers } from '../hooks/usePlayers'
 import { CreatePlayerForm } from './CreatePlayerForm'
 import { JerseyGraphic } from './JerseyGraphic'
+import type { PlayerWizardResult } from './player-form/PlayerWizard'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { Skeleton } from './ui/skeleton'
@@ -43,28 +44,21 @@ export function PlayersSection({
     setSaveError(null)
   }
 
-  async function handleCreate(
-    nickname: string,
-    jerseyNumber: number | null,
-    jerseyColor: JerseyColor | null,
-    heightCm: number | null,
-    weightKg: number | null,
-    mascotId: string,
-    eyeColor: EyeColor | null,
-  ) {
+  async function handleCreate(result: PlayerWizardResult) {
     setSaving(true)
     setSaveError(null)
 
     try {
       await createPlayer(
         passcode(),
-        nickname,
-        jerseyNumber,
-        jerseyColor,
-        heightCm,
-        weightKg,
-        mascotId,
-        eyeColor,
+        result.nickname,
+        result.jerseyNumber,
+        result.jerseyColor,
+        result.heightCm,
+        result.weightKg,
+        result.mascotId,
+        result.eyeColor,
+        result.gender,
       )
       closeForm()
     } catch (e) {
@@ -131,6 +125,7 @@ export function PlayersSection({
                 <JerseyGraphic
                   color={player.jersey_color}
                   eyeColor={player.eye_color ?? undefined}
+                  gender={player.gender ?? undefined}
                   number={player.jersey_number}
                   nickname={player.nickname}
                   groupId={player.group_id}
