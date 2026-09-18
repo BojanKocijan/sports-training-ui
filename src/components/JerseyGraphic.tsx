@@ -205,12 +205,13 @@ function DynamicJerseyGraphic({
   nickname: string
   size: keyof typeof SIZE_CLASSES
 }) {
-  const [loaded, setLoaded] = useState(false)
-  useEffect(() => {
-    setLoaded(false)
-  }, [avatar.image_url])
-
   const imageSrc = assetUrl(avatar.image_url)
+  // Which src has finished loading, not a boolean reset by an effect: the fallback art and the
+  // API row for the same mascot resolve to the identical URL, so the <img> never reloads (and
+  // never fires another `load`) when the API rows arrive. A boolean reset on that change left
+  // the skeleton up forever -- seen on mobile as the avatars flashing, then going grey.
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null)
+  const loaded = loadedSrc === imageSrc
   const jerseySrc = avatar.jersey_mask_url && assetUrl(avatar.jersey_mask_url.replace('{color}', jerseyColor))
   const eyesSrc = avatar.eyes_mask_url && assetUrl(avatar.eyes_mask_url.replace('{color}', eyeColor))
   const highlightsSrc = assetUrl(avatar.eyes_highlights_url ?? EYE_HIGHLIGHTS_URL)
@@ -228,7 +229,7 @@ function DynamicJerseyGraphic({
           src={imageSrc}
           alt=""
           className="absolute inset-0 h-full w-full object-contain"
-          onLoad={() => setLoaded(true)}
+          onLoad={() => setLoadedSrc(imageSrc)}
         />
         {jerseySrc && avatar.jersey_layout && (
           <img src={jerseySrc} alt="" className="h-full w-full" style={{ ...boxStyle(avatar.jersey_layout), mixBlendMode: 'multiply' }} />
