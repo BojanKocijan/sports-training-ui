@@ -9,6 +9,7 @@ import { notify, requestNotificationPermission } from '../lib/notify'
 import { formatClock } from '../utils/format'
 import { ExerciseTimeline } from './ExerciseTimeline'
 import { PlayerProgressSection } from './PlayerProgressSection'
+import { Card } from './ui/card'
 
 export function SessionScreen({
   activePlan,
@@ -160,7 +161,7 @@ export function SessionScreen({
        * scrolling clear of it first. */}
       <main className="space-y-4 pb-44 pt-2">
         {isSessionDone ? (
-          <div className="mx-4 rounded-3xl border border-black/10 bg-white p-6 text-center dark:border-white/10 dark:bg-neutral-900">
+          <Card className="mx-4 rounded-3xl p-6 text-center">
             <p className="text-4xl">🏆</p>
             <h2 className="mt-2 text-lg font-bold text-neutral-900 dark:text-neutral-50">
               Session complete!
@@ -168,7 +169,7 @@ export function SessionScreen({
             <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
               Great job, coaches. Time for high-fives and go home.
             </p>
-          </div>
+          </Card>
         ) : null}
 
         {isSessionDone && unlocked && planId && (

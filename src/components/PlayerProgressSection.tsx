@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { categoryInfo, type CategoryId, useCategories } from '../hooks/useCategories'
 import { ratePlayerProgress, usePlayers } from '../hooks/usePlayers'
+import { Card } from './ui/card'
 
 const SCALE = [
   { value: 1, emoji: '😐' },
@@ -53,10 +54,7 @@ export function PlayerProgressSection({
       {error && <p className="mb-2 text-sm text-red-600">Could not load players: {error}</p>}
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {players.map((p) => (
-          <div
-            key={p.id}
-            className="rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-900"
-          >
+          <Card key={p.id} className="rounded-2xl p-3">
             <p className="text-sm font-bold text-neutral-900 dark:text-neutral-50">{p.nickname}</p>
             <div className="mt-2 space-y-1.5">
               {categories.map((categoryId) => {
@@ -88,7 +86,7 @@ export function PlayerProgressSection({
                 )
               })}
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     </section>
