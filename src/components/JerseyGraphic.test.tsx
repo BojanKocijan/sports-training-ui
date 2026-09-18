@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react'
+import { fireEvent, render } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MascotAvatar } from '../hooks/useMascotAvatars'
 import { JerseyGraphic } from './JerseyGraphic'
@@ -120,5 +120,40 @@ describe('JerseyGraphic (dynamic art)', () => {
     expect(srcs[2]).toBe(`${import.meta.env.BASE_URL}images/api/eyes-blue.svg`)
     // A row with no highlights column (predates it) keeps its eye shine via the lion default.
     expect(srcs[3]).toBe('/images/basketball/u8%20u10/Leon/Web%20size/leon-baby-eyes-highlights.svg')
+  })
+
+  it('keeps showing the art once loaded when the API row resolves to the same image as the fallback', () => {
+    // Fallback art first (avatars not fetched yet), then the API row arrives storing the same
+    // file as a relative path. The <img> src doesn't change, so the browser never fires another
+    // load event -- the graphic must not fall back to the skeleton waiting for one.
+    const { container, rerender } = render(
+      <JerseyGraphic color="blue" mascotId="lion" groupId="u8" number={7} nickname="Mila" />,
+    )
+    fireEvent.load(container.querySelectorAll('img')[0])
+    expect(container.querySelector('[data-slot="skeleton"]')).toBeNull()
+
+    avatars = [
+      {
+        ...apiRow,
+        mascot_id: 'lion',
+        image_url: 'images/basketball/u8%20u10/Leon/Web%20size/leon-baby-boy.webp',
+        jersey_mask_url: 'images/basketball/u8%20u10/Leon/Web%20size/leon-baby-jersey-{color}.svg',
+        eyes_mask_url: 'images/basketball/u8%20u10/Leon/Web%20size/leon-baby-eyes-{color}.svg',
+      },
+    ]
+    rerender(<JerseyGraphic color="blue" mascotId="lion" groupId="u8" number={7} nickname="Mila" />)
+
+    expect(container.querySelector('[data-slot="skeleton"]')).toBeNull()
+  })
+
+  it('shows the skeleton again when the base image genuinely changes', () => {
+    const { container, rerender } = render(
+      <JerseyGraphic color="blue" mascotId="lion" number={null} nickname="Mila" />,
+    )
+    fireEvent.load(container.querySelectorAll('img')[0])
+    expect(container.querySelector('[data-slot="skeleton"]')).toBeNull()
+
+    rerender(<JerseyGraphic color="blue" mascotId="shark" number={null} nickname="Mila" />)
+    expect(container.querySelector('[data-slot="skeleton"]')).not.toBeNull()
   })
 })
