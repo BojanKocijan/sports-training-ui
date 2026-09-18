@@ -22,6 +22,8 @@ const player: Player = {
   nickname: 'Mila',
   jersey_number: 12,
   jersey_color: 'blue',
+  eye_color: null,
+  gender: null,
   height_cm: 128,
   weight_kg: 27,
   mascot_id: 'lion',
@@ -85,6 +87,8 @@ describe('EditPlayerForm', () => {
       27,
       'u10',
       'lion',
+      null,
+      null,
     )
   })
 })

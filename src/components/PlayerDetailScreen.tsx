@@ -5,6 +5,8 @@ import {
   issueParentCode,
   ratePlayerProgress,
   revokeParentCode,
+  type EyeColor,
+  type Gender,
   type JerseyColor,
   type Player,
 } from '../hooks/usePlayers'
@@ -71,6 +73,8 @@ export function PlayerDetailScreen({
     weightKg: number | null,
     groupId: string,
     mascotId: string | null,
+    eyeColor: EyeColor | null,
+    gender: Gender | null,
   ) => Promise<void>
   saving: boolean
   saveError: string | null
@@ -94,9 +98,11 @@ export function PlayerDetailScreen({
     weightKg: number | null,
     groupId: string,
     mascotId: string | null,
+    eyeColor: EyeColor | null,
+    gender: Gender | null,
   ) {
     try {
-      await onSaveEdit(nickname, jerseyNumber, jerseyColor, heightCm, weightKg, groupId, mascotId)
+      await onSaveEdit(nickname, jerseyNumber, jerseyColor, heightCm, weightKg, groupId, mascotId, eyeColor, gender)
       setEditing(false)
     } catch {
       // Stay in edit mode — `saveError` (lifted state from the parent) already reflects why.
@@ -326,6 +332,8 @@ export function PlayerDetailScreen({
 
           <JerseyGraphic
             color={player.jersey_color}
+            eyeColor={player.eye_color ?? undefined}
+            gender={player.gender ?? undefined}
             number={player.jersey_number}
             nickname={player.nickname}
             size="xl"

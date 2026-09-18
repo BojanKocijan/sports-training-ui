@@ -14,7 +14,7 @@ import { useActivePlan } from './hooks/useActivePlan'
 import { findExercise, useExercises } from './hooks/useExercises'
 import { useGroups } from './hooks/useGroups'
 import { usePlans } from './hooks/usePlans'
-import { type JerseyColor, usePlayers } from './hooks/usePlayers'
+import { type EyeColor, type Gender, type JerseyColor, usePlayers } from './hooks/usePlayers'
 import { useTrainerAccess } from './hooks/useTrainerAccess'
 import { formatDate } from './utils/format'
 
@@ -72,6 +72,8 @@ function App() {
     weightKg: number | null,
     targetGroupId: string,
     mascotId: string | null,
+    eyeColor: EyeColor | null,
+    gender: Gender | null,
   ) {
     setSavingPlayer(true)
     setSavePlayerError(null)
@@ -87,6 +89,8 @@ function App() {
         heightCm,
         weightKg,
         mascotId,
+        eyeColor,
+        gender,
       )
     } catch (e) {
       setSavePlayerError(e instanceof Error ? e.message : 'Could not save player')

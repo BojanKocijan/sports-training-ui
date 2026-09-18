@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { DEFAULT_MASCOT_ID, type JerseyColor, type Player } from '../hooks/usePlayers'
+import { DEFAULT_MASCOT_ID, type EyeColor, type Gender, type JerseyColor, type Player } from '../hooks/usePlayers'
+import { EyeColorPicker } from './player-form/EyeColorPicker'
+import { GenderPicker } from './player-form/GenderPicker'
 import { JerseyColorPicker } from './player-form/JerseyColorPicker'
 import { MascotPicker } from './player-form/MascotPicker'
 import { toIntOrNull } from './player-form/parseNumber'
@@ -7,9 +9,11 @@ import { PlayerPreviewCard } from './player-form/PlayerPreviewCard'
 import { Card } from './ui/card'
 
 /** Edits an existing player, pre-filled from `player` — rendered in place inside
- * PlayerDetailScreen (Edit no longer closes the details view/jumps to the roster grid). Also
- * shows the group picker, since moving a player between groups only makes sense once they
- * already exist. */
+ * PlayerDetailScreen (Edit no longer closes the details view/jumps to the roster grid).
+ * Unlike CreatePlayerForm's step-by-step wizard, editing stays a single flat form — an
+ * existing player's fields should all be visible and editable at once, not walked through
+ * screen by screen. Also shows the group picker, since moving a player only makes sense once
+ * they already exist. */
 export function EditPlayerForm({
   player,
   groups,
@@ -31,11 +35,15 @@ export function EditPlayerForm({
     weightKg: number | null,
     groupId: string,
     mascotId: string | null,
+    eyeColor: EyeColor | null,
+    gender: Gender | null,
   ) => void
 }) {
   const [nickname, setNickname] = useState(player.nickname)
   const [jerseyNumber, setJerseyNumber] = useState(player.jersey_number?.toString() ?? '')
   const [jerseyColor, setJerseyColor] = useState<JerseyColor | null>(player.jersey_color)
+  const [eyeColor, setEyeColor] = useState<EyeColor | null>(player.eye_color)
+  const [gender, setGender] = useState<Gender | null>(player.gender)
   const [heightCm, setHeightCm] = useState(player.height_cm?.toString() ?? '')
   const [weightKg, setWeightKg] = useState(player.weight_kg?.toString() ?? '')
   const [groupId, setGroupId] = useState(player.group_id)
@@ -55,6 +63,8 @@ export function EditPlayerForm({
       toIntOrNull(weightKg),
       groupId,
       mascotId,
+      eyeColor,
+      gender,
     )
   }
 
@@ -63,6 +73,8 @@ export function EditPlayerForm({
       <PlayerPreviewCard
         nickname={nickname}
         jerseyColor={jerseyColor}
+        eyeColor={eyeColor}
+        gender={gender}
         jerseyNumber={toIntOrNull(jerseyNumber)}
         groupId={groupId}
         mascotId={mascotId}
@@ -90,7 +102,26 @@ export function EditPlayerForm({
         />
       </div>
 
-      <JerseyColorPicker value={jerseyColor} onChange={setJerseyColor} />
+      <div>
+        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-400">
+          Jersey color
+        </label>
+        <JerseyColorPicker value={jerseyColor} onChange={setJerseyColor} />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-400">
+          Eye color
+        </label>
+        <EyeColorPicker value={eyeColor} onChange={setEyeColor} />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-400">
+          Boy or girl?
+        </label>
+        <GenderPicker value={gender} onChange={setGender} />
+      </div>
 
       <MascotPicker value={mascotId} onChange={setMascotId} />
 
