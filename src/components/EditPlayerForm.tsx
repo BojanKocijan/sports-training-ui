@@ -1,15 +1,21 @@
 import { useState } from 'react'
-import { DEFAULT_MASCOT_ID, type JerseyColor, type Player } from '../hooks/usePlayers'
+import { DEFAULT_MASCOT_ID, type EyeColor, type JerseyColor, type Player } from '../hooks/usePlayers'
+import { EyeColorPicker } from './player-form/EyeColorPicker'
 import { JerseyColorPicker } from './player-form/JerseyColorPicker'
 import { MascotPicker } from './player-form/MascotPicker'
 import { toIntOrNull } from './player-form/parseNumber'
 import { PlayerPreviewCard } from './player-form/PlayerPreviewCard'
 import { Card } from './ui/card'
 
+type Step = 'appearance' | 'details'
+
 /** Edits an existing player, pre-filled from `player` — rendered in place inside
- * PlayerDetailScreen (Edit no longer closes the details view/jumps to the roster grid). Also
- * shows the group picker, since moving a player between groups only makes sense once they
- * already exist. */
+ * PlayerDetailScreen (Edit no longer closes the details view/jumps to the roster grid).
+ *
+ * Two steps instead of one long form, same split as CreatePlayerForm: "Appearance" (animal,
+ * jersey color, eye color, live preview) then "Details" (nickname, number, group, height,
+ * weight — the group picker lives here since moving a player only makes sense once they
+ * already exist). */
 export function EditPlayerForm({
   player,
   groups,
@@ -31,11 +37,14 @@ export function EditPlayerForm({
     weightKg: number | null,
     groupId: string,
     mascotId: string | null,
+    eyeColor: EyeColor | null,
   ) => void
 }) {
+  const [step, setStep] = useState<Step>('appearance')
   const [nickname, setNickname] = useState(player.nickname)
   const [jerseyNumber, setJerseyNumber] = useState(player.jersey_number?.toString() ?? '')
   const [jerseyColor, setJerseyColor] = useState<JerseyColor | null>(player.jersey_color)
+  const [eyeColor, setEyeColor] = useState<EyeColor | null>(player.eye_color)
   const [heightCm, setHeightCm] = useState(player.height_cm?.toString() ?? '')
   const [weightKg, setWeightKg] = useState(player.weight_kg?.toString() ?? '')
   const [groupId, setGroupId] = useState(player.group_id)
@@ -55,6 +64,52 @@ export function EditPlayerForm({
       toIntOrNull(weightKg),
       groupId,
       mascotId,
+      eyeColor,
+    )
+  }
+
+  if (step === 'appearance') {
+    return (
+      <Card size="sm" className="space-y-3 px-3">
+        <PlayerPreviewCard
+          nickname={nickname}
+          jerseyColor={jerseyColor}
+          eyeColor={eyeColor}
+          jerseyNumber={toIntOrNull(jerseyNumber)}
+          groupId={groupId}
+          mascotId={mascotId}
+        />
+
+        <div>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            Jersey color
+          </label>
+          <JerseyColorPicker value={jerseyColor} onChange={setJerseyColor} />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-400">
+            Eye color
+          </label>
+          <EyeColorPicker value={eyeColor} onChange={setEyeColor} />
+        </div>
+
+        <MascotPicker value={mascotId} onChange={setMascotId} />
+
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setStep('details')}
+            className="rounded-full bg-orange-500 px-4 py-1.5 text-xs font-bold text-white"
+          >
+            Next
+          </button>
+
+          <button type="button" onClick={onCancel} className="text-xs font-semibold text-neutral-400">
+            Cancel
+          </button>
+        </div>
+      </Card>
     )
   }
 
@@ -63,6 +118,7 @@ export function EditPlayerForm({
       <PlayerPreviewCard
         nickname={nickname}
         jerseyColor={jerseyColor}
+        eyeColor={eyeColor}
         jerseyNumber={toIntOrNull(jerseyNumber)}
         groupId={groupId}
         mascotId={mascotId}
@@ -89,10 +145,6 @@ export function EditPlayerForm({
           className="w-16 rounded-xl border border-black/10 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-orange-500 dark:border-white/10 dark:bg-neutral-800 dark:text-neutral-50"
         />
       </div>
-
-      <JerseyColorPicker value={jerseyColor} onChange={setJerseyColor} />
-
-      <MascotPicker value={mascotId} onChange={setMascotId} />
 
       <div>
         <label
@@ -159,6 +211,10 @@ export function EditPlayerForm({
           className="rounded-full bg-orange-500 px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
         >
           {saving ? 'Saving…' : 'Save'}
+        </button>
+
+        <button type="button" onClick={() => setStep('appearance')} className="text-xs font-semibold text-neutral-400">
+          Back
         </button>
 
         <button type="button" onClick={onCancel} className="text-xs font-semibold text-neutral-400">

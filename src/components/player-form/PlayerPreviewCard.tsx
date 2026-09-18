@@ -1,4 +1,4 @@
-import type { JerseyColor } from '../../hooks/usePlayers'
+import type { EyeColor, JerseyColor } from '../../hooks/usePlayers'
 import { JerseyGraphic } from '../JerseyGraphic'
 
 /** Live preview of the jersey being built in a create/edit form — mirrors the in-progress
@@ -7,12 +7,14 @@ import { JerseyGraphic } from '../JerseyGraphic'
 export function PlayerPreviewCard({
   nickname,
   jerseyColor,
+  eyeColor,
   jerseyNumber,
   groupId,
   mascotId,
 }: {
   nickname: string
   jerseyColor: JerseyColor | null
+  eyeColor?: EyeColor | null
   jerseyNumber: number | null
   /** Omit when no group is known yet (e.g. CreatePlayerForm) -- see JerseyGraphic's own doc
    * comment on why that falls back to the shared stopgap art instead of erroring. */
@@ -23,6 +25,7 @@ export function PlayerPreviewCard({
     <div className="flex flex-col items-center gap-1">
       <JerseyGraphic
         color={jerseyColor}
+        eyeColor={eyeColor ?? undefined}
         number={jerseyNumber}
         nickname={nickname.trim() || 'Preview'}
         size="lg"

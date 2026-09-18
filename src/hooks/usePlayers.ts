@@ -14,6 +14,11 @@ export const JERSEY_COLORS = [
 
 export type JerseyColor = (typeof JERSEY_COLORS)[number]
 
+// Must match the 3 eye-color masks actually produced in Figma for the dynamic 'baby'-stage
+// art (sports-training-api#57/#59) -- see JerseyGraphic.tsx's own EYE_COLORS.
+export const EYE_COLORS = ['blue', 'green', 'brown'] as const
+export type EyeColor = (typeof EYE_COLORS)[number]
+
 /** The only entry in the `mascots` roster today (sports-training-api#43/#44) — every player
  * gets it until more animals ship. Jersey art still resolves by jersey_color, not mascot_id;
  * see JerseyGraphic.tsx. mascot_avatars has no seeded artwork yet, so this is data plumbing
@@ -26,6 +31,7 @@ export interface Player {
   nickname: string
   jersey_number: number | null
   jersey_color: JerseyColor | null
+  eye_color: EyeColor | null
   /** Optional bio details a trainer can fill in — nullable, metric (cm/kg). */
   height_cm: number | null
   weight_kg: number | null
@@ -72,6 +78,7 @@ export function usePlayers(groupId: string) {
     heightCm: number | null = null,
     weightKg: number | null = null,
     mascotId: string | null = DEFAULT_MASCOT_ID,
+    eyeColor: EyeColor | null = null,
   ) {
     await api.post('/players', {
       passcode,
@@ -82,6 +89,7 @@ export function usePlayers(groupId: string) {
       heightCm,
       weightKg,
       mascotId,
+      eyeColor,
     })
     await refresh()
   }
@@ -96,9 +104,10 @@ export function usePlayers(groupId: string) {
     heightCm: number | null = null,
     weightKg: number | null = null,
     mascotId: string | null = DEFAULT_MASCOT_ID,
+    eyeColor: EyeColor | null = null,
   ) {
-    // update_player defaults mascot_id to null when omitted, so this must always be sent —
-    // otherwise every edit would silently clear the player's mascot.
+    // update_player defaults mascot_id/eye_color to null when omitted, so these must always
+    // be sent — otherwise every edit would silently clear them.
     await api.put(`/players/${id}`, {
       passcode,
       groupId: targetGroupId,
@@ -108,6 +117,7 @@ export function usePlayers(groupId: string) {
       heightCm,
       weightKg,
       mascotId,
+      eyeColor,
     })
 
     await refresh()

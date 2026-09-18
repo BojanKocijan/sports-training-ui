@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { type JerseyColor, type Player, type usePlayers } from '../hooks/usePlayers'
+import { type EyeColor, type JerseyColor, type Player, type usePlayers } from '../hooks/usePlayers'
 import { CreatePlayerForm } from './CreatePlayerForm'
 import { JerseyGraphic } from './JerseyGraphic'
 import { Button } from './ui/button'
@@ -50,6 +50,7 @@ export function PlayersSection({
     heightCm: number | null,
     weightKg: number | null,
     mascotId: string,
+    eyeColor: EyeColor | null,
   ) {
     setSaving(true)
     setSaveError(null)
@@ -63,6 +64,7 @@ export function PlayersSection({
         heightCm,
         weightKg,
         mascotId,
+        eyeColor,
       )
       closeForm()
     } catch (e) {
@@ -128,6 +130,7 @@ export function PlayersSection({
               >
                 <JerseyGraphic
                   color={player.jersey_color}
+                  eyeColor={player.eye_color ?? undefined}
                   number={player.jersey_number}
                   nickname={player.nickname}
                   groupId={player.group_id}
