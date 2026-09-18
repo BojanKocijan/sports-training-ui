@@ -1,5 +1,6 @@
 import { useGroupProgress } from '../hooks/useGroupProgress'
 import { SportLoader } from './SportLoader'
+import { Card } from './ui/card'
 
 /** Group-level rollup of every rating logged for this group's players — the "individual
  * players as a team" payoff: not any one kid's report card, just an at-a-glance sense of
@@ -22,7 +23,7 @@ export function GroupProgressSummary({ groupId }: { groupId: string }) {
           No ratings logged yet — rate players during a training to build this up.
         </p>
       ) : (
-        <div className="space-y-2 rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-neutral-900">
+        <Card className="space-y-2 rounded-2xl p-3">
           {byCategory.map((c) => (
             <div key={c.categoryId} className="flex items-center gap-3">
               <span className="w-28 shrink-0 truncate text-xs font-semibold text-neutral-600 dark:text-neutral-300">
@@ -39,7 +40,7 @@ export function GroupProgressSummary({ groupId }: { groupId: string }) {
               </span>
             </div>
           ))}
-        </div>
+        </Card>
       )}
     </section>
   )

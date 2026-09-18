@@ -14,7 +14,10 @@
   color-scheme: light;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
+  /* Slightly off-white vs. pure-white --background — identical values made every Card blend
+   * into the page (border alone wasn't enough at shadow-sm strength). Dark mode already had
+   * this separation (--card is lighter than --background there); light mode didn't. */
+  --card: oklch(0.985 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);

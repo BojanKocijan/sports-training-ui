@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGroups } from '../hooks/useGroups'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
+import { Card } from './ui/card'
 
 /**
  * Gates the entire app: nothing (Setup/Library/Session/Words/Groups content) is reachable
@@ -63,7 +64,7 @@ export function LockScreen({
         </div>
       )}
 
-      <div className="w-full rounded-3xl bg-white p-5 shadow-lg dark:bg-neutral-900">
+      <Card className="w-full rounded-3xl p-5 shadow-lg">
         <p className="text-lg font-bold text-neutral-900 dark:text-neutral-50">Enter your code</p>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
           Enter the {activeGroup?.name ?? groupId} trainer code, or a parent code if a trainer
@@ -94,7 +95,7 @@ export function LockScreen({
         >
           {checking ? '…' : 'Unlock'}
         </button>
-      </div>
+      </Card>
     </div>
   )
 }
