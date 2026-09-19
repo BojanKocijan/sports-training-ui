@@ -173,8 +173,9 @@ export async function fetchParentCode(
   passcode: string,
   playerId: string,
 ): Promise<string | null> {
-  const { parentCode } = await api.get<{ parentCode: string | null }>(
-    `/players/${playerId}/parent-code?passcode=${encodeURIComponent(passcode)}`,
+  const { parentCode } = await api.post<{ parentCode: string | null }>(
+    `/players/${playerId}/parent-code/read`,
+    { passcode },
   )
   return parentCode
 }
