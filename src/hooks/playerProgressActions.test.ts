@@ -17,7 +17,6 @@ vi.mock('../lib/apiClient', () => ({
   isApiConfigured: true,
 }))
 
-const getMock = vi.mocked(api.get)
 const postMock = vi.mocked(api.post)
 const deleteMock = vi.mocked(api.delete)
 
@@ -47,20 +46,22 @@ describe('player progress actions', () => {
   })
 
   it('fetches the current parent code using trainer credentials', async () => {
-    getMock.mockResolvedValueOnce({
+    postMock.mockResolvedValueOnce({
       parentCode: 'PARENT-123',
     })
 
     const code = await fetchParentCode('trainer code & symbols', 'player-1')
 
     expect(code).toBe('PARENT-123')
-    expect(getMock).toHaveBeenCalledWith(
-      '/players/player-1/parent-code?passcode=trainer%20code%20%26%20symbols',
-    )
+    expect(postMock).toHaveBeenCalledWith('/players/player-1/parent-code/read', {
+      passcode: 'trainer code & symbols',
+    })
+    expect(api.get).not.toHaveBeenCalled()
+    expect(postMock.mock.calls.some(([path]) => path.includes('passcode='))).toBe(false)
   })
 
   it('returns null when the player has no parent code', async () => {
-    getMock.mockResolvedValueOnce({
+    postMock.mockResolvedValueOnce({
       parentCode: null,
     })
 
