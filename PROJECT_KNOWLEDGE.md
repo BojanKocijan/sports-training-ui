@@ -53,6 +53,21 @@ A scan of 19 youth-sports coaching apps across basketball, soccer, swimming, and
 
 Sport count and exercise-library breadth are table stakes (six competitors already there); the progress-and-psychology layer for parents is not in any of the 19 apps reviewed.
 
+### Gamification + AI-coach competitors (Sept 2026)
+
+A follow-up scan specifically for apps combining progress tracking, gamification, and a parent-facing view for kids — the closest analogs to this app's planned gamification layer (§ above) and the 3D mascot concept (see `PROJECT_KNOWLEDGE.md` mascot notes).
+
+**Findings:**
+- **5StarKidz** — closest analog: season-long match/training tracking, an **AI coach** giving personalized tips/drills, **gamification** (badges, progress trophies), and an explicit parent view where parents follow their kid's progress and celebrate milestones together. Youth football (soccer), currently outside the US App Store top 30 — not mass-adopted.
+- **Sportlingo** — gamified lessons (streaks, badges, challenges), coaches build AI-assisted training plans, individual + team progress on one dashboard. Multi-sport (soccer, basketball, baseball…), $4.99 starting price. Already listed above as a multi-sport practice-planning competitor; this adds the gamification angle.
+- **Balls Utopia / Skill Track / Pivot: Athletics** — smaller parent-facing stat trackers (mostly older-kid/parent self-logged post-game data), shallow gamification (streak badges only), no coach in the loop, no pedagogical content.
+
+**What this means for positioning:**
+- All three gamification/AI-coach competitors above are **B2C — the parent pays directly**. This app's model is **B2B2C** (club/trainer pays, parent access is free) — nobody in this set combines that distribution with a gamified, parent-facing progress view. That's a real differentiation opening on top of the psychology-layer gap already identified above.
+- 5StarKidz's AI-coach approach exists and has **not achieved mass adoption** (outside top 30) — a signal against building an AI-coach feature here; the human trainer + visual progress tracking is the stronger, cheaper wedge, not an AI replacement for the trainer.
+- Gamification should stay **individual, not comparative** — progress shown as a kid's own visual arc (e.g. badges, or the mascot growing/unlocking a new look as skills are rated), never a leaderboard ranking kids against each other. This matches the age-scoped, no-leaderboard framing already planned in this milestone and avoids the comparison/pressure risk that youth sports pedagogy (LTAD framework) warns against for this age group.
+- Natural next step once gamification badges (already in progress, see Changelog) are proven out: connect visual progress to the 3D mascot concept (mascot "grows"/unlocks look as the kid progresses) rather than building it as a separate feature.
+
 ### Proof this isn't just theory
 
 The first real club (Basketball App, U8 + U10 groups) is already using the shipped product with real data: logged plans, rated player progress, an active live session. This milestone is about deepening that, not starting from zero.
@@ -163,3 +178,4 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 - **2026-09-19** — sports-training-api#65 Parent-code reads now use `POST /players/:id/parent-code/read` with the trainer passcode in the JSON body. The old credential-bearing GET query URL was removed so browser history and URL logging cannot capture the trainer passcode; the UI action test enforces that no parent-code request URL contains `passcode=`.
 - **2026-09-16** — File created; captured current scope, architecture, the a11y/interaction-state gap found in this session, and the plan to descope Setup/Vocabulary.
 - **2026-09-17** — Added competitive scouting summary (§ Milestone 1); reframed positioning after review — this is a child development & progress-sharing tool for parents, not a practice planner with a parent screen attached. Per-skill progress tracking + parent-code sharing + age-scoped psychology framing are the load-bearing differentiators for the multi-sport milestone, not sport count or zero-PII alone.
+- **2026-09-20** — Added gamification/AI-coach competitor scan (§ Milestone 1): 5StarKidz, Sportlingo, and smaller stat-tracker apps are all B2C (parent pays) — none combine gamified parent-facing progress with this app's B2B2C model. Confirms individual (non-comparative) gamification over an AI-coach feature, and links the gamification badges already in progress to the future 3D mascot concept.
