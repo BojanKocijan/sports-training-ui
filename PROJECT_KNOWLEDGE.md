@@ -33,7 +33,7 @@ One subscription per **sport, per club** (`sport_subscriptions`, already in the 
 ### Go-to-market
 
 1. **Freemium/pilot for the trainer** — the trainer uses the basic version (session planning, live timer, progress tracking) for free, with no conversation with the club needed. That's the marketing.
-   - **Trainer as informal referrer** — once a trainer sees the value (like Dunckers now), give them a simple one-line message/link they can forward to the treasurer/president: *"I'm using this — the club needs to pay €X/season to keep access for all groups and parents."* The trainer doesn't need to "sell," just pass along the decision.
+   - **Trainer as informal referrer** — once a trainer sees the value (like Basketball App now), give them a simple one-line message/link they can forward to the treasurer/president: *"I'm using this — the club needs to pay €X/season to keep access for all groups and parents."* The trainer doesn't need to "sell," just pass along the decision.
    - **Club pays, becomes a reference** — every new paying club becomes proof for the next one (same school-by-school pattern Seesaw used).
 2. **Federation (NBB/Club.Basketball.nl) comes later** — once there are 5–10 paying clubs as proof, approach as a partner with a track record, not as an unknown competitor to their admin tool.
 
@@ -55,7 +55,7 @@ Sport count and exercise-library breadth are table stakes (six competitors alrea
 
 ### Proof this isn't just theory
 
-The first real club (Dunckers Hilversum, U8 + U10 groups) is already using the shipped product with real data: logged plans, rated player progress, an active live session. This milestone is about deepening that, not starting from zero.
+The first real club (Basketball App, U8 + U10 groups) is already using the shipped product with real data: logged plans, rated player progress, an active live session. This milestone is about deepening that, not starting from zero.
 
 ### What's in this milestone
 

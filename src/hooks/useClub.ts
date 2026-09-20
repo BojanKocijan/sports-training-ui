@@ -8,14 +8,14 @@ export interface Club {
 }
 
 /**
- * Only one club exists today (Dunckers Hilversum), so this just reads the first row from the
+ * Only one club exists today (Basketball App), so this just reads the first row from the
  * `clubs` table via sports-training-api. Once the app serves multiple clubs, this becomes
  * "resolve the active club by slug/subdomain" instead — the DB shape already supports that.
  *
  * No sport here — a club can run several sport sections (see the `groups`/`group_templates`
  * tables via useGroups), so sport is a property of the active group, not the club.
  */
-const FALLBACK_CLUB: Club = { name: 'Dunckers Hilversum', logoUrl: null }
+const FALLBACK_CLUB: Club = { name: 'Basketball App', logoUrl: null }
 
 interface ClubRecord {
   name: string
