@@ -55,19 +55,44 @@ function useMatte(scene: Group, matte: boolean) {
 
 // Two recolouring rules driven by one RGB mask (red = jersey, green = eye area):
 //  - Jersey: multiply the base colour by the tint. The jersey art is white with black trim, so
-//    white becomes the tint and the trim stays black. The 1.12 gain offsets the darkening a
-//    saturated multiply gives on the slightly grey (not pure white) fabric.
-//  - Iris: inside the eye area only the DARK texels are recoloured (the iris and pupil); the
-//    white highlight, sclera and lashes are left alone. The result keeps the texel's own
-//    lightness, so the pupil stays dark while the iris takes the tint.
+//    white becomes the tint and the trim stays black.
+//  - Iris: same recipe as the still image, whose base art has a GREY iris with a flat colour
+//    multiplied over it and the white highlights layered on top. Inside the eye area only the iris
+//    texels are used (lightness < ~0.5; the sclera and highlights are 0.65+, measured with a clean
+//    gap between them). The 3D atlas iris is much darker and distributed differently from the
+//    still art's (still: a big black pupil, over half the iris, inside a bright ring), so its
+//    lightness is HISTOGRAM-MATCHED to the still art's: each 3D lightness is mapped to the still
+//    art's value at the same quantile (points measured offline from the two images). The mapped
+//    grey is then multiplied by the swatch colour in sRGB like CSS mix-blend-mode: multiply does.
+// 3D iris lightness -> still-art iris base lightness, piecewise linear.
+const IRIS_TONE_X = [0.0, 0.046, 0.101, 0.205, 0.252, 0.298, 0.348, 0.384, 0.45]
+const IRIS_TONE_Y = [0.0, 0.004, 0.027, 0.081, 0.129, 0.251, 0.471, 0.621, 0.7]
+const glslFloats = (v: number[]) => v.map((n) => n.toFixed(4)).join(', ')
+
+// Declarations (uniforms, tone table and helper) go above main(); the body replaces map_fragment.
+const REGION_TINT_DECLS = /* glsl */ `
+uniform sampler2D uRegionMask;
+uniform vec3 uJerseyTint;
+uniform vec4 uEyeTint;
+const float IRIS_X[${IRIS_TONE_X.length}] = float[${IRIS_TONE_X.length}](${glslFloats(IRIS_TONE_X)});
+const float IRIS_Y[${IRIS_TONE_Y.length}] = float[${IRIS_TONE_Y.length}](${glslFloats(IRIS_TONE_Y)});
+float irisTone( float l ) {
+  for ( int i = 0; i < ${IRIS_TONE_X.length - 1}; i++ ) {
+    if ( l < IRIS_X[i + 1] ) return mix( IRIS_Y[i], IRIS_Y[i + 1], ( l - IRIS_X[i] ) / ( IRIS_X[i + 1] - IRIS_X[i] ) );
+  }
+  return IRIS_Y[${IRIS_TONE_Y.length - 1}];
+}
+`
+
 const REGION_TINT_GLSL = /* glsl */ `
 #include <map_fragment>
 #ifdef USE_MAP
   vec3 regionMask = texture2D( uRegionMask, vMapUv ).rgb;
-  diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * uJerseyTint * 1.12, regionMask.r );
+  diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * uJerseyTint, regionMask.r );
   float texelLuma = dot( pow( diffuseColor.rgb, vec3( 1.0 / 2.2 ) ), vec3( 0.299, 0.587, 0.114 ) );
-  float iris = regionMask.g * ( 1.0 - smoothstep( 0.38, 0.52, texelLuma ) ) * uEyeTint.a;
-  diffuseColor.rgb = mix( diffuseColor.rgb, uEyeTint.rgb * ( 0.25 + texelLuma * 1.6 ), iris );
+  float iris = regionMask.g * ( 1.0 - smoothstep( 0.47, 0.60, texelLuma ) ) * uEyeTint.a;
+  vec3 irisSrgb = pow( uEyeTint.rgb, vec3( 1.0 / 2.2 ) ) * irisTone( texelLuma );
+  diffuseColor.rgb = mix( diffuseColor.rgb, pow( irisSrgb, vec3( 2.2 ) ), iris );
 #endif
 `
 
@@ -90,7 +115,7 @@ function useRegionTint(scene: Group, mask: Texture, jerseyHex: string, eyeHex: s
         shader.uniforms.uRegionMask = uniforms.uRegionMask
         shader.uniforms.uJerseyTint = uniforms.uJerseyTint
         shader.uniforms.uEyeTint = uniforms.uEyeTint
-        shader.fragmentShader = `uniform sampler2D uRegionMask;\nuniform vec3 uJerseyTint;\nuniform vec4 uEyeTint;\n${shader.fragmentShader}`.replace(
+        shader.fragmentShader = `${REGION_TINT_DECLS}\n${shader.fragmentShader}`.replace(
           '#include <map_fragment>',
           REGION_TINT_GLSL,
         )
@@ -190,7 +215,9 @@ export function Mascot3DScene({
 }) {
   return (
     <Canvas camera={{ position: cameraPosition, fov: 45 }}>
-      <ambientLight intensity={0.8} />
+      {/* Deliberately bright and fairly flat: the still art is flat-lit, and three.js divides light
+          by pi, so the defaults (0.8 / 1.2) rendered every multiplied colour darker than its swatch. */}
+      <ambientLight intensity={1.8} />
       <directionalLight position={[3, 5, 2]} intensity={1.2} />
       <Suspense fallback={null}>
         <Center>
