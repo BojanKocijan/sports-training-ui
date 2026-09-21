@@ -5,10 +5,12 @@ import type { JerseyColor } from '../hooks/usePlayers'
 const BASE = '/images/basketball/u8%20u10/Leon/Original%20size'
 
 /** The lion's 3D assets (sports-training-api#68, #99). The model is the Tripo export with its
- * skeleton repaired (see MascotViewer3D history); the mask is a grayscale image in the model's
- * UV space that is white over the jersey and shorts panels, used to tint only those. */
+ * skeleton repaired (see MascotViewer3D), slimmed for the web: the normal map is dropped (the
+ * app renders it matte, which ignores it anyway) and the colour texture is 2048px, taking it
+ * from 9.5MB to 1.3MB. The mask is a grayscale image in the model's UV space that is white over
+ * the jersey and shorts panels, used to tint only those. */
 export const LION_3D = {
-  modelUrl: `${BASE}/Leo%20boy/anthropomorphic_lion_v2_bones_fixed.glb`,
+  modelUrl: `${BASE}/Leo%20boy/anthropomorphic_lion_v2_web.glb`,
   ballUrl: `${BASE}/Meshy_AI_cartoon_basketball_lo_0921102916_texture_1k.glb`,
   jerseyMaskUrl: `${BASE}/Leo%20boy/anthropomorphic_lion_v2_jersey_mask.png`,
 } as const
