@@ -19,8 +19,10 @@ import type { Group, Mesh, MeshStandardMaterial, Texture } from 'three'
 const HAND_BONE = 'mixamorigRightHand'
 // The ball export is ~1.9 units across and this lion is ~0.98 tall; this scale makes the ball ~0.14 wide.
 const BALL_SCALE = 0.075
-// Offset in the hand bone's local space (bone axis runs along +Y from the wrist).
-const BALL_OFFSET: [number, number, number] = [0, 0.06, 0]
+// Offset in the hand bone's local space (bone axis runs along +Y from the wrist, i.e. along the
+// fingers). 0.155 puts the ball just past the fingertips so the hand rests on top of it; smaller
+// values bury the hand inside the ball.
+const BALL_OFFSET: [number, number, number] = [0, 0.155, 0]
 
 type PbrOriginals = {
   normalMap: Texture | null
