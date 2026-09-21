@@ -1,110 +1,54 @@
-import { Center, OrbitControls, useGLTF } from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import type { Group, Mesh, MeshStandardMaterial, Texture } from 'three'
+import { useState } from 'react'
+import { JERSEY_COLORS, type JerseyColor } from '../hooks/usePlayers'
+import { LION_3D } from '../lib/mascot3d'
+import { Mascot3DScene } from './Mascot3DScene'
 
-/**
- * POC only (sports-training-api#68, #96) — loads Leon's rigged export in its rest pose (no
- * animation clip is played) and parents a small basketball to one of his hand bones, so the
- * ball follows the hand in any pose.
+/** Standalone full-page viewer for the hidden POC page (`/poc-3d.html`, sports-training-api#68):
+ * the same scene the player form embeds, plus dev controls for matte shading, the ball and the
+ * jersey colour. Styling lives in poc-3d.html.
  *
  * The Tripo export ("anthropomorphic lion") shipped with two skeleton defects that made three.js
  * render it garbled: bone nodes had no transforms, and the bind matrices were turned 90 degrees
- * about Y relative to the mesh. `anthropomorphic_lion_bones_fixed.glb` is the original file with
- * both repaired (mesh, weights and textures untouched).
- */
-
-// Mixamo-style rig. The GLB names it 'mixamorig:RightHand', but three.js strips the
-// colon from node names on load. Swap to 'mixamorigLeftHand' to put the ball in the other hand.
-const HAND_BONE = 'mixamorigRightHand'
-// The ball export is ~1.9 units across and this lion is ~0.98 tall; this scale makes the ball ~0.14 wide.
-const BALL_SCALE = 0.075
-// Offset in the hand bone's local space (bone axis runs along +Y from the wrist, i.e. along the
-// fingers). 0.155 puts the ball just past the fingertips so the hand rests on top of it; smaller
-// values bury the hand inside the ball.
-const BALL_OFFSET: [number, number, number] = [0, 0.155, 0]
-
-type PbrOriginals = {
-  normalMap: Texture | null
-  metalnessMap: Texture | null
-  roughnessMap: Texture | null
-  metalness: number
-  roughness: number
-}
-
-// The exports bake shading into their normal + metallic/roughness maps. "Matte" drops
-// them (flat, cartoon-like look); toggling off restores the originals.
-function useMatte(scene: Group, matte: boolean) {
-  const originals = useRef(new Map<MeshStandardMaterial, PbrOriginals>())
-
-  useEffect(() => {
-    scene.traverse((obj) => {
-      const mat = (obj as Mesh).material as MeshStandardMaterial | undefined
-      if (!(obj as Mesh).isMesh || !mat) return
-      if (!originals.current.has(mat)) {
-        originals.current.set(mat, {
-          normalMap: mat.normalMap,
-          metalnessMap: mat.metalnessMap,
-          roughnessMap: mat.roughnessMap,
-          metalness: mat.metalness,
-          roughness: mat.roughness,
-        })
-      }
-      const o = originals.current.get(mat)!
-      mat.normalMap = matte ? null : o.normalMap
-      mat.metalnessMap = matte ? null : o.metalnessMap
-      mat.roughnessMap = matte ? null : o.roughnessMap
-      mat.metalness = matte ? 0 : o.metalness
-      mat.roughness = matte ? 1 : o.roughness
-      mat.needsUpdate = true
-    })
-  }, [scene, matte])
-}
-
-function MascotModel({ url, ballUrl, matte }: { url: string; ballUrl: string; matte: boolean }) {
-  const { scene } = useGLTF(url)
-  const { scene: ballSource } = useGLTF(ballUrl)
-  const ball = useMemo(() => ballSource.clone(), [ballSource])
-
-  useMatte(scene, matte)
-  useMatte(ball, matte)
-
-  useEffect(() => {
-    const hand = scene.getObjectByName(HAND_BONE)
-    if (!hand) {
-      console.warn(`MascotViewer3D: bone "${HAND_BONE}" not found; ball not attached`)
-      return
-    }
-    ball.position.set(...BALL_OFFSET)
-    ball.scale.setScalar(BALL_SCALE)
-    hand.add(ball)
-    return () => {
-      hand.remove(ball)
-    }
-  }, [scene, ball])
-
-  return <primitive object={scene} />
-}
-
-export function MascotViewer3D({ modelUrl, ballUrl }: { modelUrl: string; ballUrl: string }) {
+ * about Y relative to the mesh. `anthropomorphic_lion_v2_bones_fixed.glb` is the original file
+ * with both repaired (mesh, weights and textures untouched). */
+export function MascotViewer3D() {
   const [matte, setMatte] = useState(true)
+  const [showBall, setShowBall] = useState(true)
+  const [jerseyColor, setJerseyColor] = useState<JerseyColor | null>(null)
 
   return (
     <div className="viewer">
-      <Canvas camera={{ position: [1.8, 0.8, 3.2], fov: 45 }}>
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[3, 5, 2]} intensity={1.2} />
-        <Suspense fallback={null}>
-          <Center>
-            <MascotModel url={modelUrl} ballUrl={ballUrl} matte={matte} />
-          </Center>
-        </Suspense>
-        <OrbitControls enablePan={false} />
-      </Canvas>
-      <label className="matte-toggle">
-        <input type="checkbox" checked={matte} onChange={(e) => setMatte(e.target.checked)} />
-        Matte
-      </label>
+      <Mascot3DScene
+        {...LION_3D}
+        jerseyColor={jerseyColor}
+        showBall={showBall}
+        matte={matte}
+        cameraPosition={[1.8, 0.8, 3.2]}
+      />
+      <div className="viewer-controls">
+        <label>
+          <input type="checkbox" checked={matte} onChange={(e) => setMatte(e.target.checked)} />
+          Matte
+        </label>
+        <label>
+          <input type="checkbox" checked={showBall} onChange={(e) => setShowBall(e.target.checked)} />
+          Ball
+        </label>
+        <label>
+          Jersey
+          <select
+            value={jerseyColor ?? ''}
+            onChange={(e) => setJerseyColor((e.target.value || null) as JerseyColor | null)}
+          >
+            <option value="">(none)</option>
+            {JERSEY_COLORS.map((color) => (
+              <option key={color} value={color}>
+                {color}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
     </div>
   )
 }
