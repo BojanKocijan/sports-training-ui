@@ -6,7 +6,7 @@ const MODEL_URL = encodeURI(
   '/images/basketball/u8 u10/Leon/Original size/Leo boy/Meshy_AI_Leo_Hoops_Running.glb',
 )
 const BALL_URL = encodeURI(
-  '/images/basketball/u8 u10/Leon/Original size/Meshy_AI_cartoon_basketball_lo_0921102916_texture.glb',
+  '/images/basketball/u8 u10/Leon/Original size/Meshy_AI_cartoon_basketball_lo_0921102916_texture_1k.glb',
 )
 
 createRoot(document.getElementById('root')!).render(
