@@ -56,14 +56,34 @@ function useMatte(scene: Group, matte: boolean) {
 // Two recolouring rules driven by one RGB mask (red = jersey, green = eye area):
 //  - Jersey: multiply the base colour by the tint. The jersey art is white with black trim, so
 //    white becomes the tint and the trim stays black.
-//  - Iris: same recipe as the still image, whose base art has a GREY iris (light ring, darker
-//    middle, black pupil) with a flat colour multiplied over it and the white highlights layered
-//    on top. Inside the eye area only the iris texels are used (lightness < ~0.5; the sclera and
-//    highlights are 0.65+, measured with a clean gap between them). The 3D atlas iris is much
-//    darker than the still art's (most texels 0.1-0.3, vs a mid-grey iris there), so texels above
-//    the pupil/outline range are lifted into the still art's mid-grey range (keeping their own
-//    gradient) while the pupil and outline stay black, then multiplied by the swatch colour in
-//    sRGB like CSS mix-blend-mode: multiply does.
+//  - Iris: same recipe as the still image, whose base art has a GREY iris with a flat colour
+//    multiplied over it and the white highlights layered on top. Inside the eye area only the iris
+//    texels are used (lightness < ~0.5; the sclera and highlights are 0.65+, measured with a clean
+//    gap between them). The 3D atlas iris is much darker and distributed differently from the
+//    still art's (still: a big black pupil, over half the iris, inside a bright ring), so its
+//    lightness is HISTOGRAM-MATCHED to the still art's: each 3D lightness is mapped to the still
+//    art's value at the same quantile (points measured offline from the two images). The mapped
+//    grey is then multiplied by the swatch colour in sRGB like CSS mix-blend-mode: multiply does.
+// 3D iris lightness -> still-art iris base lightness, piecewise linear.
+const IRIS_TONE_X = [0.0, 0.046, 0.101, 0.205, 0.252, 0.298, 0.348, 0.384, 0.45]
+const IRIS_TONE_Y = [0.0, 0.004, 0.027, 0.081, 0.129, 0.251, 0.471, 0.621, 0.7]
+const glslFloats = (v: number[]) => v.map((n) => n.toFixed(4)).join(', ')
+
+// Declarations (uniforms, tone table and helper) go above main(); the body replaces map_fragment.
+const REGION_TINT_DECLS = /* glsl */ `
+uniform sampler2D uRegionMask;
+uniform vec3 uJerseyTint;
+uniform vec4 uEyeTint;
+const float IRIS_X[${IRIS_TONE_X.length}] = float[${IRIS_TONE_X.length}](${glslFloats(IRIS_TONE_X)});
+const float IRIS_Y[${IRIS_TONE_Y.length}] = float[${IRIS_TONE_Y.length}](${glslFloats(IRIS_TONE_Y)});
+float irisTone( float l ) {
+  for ( int i = 0; i < ${IRIS_TONE_X.length - 1}; i++ ) {
+    if ( l < IRIS_X[i + 1] ) return mix( IRIS_Y[i], IRIS_Y[i + 1], ( l - IRIS_X[i] ) / ( IRIS_X[i + 1] - IRIS_X[i] ) );
+  }
+  return IRIS_Y[${IRIS_TONE_Y.length - 1}];
+}
+`
+
 const REGION_TINT_GLSL = /* glsl */ `
 #include <map_fragment>
 #ifdef USE_MAP
@@ -71,9 +91,7 @@ const REGION_TINT_GLSL = /* glsl */ `
   diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * uJerseyTint, regionMask.r );
   float texelLuma = dot( pow( diffuseColor.rgb, vec3( 1.0 / 2.2 ) ), vec3( 0.299, 0.587, 0.114 ) );
   float iris = regionMask.g * ( 1.0 - smoothstep( 0.47, 0.60, texelLuma ) ) * uEyeTint.a;
-  float pupil = smoothstep( 0.03, 0.12, texelLuma );
-  float irisTone = mix( 0.45, 0.68, clamp( texelLuma / 0.42, 0.0, 1.0 ) );
-  vec3 irisSrgb = pow( uEyeTint.rgb, vec3( 1.0 / 2.2 ) ) * irisTone * pupil;
+  vec3 irisSrgb = pow( uEyeTint.rgb, vec3( 1.0 / 2.2 ) ) * irisTone( texelLuma );
   diffuseColor.rgb = mix( diffuseColor.rgb, pow( irisSrgb, vec3( 2.2 ) ), iris );
 #endif
 `
@@ -97,7 +115,7 @@ function useRegionTint(scene: Group, mask: Texture, jerseyHex: string, eyeHex: s
         shader.uniforms.uRegionMask = uniforms.uRegionMask
         shader.uniforms.uJerseyTint = uniforms.uJerseyTint
         shader.uniforms.uEyeTint = uniforms.uEyeTint
-        shader.fragmentShader = `uniform sampler2D uRegionMask;\nuniform vec3 uJerseyTint;\nuniform vec4 uEyeTint;\n${shader.fragmentShader}`.replace(
+        shader.fragmentShader = `${REGION_TINT_DECLS}\n${shader.fragmentShader}`.replace(
           '#include <map_fragment>',
           REGION_TINT_GLSL,
         )
