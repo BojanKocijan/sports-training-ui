@@ -7,6 +7,11 @@ export interface Cue {
   en: string
 }
 
+export interface ExerciseGuidance {
+  groupTemplateId: string
+  note: string
+}
+
 export interface Exercise {
   id: string
   emoji: string
@@ -19,6 +24,7 @@ export interface Exercise {
   cues?: Cue[]
   isBreak?: boolean
   groups?: string[]
+  guidance?: ExerciseGuidance[]
 }
 
 interface ApiExercise {
@@ -33,6 +39,7 @@ interface ApiExercise {
   is_break: boolean
   categories: string[]
   groups: string[] | null
+  guidance?: Array<{ group_template_id: string; note: string }>
 }
 
 function mapExercise(e: ApiExercise): Exercise {
@@ -48,6 +55,10 @@ function mapExercise(e: ApiExercise): Exercise {
     cues: e.cues ?? undefined,
     isBreak: e.is_break || undefined,
     groups: e.groups ?? undefined,
+    guidance: (e.guidance ?? []).map((item) => ({
+      groupTemplateId: item.group_template_id,
+      note: item.note,
+    })),
   }
 }
 
@@ -121,4 +132,12 @@ export function findExercise(exercises: Exercise[], id: string): Exercise | unde
  * untagged exercises are shared fundamentals and show for every group. */
 export function exercisesForGroup(exercises: Exercise[], templateId: string): Exercise[] {
   return exercises.filter((e) => !e.groups || e.groups.includes(templateId))
+}
+
+/** The hand-authored note for this exercise and stable age-band template, if one exists. */
+export function guidanceForGroup(
+  exercise: Exercise,
+  groupTemplateId: string,
+): string | undefined {
+  return exercise.guidance?.find((item) => item.groupTemplateId === groupTemplateId)?.note
 }

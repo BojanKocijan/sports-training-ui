@@ -47,6 +47,7 @@ describe('useGroups', () => {
         {
           id: 'group-u8',
           templateId: 'u8',
+          templateLabel: 'U8',
           name: 'Dunckers U8',
           emoji: '🏀',
           status: 'available',
@@ -138,6 +139,7 @@ describe('useGroups', () => {
         {
           id: 'group-x',
           templateId: 'u12',
+          templateLabel: 'U12',
           name: 'Future group',
           emoji: '🏀',
           status: 'available',

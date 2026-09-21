@@ -15,6 +15,8 @@ export function SessionScreen({
   activePlan,
   planId,
   groupId,
+  groupTemplateId,
+  groupTemplateLabel,
   trainerAccess,
   onBuildPlan,
 }: {
@@ -24,6 +26,8 @@ export function SessionScreen({
    * are tied to a plan_id server-side, so rating only makes sense once one exists. */
   planId: string | null
   groupId: string
+  groupTemplateId: string
+  groupTemplateLabel: string
   trainerAccess: ReturnType<typeof useTrainerAccess>
   onBuildPlan: () => void
 }) {
@@ -186,6 +190,8 @@ export function SessionScreen({
             currentEntry={currentEntry}
             remainingLabel={formatClock(remainingInSegment)}
             segmentPct={segmentPct}
+            groupTemplateId={groupTemplateId}
+            groupTemplateLabel={groupTemplateLabel}
             onRate={(value) => rate(current.id, value)}
             ratingAverage={currentStats.average}
             ratingCount={currentStats.count}

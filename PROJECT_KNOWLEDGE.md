@@ -160,6 +160,9 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 
 ## Changelog
 
+- **2026-09-21** — Local UI uses strict port 5174 and calls the sibling API on port 3002, avoiding other local services. Both projects require Node 22+; the API must allow the exact UI origin. The API client trims trailing slashes and sends JSON Content-Type only for requests with a body, so GET requests no longer trigger unnecessary preflights.
+
+- **2026-09-20** — sports-training-api#26 Age-scoped pedagogical guidance is now carried with database-backed exercises and shown only on the live `ExerciseTimeline`. The UI resolves the note by the active group's stable `templateId` (not its renameable display name), labels it with the template's display label, and omits the block when no note has been authored.
 - **2026-09-19** — sports-training-api#65 Parent-code reads now use `POST /players/:id/parent-code/read` with the trainer passcode in the JSON body. The old credential-bearing GET query URL was removed so browser history and URL logging cannot capture the trainer passcode; the UI action test enforces that no parent-code request URL contains `passcode=`.
 - **2026-09-16** — File created; captured current scope, architecture, the a11y/interaction-state gap found in this session, and the plan to descope Setup/Vocabulary.
 - **2026-09-17** — Added competitive scouting summary (§ Milestone 1); reframed positioning after review — this is a child development & progress-sharing tool for parents, not a practice planner with a parent screen attached. Per-skill progress tracking + parent-code sharing + age-scoped psychology framing are the load-bearing differentiators for the multi-sport milestone, not sport count or zero-PII alone.

@@ -25,6 +25,9 @@ function App() {
   const { groups } = useGroups()
   const { exercises } = useExercises()
   const { plans, nextPlan } = usePlans(groupId)
+  const activeGroup = groups.find((group) => group.id === groupId)
+  const groupTemplateId = activeGroup?.templateId ?? groupId
+  const groupTemplateLabel = activeGroup?.templateLabel ?? groupTemplateId.toUpperCase()
   // Owned here, not inside PlayersSection, so PlayerDetailScreen (a sibling top-level screen, see
   // below) can use the same roster data and mutations without a second fetch.
   const {
@@ -185,6 +188,8 @@ function App() {
                   activePlan={sessionPlan}
                   planId={nextPlan?.id ?? null}
                   groupId={groupId}
+                  groupTemplateId={groupTemplateId}
+                  groupTemplateLabel={groupTemplateLabel}
                   trainerAccess={trainerAccess}
                   onBuildPlan={() => setTab('groups')}
                 />
