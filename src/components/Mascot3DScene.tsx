@@ -1,20 +1,10 @@
 import { Center, OrbitControls, useGLTF, useTexture } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Suspense, useEffect, useMemo, useRef } from 'react'
-import { Color, Vector4 } from 'three'
-import type { Group, Mesh, MeshStandardMaterial, Texture } from 'three'
+import { Color, MathUtils, Quaternion, Vector3, Vector4 } from 'three'
+import type { Group, Mesh, MeshStandardMaterial, Object3D, Texture } from 'three'
 import type { EyeColor, JerseyColor } from '../hooks/usePlayers'
-import { DEFAULT_JERSEY_TINT, EYE_TINTS, JERSEY_TINTS } from '../lib/mascot3d'
-
-// Mixamo-style rig. The GLB names it 'mixamorig:RightHand', but three.js strips the
-// colon from node names on load. Swap to 'mixamorigLeftHand' to put the ball in the other hand.
-const HAND_BONE = 'mixamorigRightHand'
-// The ball export is ~1.9 units across and this lion is ~0.98 tall; this scale makes the ball ~0.14 wide.
-const BALL_SCALE = 0.075
-// Offset in the hand bone's local space (bone axis runs along +Y from the wrist, i.e. along the
-// fingers). 0.155 puts the ball just past the fingertips so the hand rests on top of it; smaller
-// values bury the hand inside the ball.
-const BALL_OFFSET: [number, number, number] = [0, 0.155, 0]
+import { DEFAULT_JERSEY_TINT, EYE_TINTS, JERSEY_TINTS, type Mascot3DConfig } from '../lib/mascot3d'
 
 type PbrOriginals = {
   normalMap: Texture | null
@@ -64,27 +54,27 @@ function useMatte(scene: Group, matte: boolean) {
 //    lightness is HISTOGRAM-MATCHED to the still art's: each 3D lightness is mapped to the still
 //    art's value at the same quantile (points measured offline from the two images). The mapped
 //    grey is then multiplied by the swatch colour in sRGB like CSS mix-blend-mode: multiply does.
-// 3D iris lightness -> still-art iris base lightness, piecewise linear.
-const IRIS_TONE_X = [0.0, 0.046, 0.101, 0.205, 0.252, 0.298, 0.348, 0.384, 0.45]
-const IRIS_TONE_Y = [0.0, 0.004, 0.027, 0.081, 0.129, 0.251, 0.471, 0.621, 0.7]
 const glslFloats = (v: number[]) => v.map((n) => n.toFixed(4)).join(', ')
 
-// Declarations (uniforms, tone table and helper) go above main(); the body replaces map_fragment.
-const REGION_TINT_DECLS = /* glsl */ `
+/** The two shader chunks for one mascot. The iris tone table differs per model, so the GLSL is
+ * built from the config. Declarations (uniforms, tone table, helper) go above main(); the body
+ * replaces map_fragment. */
+function buildTintShader(iris: Mascot3DConfig['irisTone']) {
+  const n = iris.x.length
+  const decls = /* glsl */ `
 uniform sampler2D uRegionMask;
 uniform vec3 uJerseyTint;
 uniform vec4 uEyeTint;
-const float IRIS_X[${IRIS_TONE_X.length}] = float[${IRIS_TONE_X.length}](${glslFloats(IRIS_TONE_X)});
-const float IRIS_Y[${IRIS_TONE_Y.length}] = float[${IRIS_TONE_Y.length}](${glslFloats(IRIS_TONE_Y)});
+const float IRIS_X[${n}] = float[${n}](${glslFloats(iris.x)});
+const float IRIS_Y[${n}] = float[${n}](${glslFloats(iris.y)});
 float irisTone( float l ) {
-  for ( int i = 0; i < ${IRIS_TONE_X.length - 1}; i++ ) {
+  for ( int i = 0; i < ${n - 1}; i++ ) {
     if ( l < IRIS_X[i + 1] ) return mix( IRIS_Y[i], IRIS_Y[i + 1], ( l - IRIS_X[i] ) / ( IRIS_X[i + 1] - IRIS_X[i] ) );
   }
-  return IRIS_Y[${IRIS_TONE_Y.length - 1}];
+  return IRIS_Y[${n - 1}];
 }
 `
-
-const REGION_TINT_GLSL = /* glsl */ `
+  const body = /* glsl */ `
 #include <map_fragment>
 #ifdef USE_MAP
   vec3 regionMask = texture2D( uRegionMask, vMapUv ).rgb;
@@ -95,8 +85,17 @@ const REGION_TINT_GLSL = /* glsl */ `
   diffuseColor.rgb = mix( diffuseColor.rgb, pow( irisSrgb, vec3( 2.2 ) ), iris );
 #endif
 `
+  return { decls, body }
+}
 
-function useRegionTint(scene: Group, mask: Texture, jerseyHex: string, eyeHex: string | null) {
+function useRegionTint(
+  scene: Group,
+  mask: Texture,
+  jerseyHex: string,
+  eyeHex: string | null,
+  irisTone: Mascot3DConfig['irisTone'],
+) {
+  const shader = useMemo(() => buildTintShader(irisTone), [irisTone])
   const uniforms = useMemo(
     () => ({
       uRegionMask: { value: mask },
@@ -111,19 +110,20 @@ function useRegionTint(scene: Group, mask: Texture, jerseyHex: string, eyeHex: s
     scene.traverse((obj) => {
       const mat = (obj as Mesh).material as MeshStandardMaterial | undefined
       if (!(obj as Mesh).isMesh || !mat) return
-      mat.onBeforeCompile = (shader) => {
-        shader.uniforms.uRegionMask = uniforms.uRegionMask
-        shader.uniforms.uJerseyTint = uniforms.uJerseyTint
-        shader.uniforms.uEyeTint = uniforms.uEyeTint
-        shader.fragmentShader = `${REGION_TINT_DECLS}\n${shader.fragmentShader}`.replace(
+      mat.onBeforeCompile = (compiled) => {
+        compiled.uniforms.uRegionMask = uniforms.uRegionMask
+        compiled.uniforms.uJerseyTint = uniforms.uJerseyTint
+        compiled.uniforms.uEyeTint = uniforms.uEyeTint
+        compiled.fragmentShader = `${shader.decls}\n${compiled.fragmentShader}`.replace(
           '#include <map_fragment>',
-          REGION_TINT_GLSL,
+          shader.body,
         )
       }
-      mat.customProgramCacheKey = () => 'region-tint'
+      // The compiled program depends on the tone table, so it must be part of the cache key.
+      mat.customProgramCacheKey = () => `region-tint-${irisTone.x.join(',')}`
       mat.needsUpdate = true
     })
-  }, [scene, uniforms])
+  }, [scene, uniforms, shader, irisTone])
 
   useEffect(() => {
     uniforms.uJerseyTint.value.set(jerseyHex)
@@ -135,28 +135,55 @@ function useRegionTint(scene: Group, mask: Texture, jerseyHex: string, eyeHex: s
   }, [uniforms, eyeHex])
 }
 
+// Upper-arm bones swung down from a T-pose. The right arm points to -x and the left to +x (the
+// mascot faces +z), so a rotation about the world z axis lowers them in opposite directions.
+const ARM_BONES = [
+  ['mixamorigRightArm', 1],
+  ['mixamorigLeftArm', -1],
+] as const
+
+function useArmsDown(scene: Group, degrees: number | undefined) {
+  useEffect(() => {
+    if (!degrees) return
+    scene.updateWorldMatrix(true, true)
+    const original: [Object3D, Quaternion][] = []
+    for (const [name, sign] of ARM_BONES) {
+      const bone = scene.getObjectByName(name)
+      if (!bone?.parent) {
+        console.warn(`Mascot3DScene: bone "${name}" not found; arm not lowered`)
+        continue
+      }
+      original.push([bone, bone.quaternion.clone()])
+      // Apply the swing in world space, then convert back to the bone's local space.
+      const swing = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), sign * MathUtils.degToRad(degrees))
+      const boneWorld = bone.getWorldQuaternion(new Quaternion())
+      const parentWorld = bone.parent.getWorldQuaternion(new Quaternion())
+      bone.quaternion.copy(parentWorld.invert().multiply(swing).multiply(boneWorld))
+    }
+    scene.updateWorldMatrix(true, true)
+    // The loaded scene is cached and shared, so put the bones back or a remount bends them twice.
+    return () => original.forEach(([bone, q]) => bone.quaternion.copy(q))
+  }, [scene, degrees])
+}
+
 function MascotModel({
-  modelUrl,
-  ballUrl,
-  regionMaskUrl,
+  config,
   jerseyColor,
   eyeColor,
   showBall,
   matte,
 }: {
-  modelUrl: string
-  ballUrl: string
-  regionMaskUrl: string
+  config: Mascot3DConfig
   jerseyColor: JerseyColor | null
   eyeColor: EyeColor | null
   showBall: boolean
   matte: boolean
 }) {
-  const { scene } = useGLTF(modelUrl)
-  const { scene: ballSource } = useGLTF(ballUrl)
+  const { scene } = useGLTF(config.modelUrl)
+  const { scene: ballSource } = useGLTF(config.ballUrl)
   const ball = useMemo(() => ballSource.clone(), [ballSource])
   // glTF UVs have their origin top-left, so the mask must not be flipped on upload.
-  const mask = useTexture(regionMaskUrl, (t) => {
+  const mask = useTexture(config.regionMaskUrl, (t) => {
     ;(Array.isArray(t) ? t : [t]).forEach((tex) => {
       tex.flipY = false
     })
@@ -169,33 +196,34 @@ function MascotModel({
     mask,
     jerseyColor ? JERSEY_TINTS[jerseyColor] : DEFAULT_JERSEY_TINT,
     eyeColor ? EYE_TINTS[eyeColor] : null,
+    config.irisTone,
   )
+  useArmsDown(scene, config.armDownDegrees)
 
   useEffect(() => {
     if (!showBall) return
-    const hand = scene.getObjectByName(HAND_BONE)
+    const hand = scene.getObjectByName(config.ball.bone)
     if (!hand) {
-      console.warn(`Mascot3DScene: bone "${HAND_BONE}" not found; ball not attached`)
+      console.warn(`Mascot3DScene: bone "${config.ball.bone}" not found; ball not attached`)
       return
     }
-    ball.position.set(...BALL_OFFSET)
-    ball.scale.setScalar(BALL_SCALE)
+    ball.position.set(...config.ball.offset)
+    ball.scale.setScalar(config.ball.scale)
     hand.add(ball)
     return () => {
       hand.remove(ball)
     }
-  }, [scene, ball, showBall])
+  }, [scene, ball, showBall, config.ball])
 
   return <primitive object={scene} />
 }
 
-/** The lion's 3D canvas (sports-training-api#68, #99, #101): the rigged Tripo export in its rest
- * pose, jersey and irises recoloured through a UV region mask, optionally holding a ball parented to a hand bone.
- * Fills its parent, so the parent decides the size. */
+/** A mascot's 3D canvas (sports-training-api#68, #99, #101, #104): the rigged Tripo export in its
+ * rest pose (arms lowered in code when its config asks), jersey and irises recoloured through a UV
+ * region mask, optionally holding a ball parented to a hand bone. Fills its parent, so the parent
+ * decides the size. */
 export function Mascot3DScene({
-  modelUrl,
-  ballUrl,
-  regionMaskUrl,
+  config,
   jerseyColor,
   eyeColor,
   showBall,
@@ -203,18 +231,17 @@ export function Mascot3DScene({
   cameraPosition,
   enableZoom = true,
 }: {
-  modelUrl: string
-  ballUrl: string
-  regionMaskUrl: string
+  config: Mascot3DConfig
   jerseyColor: JerseyColor | null
   eyeColor: EyeColor | null
   showBall: boolean
   matte?: boolean
-  cameraPosition: [number, number, number]
+  /** Overrides the config's preview camera (the hidden POC page uses a wider shot). */
+  cameraPosition?: [number, number, number]
   enableZoom?: boolean
 }) {
   return (
-    <Canvas camera={{ position: cameraPosition, fov: 45 }}>
+    <Canvas camera={{ position: cameraPosition ?? config.cameraPosition, fov: 45 }}>
       {/* Deliberately bright and fairly flat: the still art is flat-lit, and three.js divides light
           by pi, so the defaults (0.8 / 1.2) rendered every multiplied colour darker than its swatch. */}
       <ambientLight intensity={1.8} />
@@ -222,9 +249,7 @@ export function Mascot3DScene({
       <Suspense fallback={null}>
         <Center>
           <MascotModel
-            modelUrl={modelUrl}
-            ballUrl={ballUrl}
-            regionMaskUrl={regionMaskUrl}
+            config={config}
             jerseyColor={jerseyColor}
             eyeColor={eyeColor}
             showBall={showBall}

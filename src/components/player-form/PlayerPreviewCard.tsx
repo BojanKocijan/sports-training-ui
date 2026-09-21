@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import { DEFAULT_MASCOT_ID, type EyeColor, type Gender, type JerseyColor } from '../../hooks/usePlayers'
+import { get3dConfig } from '../../lib/mascot3d'
 import { ErrorBoundary } from '../ErrorBoundary'
 import { JerseyGraphic } from '../JerseyGraphic'
 import { Skeleton } from '../ui/skeleton'
@@ -9,15 +10,12 @@ const Mascot3DPreview = lazy(() => import('../Mascot3DPreview'))
 
 type PreviewView = 'still' | '3d'
 
-/** Only the lion has a 3D model so far (sports-training-api#68, #99). */
-const MASCOTS_WITH_3D = new Set(['lion'])
-
 const VIEW_LABELS: Record<PreviewView, string> = { still: 'Still image', '3d': '3D model' }
 
 /** Live preview of the jersey being built in a create/edit form — mirrors the in-progress
  * nickname/color/number back to the trainer as they change them, instead of only showing the
- * result after Save. For the lion it can also switch to a 3D model (jersey colour, eye colour
- * and an optional ball); the still image stays the default and the 3D choice is never saved. */
+ * result after Save. For a mascot with a 3D model (lion, shark boy) it can also switch to 3D
+ * (jersey colour, eye colour and an optional ball); the still image stays the default and the 3D choice is never saved. */
 export function PlayerPreviewCard({
   nickname,
   jerseyColor,
@@ -39,7 +37,9 @@ export function PlayerPreviewCard({
 }) {
   const [view, setView] = useState<PreviewView>('still')
   const [showBall, setShowBall] = useState(true)
-  const has3d = MASCOTS_WITH_3D.has(mascotId ?? DEFAULT_MASCOT_ID)
+  // Which mascots have a 3D model (and for which gender) lives in MASCOTS_3D.
+  const mascot3dId = mascotId ?? DEFAULT_MASCOT_ID
+  const has3d = get3dConfig(mascot3dId, gender) !== null
   const activeView: PreviewView = has3d ? view : 'still'
 
   const still = (
@@ -95,7 +95,12 @@ export function PlayerPreviewCard({
       {activeView === '3d' ? (
         <ErrorBoundary fallback={still}>
           <Suspense fallback={<Skeleton className="h-72 aspect-[4/5]" />}>
-            <Mascot3DPreview jerseyColor={jerseyColor} eyeColor={eyeColor ?? null} showBall={showBall} />
+            <Mascot3DPreview
+              mascotId={mascot3dId}
+              jerseyColor={jerseyColor}
+              eyeColor={eyeColor ?? null}
+              showBall={showBall}
+            />
           </Suspense>
         </ErrorBoundary>
       ) : (

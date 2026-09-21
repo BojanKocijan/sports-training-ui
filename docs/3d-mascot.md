@@ -1,9 +1,10 @@
 # 3D mascots: how they are built and how the app uses them
 
 The player create/edit form can switch its live preview from the still image to a 3D model of
-the mascot, with the player's jersey colour, eye colour and an optional ball. Only the **lion**
-has a 3D model so far; the **shark (boy)** is next (#104). This document is the single place that
-explains the whole pipeline, so a new model can be added without rediscovering any of it.
+the mascot, with the player's jersey colour, eye colour and an optional ball. The **lion** and the
+**shark (boy)** have 3D models (the shark girl is not made yet, so she stays on the still image).
+This document is the single place that explains the whole pipeline, so a new model can be added
+without rediscovering any of it.
 
 Tracking: sports-training-api#68 (idea), #94 / #97 / #98 (POC, rig, ball), #99 / #100 (toggle,
 jersey colour, ball switch), #101 / #102 / #103 (eye colour), #104 (shark).
@@ -25,7 +26,7 @@ jersey colour, ball switch), #101 / #102 / #103 (eye colour), #104 (shark).
 | Toggle, ball switch, error fallback | `src/components/player-form/PlayerPreviewCard.tsx` | Still image is the default and the choice is never saved. Shown only for mascots with a 3D model. |
 | Lazy 3D preview | `src/components/Mascot3DPreview.tsx` | `React.lazy`, so three.js and the models are only downloaded when someone opens 3D. Shows "Loading 3D model…". |
 | Scene, shader, ball attachment | `src/components/Mascot3DScene.tsx` | Everything that draws the model. |
-| Asset URLs, colour tables | `src/lib/mascot3d.ts` | `LION_3D`, `JERSEY_TINTS`, `EYE_TINTS`. |
+| Per-mascot config, colour tables | `src/lib/mascot3d.ts` | `MASCOTS_3D` (assets, camera, ball, iris table, arm bend, genders), `get3dConfig()`, `JERSEY_TINTS`, `EYE_TINTS`. |
 | Failure fallback | `src/components/ErrorBoundary.tsx` | No WebGL or a failed download falls back to the still image. |
 | Hidden dev page | `poc-3d.html`, `src/components/MascotViewer3D.tsx` | `/poc-3d.html`: the same scene with controls for matte, ball, jersey and eyes. Not linked from the app. |
 | Assets | `public/images/basketball/u8 u10/Leon/Original size/` | See below. |
@@ -38,6 +39,15 @@ Assets in use (lion):
 | `Leo boy/anthropomorphic_lion_v2_region_mask.png` | 27 KB | RGB mask in the model's UV space: red = jersey and shorts, green = eye area. |
 | `Meshy_AI_cartoon_basketball_lo_..._texture_1k.glb` | 326 KB | The ball, attached to the right hand bone. |
 | `Leo boy/anthropomorphic_lion_v2_bones_fixed.glb` | 9.1 MB | The repaired full-size model. The source for regenerating the web copy; the app does not load it. |
+
+Assets in use (shark boy), in `public/images/basketball/u8 u10/Shark/3D/`:
+
+| File | Size | What it is |
+|---|---|---|
+| `shark_boy_web.glb` | 1.7 MB | Repaired, web-sized model (2048px colour texture). Keeps its skin data: its weights are real, and the arms are bent with them. |
+| `shark_boy_region_mask.png` | 41 KB | Region mask (red = jersey and shorts, green = eye area). |
+
+The shark reuses the lion's ball.
 
 The unrepaired Tripo exports are **not** committed. Keep them somewhere shared (they are needed
 to reproduce the assets, see [section 4](#4-the-toolkit-scriptsmascot3d)).
@@ -84,7 +94,7 @@ Measured on the exports so far:
 | Lion v1 (Meshy) | 10k | 28 | scrambled scraps | not inspected | rendered fine in three.js (bone transforms not inspected) |
 | Lion "anthropomorphic" v2 (Tripo) | 19k | 53 | large islands | 99.8% on Hips | no transforms; skeleton turned 90 degrees about Y |
 | Lion cub (Tripo) | 26k | 65 | scrambled scraps | real | fine |
-| Shark boy (Tripo) | 25k | 52 | large islands | real | no transforms; **Z-up skeleton, offset 0.5 in height** |
+| Shark boy (Tripo) | 25k | 52 | large islands | real | no transforms; **Z-up skeleton, offset 0.5 in height**; T-pose |
 
 ## 4. The toolkit (`scripts/mascot3d`)
 
@@ -164,6 +174,13 @@ How the mask is found:
   whose centroid height is in a band. On the lion the achromatic triangles fall into three clean
   height groups (eyes, jersey and shorts, shoes), so the band `0.16 to 0.60` isolates the jersey.
   Look at `overlays/jersey_overlay.png` (pink = selected): jersey and shorts panels, nothing else.
+- **Shark example**: eye centres `(-0.092, 0.724)` and `(0.092, 0.720)` (read off a `view` of
+  the whole body: `--box -0.52 0.52 0 1.02`), radius `0.042`, jersey band `--jersey-y 0.20 0.565`.
+  Two things the lion did not need: `--jersey-x 0.17` (the pale undersides of the T-posed arms
+  are colourless and in the height band, so they would otherwise be tinted) and `--chroma 12`
+  (the cream throat inside the V-neck has a colour spread of 15 to 19 against 0 to 9 for the white
+  jersey; the lion's default of 45 would tint it). Choose the threshold from a histogram of the
+  spreads in the band, not by guessing.
 - **Eye area**: triangles within a radius of each eye centre, facing front. Eye centres **must be
   measured** from the `view` image: averaging "dark" triangles gives wrong centres because
   whiskers and lashes skew it. Check `overlays/eye_selection.png` (blue = what would be
@@ -206,6 +223,15 @@ colour darker than its swatch.
 prepended with the uniforms); putting them in the `map_fragment` replacement fails to compile and
 the canvas goes blank. Check the browser console for `THREE.WebGLProgram: Shader Error`.
 
+**Arm bend (shark)**: the shark export is a T-pose, and a ball at the end of an outstretched hand
+looks like an offering. Its skin weights are real, so `useArmsDown` swings the two upper-arm bones
+(`mixamorigRightArm` / `mixamorigLeftArm`) down by `armDownDegrees` (55) about the world z axis,
+in opposite directions (the mascot faces +z, so its right arm points to -x). The rotation is applied
+in world space and converted back to each bone's local space, so it does not depend on the bones'
+local axes, and the original rotations are restored on cleanup because the loaded scene is cached
+and shared (a remount would otherwise bend the arms twice). The lion does not use this (its weights
+are useless and its pose is already an A-pose).
+
 **The ball** is a separate GLB cloned and added as a child of the hand bone
 (`mixamorigRightHand`), with a scale (0.075 for the 0.98-tall lion) and an offset in the bone's
 local space. On the lion the offset `[0, 0.155, 0]` puts it just past the fingertips so the hand
@@ -221,9 +247,11 @@ The shark (#104) is the first. Checklist, using the tools above:
 4. `masks.py view`, then `build` (eye centres, the jersey height band for this model), check both
    overlays, then `iris-table` against the mascot's own 2D art (`Web size/*-baby-*.webp`, the eyes
    SVG and the eye layout box from `JerseyGraphic.tsx`).
-5. Add the model to the app. Today the constants are lion-only (`LION_3D`, `MASCOTS_WITH_3D`, the
-   hand bone, ball offset and scale, camera, iris table); #104 generalises them into a per-mascot
-   config keyed by mascot id.
+5. Add an entry to `MASCOTS_3D` in `src/lib/mascot3d.ts`: the three asset URLs, the preview camera,
+   the ball (bone, scale, offset along the finger axis), the iris tone table from `iris-table`,
+   `armDownDegrees` if the export is a T-pose with real weights, and `genders` if only some
+   variants exist. The toggle, the scene and the POC page pick it up from there; no other code
+   changes. The shark (#104) was added exactly this way.
 6. Look at it in `/poc-3d.html` with all jersey and eye colours, the ball on and off.
 
 ## 7. Size and load time
@@ -254,7 +282,8 @@ compresses `.glb` under a different content type is untested.
 ## 8. Known limits
 
 - The lion is a static rest pose; its skin weights are almost all on the Hips, so bones cannot bend
-  its arms. The shark's weights are real, so it could be posed (its rest pose is a T-pose).
+  its arms. The shark's weights are real, so its arms are bent down in code (55 degrees).
+- Only the shark **boy** exists in 3D; the girl stays on the still image until she is made.
 - The ball rests on an open hand; a real grip needs a curled-hand pose.
 - The jersey number is not in 3D yet (needs a chest area on the atlas and a number texture).
 - Yellow jerseys are close to the lion's golden fur, and black jerseys hide their own black trim.

@@ -1,17 +1,18 @@
 import { useState } from 'react'
 import { EYE_COLORS, JERSEY_COLORS, type EyeColor, type JerseyColor } from '../hooks/usePlayers'
-import { LION_3D } from '../lib/mascot3d'
+import { MASCOTS_3D } from '../lib/mascot3d'
 import { Mascot3DScene } from './Mascot3DScene'
 
 /** Standalone full-page viewer for the hidden POC page (`/poc-3d.html`, sports-training-api#68):
- * the same scene the player form embeds, plus dev controls for matte shading, the ball, the
- * jersey colour and the eye colour. Styling lives in poc-3d.html.
+ * the same scene the player form embeds, plus dev controls for the mascot, matte shading, the
+ * ball, the jersey colour and the eye colour. Styling lives in poc-3d.html.
  *
  * The Tripo export ("anthropomorphic lion") shipped with two skeleton defects that made three.js
  * render it garbled: bone nodes had no transforms, and the bind matrices were turned 90 degrees
  * about Y relative to the mesh. `anthropomorphic_lion_v2_bones_fixed.glb` is the original file
  * with both repaired (mesh, weights and textures untouched). */
 export function MascotViewer3D() {
+  const [mascot, setMascot] = useState<keyof typeof MASCOTS_3D>('lion')
   const [matte, setMatte] = useState(true)
   const [showBall, setShowBall] = useState(true)
   const [jerseyColor, setJerseyColor] = useState<JerseyColor | null>(null)
@@ -20,7 +21,7 @@ export function MascotViewer3D() {
   return (
     <div className="viewer">
       <Mascot3DScene
-        {...LION_3D}
+        config={MASCOTS_3D[mascot]}
         jerseyColor={jerseyColor}
         eyeColor={eyeColor}
         showBall={showBall}
@@ -28,6 +29,16 @@ export function MascotViewer3D() {
         cameraPosition={[1.8, 0.8, 3.2]}
       />
       <div className="viewer-controls">
+        <label>
+          Mascot
+          <select value={mascot} onChange={(e) => setMascot(e.target.value)}>
+            {Object.keys(MASCOTS_3D).map((id) => (
+              <option key={id} value={id}>
+                {id}
+              </option>
+            ))}
+          </select>
+        </label>
         <label>
           <input type="checkbox" checked={matte} onChange={(e) => setMatte(e.target.checked)} />
           Matte

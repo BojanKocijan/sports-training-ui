@@ -4,8 +4,8 @@
 The Tripo texture atlas has no clean regions, so recolouring works through a mask painted in the
 model's UV space, found from the triangles instead of from the atlas image:
 
-  * jersey + shorts: triangles whose texture colour is achromatic (white / grey / black) and whose
-    centroid height lies in a band. On the lion the achromatic triangles fall into three clean
+  * jersey + shorts: triangles whose texture colour is achromatic (white / grey / black), whose
+    centroid height lies in a band and (optionally) whose |x| is under a limit. On the lion the achromatic triangles fall into three clean
     height groups: eyes (high), jersey+shorts (middle), shoes (low).
   * eye area: triangles within a radius of each eye centre, on the front (z > 0). The shader
     then recolours only the dark iris texels inside it. Eye centres must be MEASURED from a
@@ -94,7 +94,7 @@ def cmd_build(a):
     eyes = Image.new('L', (M, M), 0); ed = ImageDraw.Draw(eyes); ne = 0
     for ids, col, (cx, cy, cz) in tris:
         poly = [(UV[k][0] * M, UV[k][1] * M) for k in ids]
-        if max(col) - min(col) < a.chroma and ymin <= cy <= ymax:
+        if max(col) - min(col) < a.chroma and ymin <= cy <= ymax and abs(cx) <= a.jersey_x:
             jd.polygon(poly, fill=255); nj += 1
         if cz > 0.0 and any(math.hypot(cx - ex, cy - ey) <= a.eye_radius for ex, ey in centres):
             ed.polygon(poly, fill=255); ne += 1
@@ -196,6 +196,9 @@ def main():
     b.add_argument('--eye-radius', type=float, default=0.037)
     b.add_argument('--jersey-y', nargs=2, type=float, default=[0.16, 0.60], metavar=('MIN', 'MAX'))
     b.add_argument('--chroma', type=int, default=45, help='max RGB spread still counted as white/grey/black')
+    b.add_argument('--jersey-x', type=float, default=9.0, metavar='MAX',
+                   help='only triangles with |x| up to MAX count as jersey (excludes pale arm undersides '
+                        'on a T-posed mascot); default: no limit')
     b.add_argument('--size', type=int, default=2048); b.add_argument('--overlay-dir')
     b.add_argument('--texture-from', help='GLB to read the base colour from (e.g. the full-size original)')
     b.set_defaults(fn=cmd_build)

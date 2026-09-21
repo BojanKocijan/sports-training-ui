@@ -9,10 +9,12 @@ const state = vi.hoisted(() => ({ throwOnRender: false }))
 // page; these tests are about the toggle wiring around it.
 vi.mock('../Mascot3DPreview', () => ({
   default: ({
+    mascotId,
     jerseyColor,
     eyeColor,
     showBall,
   }: {
+    mascotId: string
     jerseyColor: string | null
     eyeColor: string | null
     showBall: boolean
@@ -21,6 +23,7 @@ vi.mock('../Mascot3DPreview', () => ({
     return (
       <div
         data-testid="mascot-3d"
+        data-mascot={mascotId}
         data-color={jerseyColor ?? ''}
         data-eyes={eyeColor ?? ''}
         data-ball={String(showBall)}
@@ -112,10 +115,44 @@ describe('PlayerPreviewCard', () => {
   })
 
   it('offers no 3D toggle for a mascot without a 3D model', () => {
+    render(<PlayerPreviewCard {...baseProps} mascotId="dolphin" />)
+
+    expect(screen.getByTestId('still')).toHaveAttribute('data-mascot', 'dolphin')
+    expect(screen.queryByRole('button', { name: '3D model' })).not.toBeInTheDocument()
+  })
+
+  it('offers 3D for the shark boy and tells the preview which mascot to show', async () => {
+    const user = userEvent.setup()
+    render(<PlayerPreviewCard {...baseProps} mascotId="shark" gender="boy" />)
+
+    await user.click(screen.getByRole('button', { name: '3D model' }))
+
+    expect(await screen.findByTestId('mascot-3d')).toHaveAttribute('data-mascot', 'shark')
+  })
+
+  it('treats a shark with no gender as a boy, like the still image does', () => {
     render(<PlayerPreviewCard {...baseProps} mascotId="shark" />)
 
-    expect(screen.getByTestId('still')).toHaveAttribute('data-mascot', 'shark')
+    expect(screen.getByRole('button', { name: '3D model' })).toBeInTheDocument()
+  })
+
+  it('offers no 3D for the shark girl (only the boy model exists)', () => {
+    render(<PlayerPreviewCard {...baseProps} mascotId="shark" gender="girl" />)
+
+    expect(screen.getByTestId('still')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '3D model' })).not.toBeInTheDocument()
+  })
+
+  it('drops back to the still image when the gender changes to one without a model', async () => {
+    const user = userEvent.setup()
+    const { rerender } = render(<PlayerPreviewCard {...baseProps} mascotId="shark" gender="boy" />)
+    await user.click(screen.getByRole('button', { name: '3D model' }))
+    await screen.findByTestId('mascot-3d')
+
+    rerender(<PlayerPreviewCard {...baseProps} mascotId="shark" gender="girl" />)
+
+    expect(screen.getByTestId('still')).toBeInTheDocument()
+    expect(screen.queryByTestId('mascot-3d')).not.toBeInTheDocument()
   })
 
   it('drops back to the still image when the mascot changes away from the lion', async () => {
@@ -124,7 +161,7 @@ describe('PlayerPreviewCard', () => {
     await user.click(screen.getByRole('button', { name: '3D model' }))
     await screen.findByTestId('mascot-3d')
 
-    rerender(<PlayerPreviewCard {...baseProps} mascotId="shark" />)
+    rerender(<PlayerPreviewCard {...baseProps} mascotId="dolphin" />)
 
     expect(screen.getByTestId('still')).toBeInTheDocument()
     expect(screen.queryByTestId('mascot-3d')).not.toBeInTheDocument()
