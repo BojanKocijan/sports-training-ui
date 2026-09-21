@@ -1,5 +1,5 @@
 import { useProgress } from '@react-three/drei'
-import type { JerseyColor } from '../hooks/usePlayers'
+import type { EyeColor, JerseyColor } from '../hooks/usePlayers'
 import { LION_3D } from '../lib/mascot3d'
 import { Mascot3DScene } from './Mascot3DScene'
 
@@ -8,9 +8,11 @@ import { Mascot3DScene } from './Mascot3DScene'
  * and ~2MB of models are only downloaded once someone switches to 3D. */
 export default function Mascot3DPreview({
   jerseyColor,
+  eyeColor,
   showBall,
 }: {
   jerseyColor: JerseyColor | null
+  eyeColor: EyeColor | null
   showBall: boolean
 }) {
   // drei's loading store is global, so it works outside the Canvas: `active` is true while the
@@ -25,6 +27,7 @@ export default function Mascot3DPreview({
       <Mascot3DScene
         {...LION_3D}
         jerseyColor={jerseyColor}
+        eyeColor={eyeColor}
         showBall={showBall}
         cameraPosition={[0.85, 0.1, 1.45]}
         enableZoom={false}

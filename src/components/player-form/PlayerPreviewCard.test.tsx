@@ -8,9 +8,24 @@ const state = vi.hoisted(() => ({ throwOnRender: false }))
 // three.js needs WebGL, which happy-dom doesn't have -- the real scene is covered by the POC
 // page; these tests are about the toggle wiring around it.
 vi.mock('../Mascot3DPreview', () => ({
-  default: ({ jerseyColor, showBall }: { jerseyColor: string | null; showBall: boolean }) => {
+  default: ({
+    jerseyColor,
+    eyeColor,
+    showBall,
+  }: {
+    jerseyColor: string | null
+    eyeColor: string | null
+    showBall: boolean
+  }) => {
     if (state.throwOnRender) throw new Error('WebGL unavailable')
-    return <div data-testid="mascot-3d" data-color={jerseyColor ?? ''} data-ball={String(showBall)} />
+    return (
+      <div
+        data-testid="mascot-3d"
+        data-color={jerseyColor ?? ''}
+        data-eyes={eyeColor ?? ''}
+        data-ball={String(showBall)}
+      />
+    )
   },
 }))
 
@@ -66,6 +81,19 @@ describe('PlayerPreviewCard', () => {
     await user.click(screen.getByRole('button', { name: 'Still image' }))
     expect(screen.getByTestId('still')).toBeInTheDocument()
     expect(screen.queryByTestId('mascot-3d')).not.toBeInTheDocument()
+  })
+
+  it('passes the eye colour to the 3D model, and none when no eye colour is chosen', async () => {
+    const user = userEvent.setup()
+    const { rerender } = render(<PlayerPreviewCard {...baseProps} eyeColor="green" mascotId="lion" />)
+    await user.click(screen.getByRole('button', { name: '3D model' }))
+    expect(await screen.findByTestId('mascot-3d')).toHaveAttribute('data-eyes', 'green')
+
+    rerender(<PlayerPreviewCard {...baseProps} eyeColor="brown" mascotId="lion" />)
+    expect(screen.getByTestId('mascot-3d')).toHaveAttribute('data-eyes', 'brown')
+
+    rerender(<PlayerPreviewCard {...baseProps} eyeColor={null} mascotId="lion" />)
+    expect(screen.getByTestId('mascot-3d')).toHaveAttribute('data-eyes', '')
   })
 
   it('has a ball switch that only appears in 3D and defaults to on', async () => {

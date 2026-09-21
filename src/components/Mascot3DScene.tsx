@@ -1,10 +1,10 @@
 import { Center, OrbitControls, useGLTF, useTexture } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Suspense, useEffect, useMemo, useRef } from 'react'
-import { Color } from 'three'
+import { Color, Vector4 } from 'three'
 import type { Group, Mesh, MeshStandardMaterial, Texture } from 'three'
-import type { JerseyColor } from '../hooks/usePlayers'
-import { DEFAULT_JERSEY_TINT, JERSEY_TINTS } from '../lib/mascot3d'
+import type { EyeColor, JerseyColor } from '../hooks/usePlayers'
+import { DEFAULT_JERSEY_TINT, EYE_TINTS, JERSEY_TINTS } from '../lib/mascot3d'
 
 // Mixamo-style rig. The GLB names it 'mixamorig:RightHand', but three.js strips the
 // colon from node names on load. Swap to 'mixamorigLeftHand' to put the ball in the other hand.
@@ -53,20 +53,32 @@ function useMatte(scene: Group, matte: boolean) {
   }, [scene, matte])
 }
 
-// Multiplies the base colour by the tint where the mask is white. The jersey art is white with
-// black trim, so white becomes the tint and the trim stays black. The 1.12 gain offsets the
-// darkening a saturated multiply gives on the slightly grey (not pure white) fabric.
-const JERSEY_TINT_GLSL = /* glsl */ `
+// Two recolouring rules driven by one RGB mask (red = jersey, green = eye area):
+//  - Jersey: multiply the base colour by the tint. The jersey art is white with black trim, so
+//    white becomes the tint and the trim stays black. The 1.12 gain offsets the darkening a
+//    saturated multiply gives on the slightly grey (not pure white) fabric.
+//  - Iris: inside the eye area only the DARK texels are recoloured (the iris and pupil); the
+//    white highlight, sclera and lashes are left alone. The result keeps the texel's own
+//    lightness, so the pupil stays dark while the iris takes the tint.
+const REGION_TINT_GLSL = /* glsl */ `
 #include <map_fragment>
 #ifdef USE_MAP
-  float jerseyMask = texture2D( uJerseyMask, vMapUv ).r;
-  diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * uJerseyTint * 1.12, jerseyMask );
+  vec3 regionMask = texture2D( uRegionMask, vMapUv ).rgb;
+  diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * uJerseyTint * 1.12, regionMask.r );
+  float texelLuma = dot( pow( diffuseColor.rgb, vec3( 1.0 / 2.2 ) ), vec3( 0.299, 0.587, 0.114 ) );
+  float iris = regionMask.g * ( 1.0 - smoothstep( 0.38, 0.52, texelLuma ) ) * uEyeTint.a;
+  diffuseColor.rgb = mix( diffuseColor.rgb, uEyeTint.rgb * ( 0.25 + texelLuma * 1.6 ), iris );
 #endif
 `
 
-function useJerseyTint(scene: Group, mask: Texture, tintHex: string) {
+function useRegionTint(scene: Group, mask: Texture, jerseyHex: string, eyeHex: string | null) {
   const uniforms = useMemo(
-    () => ({ uJerseyMask: { value: mask }, uJerseyTint: { value: new Color(DEFAULT_JERSEY_TINT) } }),
+    () => ({
+      uRegionMask: { value: mask },
+      uJerseyTint: { value: new Color(DEFAULT_JERSEY_TINT) },
+      // rgb = iris colour, a = 1 when an eye colour is chosen, 0 to leave the authored eyes
+      uEyeTint: { value: new Vector4(0, 0, 0, 0) },
+    }),
     [mask],
   )
 
@@ -75,35 +87,43 @@ function useJerseyTint(scene: Group, mask: Texture, tintHex: string) {
       const mat = (obj as Mesh).material as MeshStandardMaterial | undefined
       if (!(obj as Mesh).isMesh || !mat) return
       mat.onBeforeCompile = (shader) => {
-        shader.uniforms.uJerseyMask = uniforms.uJerseyMask
+        shader.uniforms.uRegionMask = uniforms.uRegionMask
         shader.uniforms.uJerseyTint = uniforms.uJerseyTint
-        shader.fragmentShader = `uniform sampler2D uJerseyMask;\nuniform vec3 uJerseyTint;\n${shader.fragmentShader}`.replace(
+        shader.uniforms.uEyeTint = uniforms.uEyeTint
+        shader.fragmentShader = `uniform sampler2D uRegionMask;\nuniform vec3 uJerseyTint;\nuniform vec4 uEyeTint;\n${shader.fragmentShader}`.replace(
           '#include <map_fragment>',
-          JERSEY_TINT_GLSL,
+          REGION_TINT_GLSL,
         )
       }
-      mat.customProgramCacheKey = () => 'jersey-tint'
+      mat.customProgramCacheKey = () => 'region-tint'
       mat.needsUpdate = true
     })
   }, [scene, uniforms])
 
   useEffect(() => {
-    uniforms.uJerseyTint.value.set(tintHex)
-  }, [uniforms, tintHex])
+    uniforms.uJerseyTint.value.set(jerseyHex)
+  }, [uniforms, jerseyHex])
+
+  useEffect(() => {
+    const iris = new Color(eyeHex ?? DEFAULT_JERSEY_TINT)
+    uniforms.uEyeTint.value.set(iris.r, iris.g, iris.b, eyeHex ? 1 : 0)
+  }, [uniforms, eyeHex])
 }
 
 function MascotModel({
   modelUrl,
   ballUrl,
-  jerseyMaskUrl,
+  regionMaskUrl,
   jerseyColor,
+  eyeColor,
   showBall,
   matte,
 }: {
   modelUrl: string
   ballUrl: string
-  jerseyMaskUrl: string
+  regionMaskUrl: string
   jerseyColor: JerseyColor | null
+  eyeColor: EyeColor | null
   showBall: boolean
   matte: boolean
 }) {
@@ -111,7 +131,7 @@ function MascotModel({
   const { scene: ballSource } = useGLTF(ballUrl)
   const ball = useMemo(() => ballSource.clone(), [ballSource])
   // glTF UVs have their origin top-left, so the mask must not be flipped on upload.
-  const mask = useTexture(jerseyMaskUrl, (t) => {
+  const mask = useTexture(regionMaskUrl, (t) => {
     ;(Array.isArray(t) ? t : [t]).forEach((tex) => {
       tex.flipY = false
     })
@@ -119,7 +139,12 @@ function MascotModel({
 
   useMatte(scene, matte)
   useMatte(ball, matte)
-  useJerseyTint(scene, mask, jerseyColor ? JERSEY_TINTS[jerseyColor] : DEFAULT_JERSEY_TINT)
+  useRegionTint(
+    scene,
+    mask,
+    jerseyColor ? JERSEY_TINTS[jerseyColor] : DEFAULT_JERSEY_TINT,
+    eyeColor ? EYE_TINTS[eyeColor] : null,
+  )
 
   useEffect(() => {
     if (!showBall) return
@@ -139,14 +164,15 @@ function MascotModel({
   return <primitive object={scene} />
 }
 
-/** The lion's 3D canvas (sports-training-api#68, #99): the rigged Tripo export in its rest
- * pose, jersey tinted through a UV mask, optionally holding a ball parented to a hand bone.
+/** The lion's 3D canvas (sports-training-api#68, #99, #101): the rigged Tripo export in its rest
+ * pose, jersey and irises recoloured through a UV region mask, optionally holding a ball parented to a hand bone.
  * Fills its parent, so the parent decides the size. */
 export function Mascot3DScene({
   modelUrl,
   ballUrl,
-  jerseyMaskUrl,
+  regionMaskUrl,
   jerseyColor,
+  eyeColor,
   showBall,
   matte = true,
   cameraPosition,
@@ -154,8 +180,9 @@ export function Mascot3DScene({
 }: {
   modelUrl: string
   ballUrl: string
-  jerseyMaskUrl: string
+  regionMaskUrl: string
   jerseyColor: JerseyColor | null
+  eyeColor: EyeColor | null
   showBall: boolean
   matte?: boolean
   cameraPosition: [number, number, number]
@@ -170,8 +197,9 @@ export function Mascot3DScene({
           <MascotModel
             modelUrl={modelUrl}
             ballUrl={ballUrl}
-            jerseyMaskUrl={jerseyMaskUrl}
+            regionMaskUrl={regionMaskUrl}
             jerseyColor={jerseyColor}
+            eyeColor={eyeColor}
             showBall={showBall}
             matte={matte}
           />

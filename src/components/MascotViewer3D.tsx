@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { JERSEY_COLORS, type JerseyColor } from '../hooks/usePlayers'
+import { EYE_COLORS, JERSEY_COLORS, type EyeColor, type JerseyColor } from '../hooks/usePlayers'
 import { LION_3D } from '../lib/mascot3d'
 import { Mascot3DScene } from './Mascot3DScene'
 
 /** Standalone full-page viewer for the hidden POC page (`/poc-3d.html`, sports-training-api#68):
- * the same scene the player form embeds, plus dev controls for matte shading, the ball and the
- * jersey colour. Styling lives in poc-3d.html.
+ * the same scene the player form embeds, plus dev controls for matte shading, the ball, the
+ * jersey colour and the eye colour. Styling lives in poc-3d.html.
  *
  * The Tripo export ("anthropomorphic lion") shipped with two skeleton defects that made three.js
  * render it garbled: bone nodes had no transforms, and the bind matrices were turned 90 degrees
@@ -15,12 +15,14 @@ export function MascotViewer3D() {
   const [matte, setMatte] = useState(true)
   const [showBall, setShowBall] = useState(true)
   const [jerseyColor, setJerseyColor] = useState<JerseyColor | null>(null)
+  const [eyeColor, setEyeColor] = useState<EyeColor | null>(null)
 
   return (
     <div className="viewer">
       <Mascot3DScene
         {...LION_3D}
         jerseyColor={jerseyColor}
+        eyeColor={eyeColor}
         showBall={showBall}
         matte={matte}
         cameraPosition={[1.8, 0.8, 3.2]}
@@ -42,6 +44,20 @@ export function MascotViewer3D() {
           >
             <option value="">(none)</option>
             {JERSEY_COLORS.map((color) => (
+              <option key={color} value={color}>
+                {color}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Eyes
+          <select
+            value={eyeColor ?? ''}
+            onChange={(e) => setEyeColor((e.target.value || null) as EyeColor | null)}
+          >
+            <option value="">(none)</option>
+            {EYE_COLORS.map((color) => (
               <option key={color} value={color}>
                 {color}
               </option>
