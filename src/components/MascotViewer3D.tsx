@@ -1,29 +1,72 @@
-import { OrbitControls, useGLTF } from '@react-three/drei'
+import { Center, OrbitControls, useGLTF } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { Suspense } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import type { Mesh, MeshStandardMaterial, Texture } from 'three'
 
 /**
- * POC only (sports-training-api#68) — loads a raw Meshy export with no rig, no animation,
- * and one baked (unsplit) material. This proves the react-three-fiber rendering pipeline and
- * gives real load-time/perf numbers on a ~1.34M-triangle mesh; it does not attempt per-region
- * recoloring or animation, both blocked on a properly rigged/segmented re-export.
+ * POC only (sports-training-api#68) — loads Leon's static (un-rigged) Meshy export. The rigged
+ * export deformed the shoes, so poses are exported as separate static models instead.
  */
-function MascotModel({ url }: { url: string }) {
+
+type PbrOriginals = {
+  normalMap: Texture | null
+  metalnessMap: Texture | null
+  roughnessMap: Texture | null
+  metalness: number
+  roughness: number
+}
+
+function MascotModel({ url, matte }: { url: string; matte: boolean }) {
   const { scene } = useGLTF(url)
+  const originals = useRef(new Map<MeshStandardMaterial, PbrOriginals>())
+
+  // The Meshy export bakes shading into its normal + metallic/roughness maps. "Matte" drops
+  // them (flat, cartoon-like look); toggling off restores the originals.
+  useEffect(() => {
+    scene.traverse((obj) => {
+      const mat = (obj as Mesh).material as MeshStandardMaterial | undefined
+      if (!(obj as Mesh).isMesh || !mat) return
+      if (!originals.current.has(mat)) {
+        originals.current.set(mat, {
+          normalMap: mat.normalMap,
+          metalnessMap: mat.metalnessMap,
+          roughnessMap: mat.roughnessMap,
+          metalness: mat.metalness,
+          roughness: mat.roughness,
+        })
+      }
+      const o = originals.current.get(mat)!
+      mat.normalMap = matte ? null : o.normalMap
+      mat.metalnessMap = matte ? null : o.metalnessMap
+      mat.roughnessMap = matte ? null : o.roughnessMap
+      mat.metalness = matte ? 0 : o.metalness
+      mat.roughness = matte ? 1 : o.roughness
+      mat.needsUpdate = true
+    })
+  }, [scene, matte])
+
   return <primitive object={scene} />
 }
 
 export function MascotViewer3D({ modelUrl }: { modelUrl: string }) {
+  const [matte, setMatte] = useState(true)
+
   return (
-    <div style={{ width: '100vw', height: '100vh', background: '#1a1a1a' }}>
-      <Canvas camera={{ position: [0, 1, 3], fov: 45 }}>
+    <div className="viewer">
+      <Canvas camera={{ position: [1.8, 0.8, 3.2], fov: 45 }}>
         <ambientLight intensity={0.8} />
         <directionalLight position={[3, 5, 2]} intensity={1.2} />
         <Suspense fallback={null}>
-          <MascotModel url={modelUrl} />
+          <Center>
+            <MascotModel url={modelUrl} matte={matte} />
+          </Center>
         </Suspense>
         <OrbitControls enablePan={false} />
       </Canvas>
+      <label className="matte-toggle">
+        <input type="checkbox" checked={matte} onChange={(e) => setMatte(e.target.checked)} />
+        Matte
+      </label>
     </div>
   )
 }
