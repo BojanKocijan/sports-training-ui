@@ -55,20 +55,26 @@ function useMatte(scene: Group, matte: boolean) {
 
 // Two recolouring rules driven by one RGB mask (red = jersey, green = eye area):
 //  - Jersey: multiply the base colour by the tint. The jersey art is white with black trim, so
-//    white becomes the tint and the trim stays black. The 1.12 gain offsets the darkening a
-//    saturated multiply gives on the slightly grey (not pure white) fabric.
-//  - Iris: inside the eye area only the DARK texels are recoloured (the iris and pupil); the
-//    white highlight, sclera and lashes are left alone. The result keeps the texel's own
-//    lightness (multiplied against a lifted copy of it), so the iris keeps its light rim and dark
-//    centre and the pupil stays dark, instead of turning into one flat colour.
+//    white becomes the tint and the trim stays black.
+//  - Iris: same recipe as the still image, whose base art has a GREY iris (light ring, darker
+//    middle, black pupil) with a flat colour multiplied over it and the white highlights layered
+//    on top. Inside the eye area only the iris texels are used (lightness < ~0.5; the sclera and
+//    highlights are 0.65+, measured with a clean gap between them). The 3D atlas iris is much
+//    darker than the still art's (most texels 0.1-0.3, vs a mid-grey iris there), so texels above
+//    the pupil/outline range are lifted into the still art's mid-grey range (keeping their own
+//    gradient) while the pupil and outline stay black, then multiplied by the swatch colour in
+//    sRGB like CSS mix-blend-mode: multiply does.
 const REGION_TINT_GLSL = /* glsl */ `
 #include <map_fragment>
 #ifdef USE_MAP
   vec3 regionMask = texture2D( uRegionMask, vMapUv ).rgb;
-  diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * uJerseyTint * 1.12, regionMask.r );
+  diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * uJerseyTint, regionMask.r );
   float texelLuma = dot( pow( diffuseColor.rgb, vec3( 1.0 / 2.2 ) ), vec3( 0.299, 0.587, 0.114 ) );
-  float iris = regionMask.g * ( 1.0 - smoothstep( 0.38, 0.52, texelLuma ) ) * uEyeTint.a;
-  diffuseColor.rgb = mix( diffuseColor.rgb, uEyeTint.rgb * ( 0.35 + texelLuma * 1.4 ), iris );
+  float iris = regionMask.g * ( 1.0 - smoothstep( 0.47, 0.60, texelLuma ) ) * uEyeTint.a;
+  float pupil = smoothstep( 0.03, 0.12, texelLuma );
+  float irisTone = mix( 0.45, 0.68, clamp( texelLuma / 0.42, 0.0, 1.0 ) );
+  vec3 irisSrgb = pow( uEyeTint.rgb, vec3( 1.0 / 2.2 ) ) * irisTone * pupil;
+  diffuseColor.rgb = mix( diffuseColor.rgb, pow( irisSrgb, vec3( 2.2 ) ), iris );
 #endif
 `
 
@@ -191,7 +197,9 @@ export function Mascot3DScene({
 }) {
   return (
     <Canvas camera={{ position: cameraPosition, fov: 45 }}>
-      <ambientLight intensity={0.8} />
+      {/* Deliberately bright and fairly flat: the still art is flat-lit, and three.js divides light
+          by pi, so the defaults (0.8 / 1.2) rendered every multiplied colour darker than its swatch. */}
+      <ambientLight intensity={1.8} />
       <directionalLight position={[3, 5, 2]} intensity={1.2} />
       <Suspense fallback={null}>
         <Center>

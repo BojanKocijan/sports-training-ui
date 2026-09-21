@@ -35,12 +35,12 @@ export const JERSEY_TINTS: Record<JerseyColor, string> = {
  * image (JerseyGraphic's FALLBACK_COLOR). */
 export const DEFAULT_JERSEY_TINT = '#ffffff'
 
-/** Iris colour for each eye choice, multiplied into the iris texels (see Mascot3DScene). These are
- * natural iris tones rather than the still image picker's swatches: the picker's "brown" is a
- * bright orange (#FF6F09), which reads as glowing orange eyes on the 3D model. No eye colour
- * chosen leaves the authored dark eyes untouched. */
+/** Iris colour for each eye choice: the same swatches the still image uses (EyeColorPicker and
+ * the leon-baby-eyes-*.svg masks). The still art multiplies them over a grey iris, so "brown"
+ * (#FF6F09) multiplied by mid-grey comes out as a rich brown; Mascot3DScene does the same
+ * multiply, so the two views match. No eye colour chosen leaves the authored dark eyes. */
 export const EYE_TINTS: Record<EyeColor, string> = {
-  blue: '#2f7fd0',
-  green: '#3f9a4d',
-  brown: '#7a4a26',
+  blue: '#0598ec',
+  green: '#3ce566',
+  brown: '#ff6f09',
 }
