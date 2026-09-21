@@ -37,6 +37,28 @@ One subscription per **sport, per club** (`sport_subscriptions`, already in the 
    - **Club pays, becomes a reference** — every new paying club becomes proof for the next one (same school-by-school pattern Seesaw used).
 2. **Federation (NBB/Club.Basketball.nl) comes later** — once there are 5–10 paying clubs as proof, approach as a partner with a track record, not as an unknown competitor to their admin tool.
 
+### Realan vremenski okvir do profitabilnosti (Sept 2026)
+
+Bootstrap side-project (solo osnivač + 1 developer, 20% profit-share) bez spoljnog kapitala — tempo rasta je strukturno sporiji od standardnih SaaS benchmark-ova jer nedostaju kapital i puno radno vreme koji te benchmark-ove čine mogućim.
+
+Industrijski benchmark-ovi za profitabilnost startupa se ne primenjuju direktno na ovaj projekat, jer pretpostavljaju kapital i puno radno vreme osnivača koji ovde ne postoje:
+
+| Referentna tačka | Standardni SaaS/VC benchmark | Ovaj projekat (bootstrap side-project) |
+|---|---|---|
+| Break-even | 2-5 godina (80% startupa) | 3-5+ godina, procena |
+| €1M ARR ekvivalent ("ozbiljan" prihod) | 33 meseca od prvog klijenta (samo ~4% startupa) | Nije uporediva meta — cilj treba redefinisati na sopstvenu skalu |
+| Održiv proizvod sa materijalnim prihodom | 24+ meseci minimum | 24+ meseci, potvrđeno projekcijama (12-18 klubova, €2-3.5k prometa do kraja 2. godine) |
+| Pun exit/IPO nivo | 7-12+ godina | Nije relevantan cilj za ovaj projekat |
+
+**Zašto je razlika strukturna, ne izvedbena:** standardni benchmark-ovi pretpostavljaju sales/marketing budžet (30%+ prihoda kod uspešnih B2B SaaS), puno radno vreme osnivača, i sposobnost brzog skaliranja akvizicije. Ovaj projekat radi bez sva tri faktora — sporiji tempo je posledica nedostajućih sastojaka, ne lošeg izvršenja.
+
+**Fazni plan:**
+- **Godina 1-2 (validacija):** 10-20 klubova, €2.000-3.500 godišnjeg prometa, profit koji pokriva troškove i simboličan iznos — cilj je dokazana retencija i reference, ne zarada
+- **Godina 3-4 (skaliranje unutar niše):** ako retencija sezona-na-sezonu prelazi 80% i reference dovode nove klubove organski, razmotriti prelazak na klub-wide/enterprise pricing (€800-1.500/sezona, vidi Tier 3 "Club" u issue #67) i eventualno drugi sport (rukomet ili odbojka, ne fudbal zbog KNVB-ovog besplatnog Rinus alata) — realan cilj 50-100 klubova, prvi profit vredan pomena
+- **Godina 5+:** tek na ovom nivou postaje relevantno pitanje stalnog posla za oboje (osnivača i developera) — pod uslovom da prethodne faze potvrde model
+
+**Checkpoint:** kraj sezone 2027/2028 — eksplicitna tačka odluke da li nastaviti kao side-project, agresivnije pivotovati (enterprise pricing, dodatni sport, mogući spoljni kapital), ili preispitati ceo pristup. Metrika uspeha do tada: broj klubova, retencija sezona-na-sezonu, ne apsolutni profit.
+
 ### Competitive scouting (Sept 2026)
 
 A scan of 19 youth-sports coaching apps across basketball, soccer, swimming, and multi-sport platforms (full report: `scratchpad_competitors.html`, triggered by finding levelupbasket.com), framed against the plan to generalize this app beyond basketball-only.
@@ -179,3 +201,4 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 - **2026-09-16** — File created; captured current scope, architecture, the a11y/interaction-state gap found in this session, and the plan to descope Setup/Vocabulary.
 - **2026-09-17** — Added competitive scouting summary (§ Milestone 1); reframed positioning after review — this is a child development & progress-sharing tool for parents, not a practice planner with a parent screen attached. Per-skill progress tracking + parent-code sharing + age-scoped psychology framing are the load-bearing differentiators for the multi-sport milestone, not sport count or zero-PII alone.
 - **2026-09-20** — Added gamification/AI-coach competitor scan (§ Milestone 1): 5StarKidz, Sportlingo, and smaller stat-tracker apps are all B2C (parent pays) — none combine gamified parent-facing progress with this app's B2B2C model. Confirms individual (non-comparative) gamification over an AI-coach feature, and links the gamification badges already in progress to the future 3D mascot concept.
+- **2026-09-21** — Added realistic timeline-to-profitability (§ Milestone 1): bootstrap side-project without external capital runs 3-5+ years to break-even vs. standard 2-5 year SaaS/VC benchmarks — the gap is structural (no sales budget, no founder full-time, no fast-scaling acquisition), not a sign of underperformance. Phased plan through Year 5+, with an explicit end-of-2027/2028-season checkpoint to decide continue/pivot/reassess.
