@@ -59,7 +59,8 @@ function useMatte(scene: Group, matte: boolean) {
 //    saturated multiply gives on the slightly grey (not pure white) fabric.
 //  - Iris: inside the eye area only the DARK texels are recoloured (the iris and pupil); the
 //    white highlight, sclera and lashes are left alone. The result keeps the texel's own
-//    lightness, so the pupil stays dark while the iris takes the tint.
+//    lightness (multiplied against a lifted copy of it), so the iris keeps its light rim and dark
+//    centre and the pupil stays dark, instead of turning into one flat colour.
 const REGION_TINT_GLSL = /* glsl */ `
 #include <map_fragment>
 #ifdef USE_MAP
@@ -67,7 +68,7 @@ const REGION_TINT_GLSL = /* glsl */ `
   diffuseColor.rgb = mix( diffuseColor.rgb, diffuseColor.rgb * uJerseyTint * 1.12, regionMask.r );
   float texelLuma = dot( pow( diffuseColor.rgb, vec3( 1.0 / 2.2 ) ), vec3( 0.299, 0.587, 0.114 ) );
   float iris = regionMask.g * ( 1.0 - smoothstep( 0.38, 0.52, texelLuma ) ) * uEyeTint.a;
-  diffuseColor.rgb = mix( diffuseColor.rgb, uEyeTint.rgb * ( 0.25 + texelLuma * 1.6 ), iris );
+  diffuseColor.rgb = mix( diffuseColor.rgb, uEyeTint.rgb * ( 0.35 + texelLuma * 1.4 ), iris );
 #endif
 `
 
