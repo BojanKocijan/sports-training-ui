@@ -32,3 +32,7 @@ coverage/
 *.njsproj
 *.sln
 *.sw?
+
+# Python bytecode (scripts/mascot3d)
+__pycache__/
+*.pyc
