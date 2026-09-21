@@ -1,12 +1,21 @@
 import { Center, OrbitControls, useGLTF } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { Suspense, useEffect, useRef, useState } from 'react'
-import type { Mesh, MeshStandardMaterial, Texture } from 'three'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import type { Group, Mesh, MeshStandardMaterial, Texture } from 'three'
 
 /**
- * POC only (sports-training-api#68) — loads Leon's static (un-rigged) Meshy export. The rigged
- * export deformed the shoes, so poses are exported as separate static models instead.
+ * POC only (sports-training-api#68, #96) — loads Leon's rigged Meshy export in its rest pose
+ * (no animation clip is played) and parents a small basketball to one of his hand bones, so the
+ * ball follows the hand in any pose.
  */
+
+// Mixamo-style rig from Meshy. The GLB names it 'mixamorig:RightHand', but three.js strips the
+// colon from node names on load. Swap to 'mixamorigLeftHand' to put the ball in the other hand.
+const HAND_BONE = 'mixamorigRightHand'
+// The ball export is ~1.9 units across and Leon is ~1.7 tall; this scale makes the ball ~0.25 wide.
+const BALL_SCALE = 0.13
+// Offset in the hand bone's local space (bone axis runs along +Y from the wrist).
+const BALL_OFFSET: [number, number, number] = [0, 0.1, 0.03]
 
 type PbrOriginals = {
   normalMap: Texture | null
@@ -16,12 +25,11 @@ type PbrOriginals = {
   roughness: number
 }
 
-function MascotModel({ url, matte }: { url: string; matte: boolean }) {
-  const { scene } = useGLTF(url)
+// The Meshy exports bake shading into their normal + metallic/roughness maps. "Matte" drops
+// them (flat, cartoon-like look); toggling off restores the originals.
+function useMatte(scene: Group, matte: boolean) {
   const originals = useRef(new Map<MeshStandardMaterial, PbrOriginals>())
 
-  // The Meshy export bakes shading into its normal + metallic/roughness maps. "Matte" drops
-  // them (flat, cartoon-like look); toggling off restores the originals.
   useEffect(() => {
     scene.traverse((obj) => {
       const mat = (obj as Mesh).material as MeshStandardMaterial | undefined
@@ -44,11 +52,34 @@ function MascotModel({ url, matte }: { url: string; matte: boolean }) {
       mat.needsUpdate = true
     })
   }, [scene, matte])
+}
+
+function MascotModel({ url, ballUrl, matte }: { url: string; ballUrl: string; matte: boolean }) {
+  const { scene } = useGLTF(url)
+  const { scene: ballSource } = useGLTF(ballUrl)
+  const ball = useMemo(() => ballSource.clone(), [ballSource])
+
+  useMatte(scene, matte)
+  useMatte(ball, matte)
+
+  useEffect(() => {
+    const hand = scene.getObjectByName(HAND_BONE)
+    if (!hand) {
+      console.warn(`MascotViewer3D: bone "${HAND_BONE}" not found; ball not attached`)
+      return
+    }
+    ball.position.set(...BALL_OFFSET)
+    ball.scale.setScalar(BALL_SCALE)
+    hand.add(ball)
+    return () => {
+      hand.remove(ball)
+    }
+  }, [scene, ball])
 
   return <primitive object={scene} />
 }
 
-export function MascotViewer3D({ modelUrl }: { modelUrl: string }) {
+export function MascotViewer3D({ modelUrl, ballUrl }: { modelUrl: string; ballUrl: string }) {
   const [matte, setMatte] = useState(true)
 
   return (
@@ -58,7 +89,7 @@ export function MascotViewer3D({ modelUrl }: { modelUrl: string }) {
         <directionalLight position={[3, 5, 2]} intensity={1.2} />
         <Suspense fallback={null}>
           <Center>
-            <MascotModel url={modelUrl} matte={matte} />
+            <MascotModel url={modelUrl} ballUrl={ballUrl} matte={matte} />
           </Center>
         </Suspense>
         <OrbitControls enablePan={false} />
