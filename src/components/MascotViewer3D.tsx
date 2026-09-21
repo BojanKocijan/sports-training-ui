@@ -4,18 +4,23 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import type { Group, Mesh, MeshStandardMaterial, Texture } from 'three'
 
 /**
- * POC only (sports-training-api#68, #96) — loads Leon's rigged Meshy export in its rest pose
- * (no animation clip is played) and parents a small basketball to one of his hand bones, so the
+ * POC only (sports-training-api#68, #96) — loads Leon's rigged export in its rest pose (no
+ * animation clip is played) and parents a small basketball to one of his hand bones, so the
  * ball follows the hand in any pose.
+ *
+ * The Tripo export ("anthropomorphic lion") shipped with two skeleton defects that made three.js
+ * render it garbled: bone nodes had no transforms, and the bind matrices were turned 90 degrees
+ * about Y relative to the mesh. `anthropomorphic_lion_bones_fixed.glb` is the original file with
+ * both repaired (mesh, weights and textures untouched).
  */
 
-// Mixamo-style rig from Meshy. The GLB names it 'mixamorig:RightHand', but three.js strips the
+// Mixamo-style rig. The GLB names it 'mixamorig:RightHand', but three.js strips the
 // colon from node names on load. Swap to 'mixamorigLeftHand' to put the ball in the other hand.
 const HAND_BONE = 'mixamorigRightHand'
-// The ball export is ~1.9 units across and Leon is ~1.7 tall; this scale makes the ball ~0.25 wide.
-const BALL_SCALE = 0.13
+// The ball export is ~1.9 units across and this lion is ~0.98 tall; this scale makes the ball ~0.14 wide.
+const BALL_SCALE = 0.075
 // Offset in the hand bone's local space (bone axis runs along +Y from the wrist).
-const BALL_OFFSET: [number, number, number] = [0, 0.1, 0.03]
+const BALL_OFFSET: [number, number, number] = [0, 0.06, 0]
 
 type PbrOriginals = {
   normalMap: Texture | null
@@ -25,7 +30,7 @@ type PbrOriginals = {
   roughness: number
 }
 
-// The Meshy exports bake shading into their normal + metallic/roughness maps. "Matte" drops
+// The exports bake shading into their normal + metallic/roughness maps. "Matte" drops
 // them (flat, cartoon-like look); toggling off restores the originals.
 function useMatte(scene: Group, matte: boolean) {
   const originals = useRef(new Map<MeshStandardMaterial, PbrOriginals>())
