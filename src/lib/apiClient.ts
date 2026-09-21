@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL as string | undefined
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/+$/, '')
 
 /** True once VITE_API_URL is set (see .env.example) — points at a sports-training-api deployment. */
 export const isApiConfigured = Boolean(API_URL)
@@ -9,7 +9,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!API_URL) throw new ApiRequestError('API is not configured')
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
+    headers: { ...(init?.body !== undefined ? { 'Content-Type': 'application/json' } : {}), ...init?.headers },
   })
   if (!res.ok) {
     const body = await res.json().catch(() => null)

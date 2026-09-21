@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { exercisesForGroup, findExercise, type Exercise } from './useExercises'
+import { exercisesForGroup, findExercise, guidanceForGroup, type Exercise } from './useExercises'
 
 const exercises: Exercise[] = [
   { id: 'shared', emoji: '🏀', title: 'Shared drill', categories: ['dribbling'], durationMinutes: 5, goal: 'g', steps: [] },
@@ -32,5 +32,24 @@ describe('exercisesForGroup', () => {
   it('includes exercises tagged for the matching group', () => {
     expect(exercisesForGroup(exercises, 'u8').some((e) => e.id === 'u8-only')).toBe(true)
     expect(exercisesForGroup(exercises, 'u10').some((e) => e.id === 'u10-only')).toBe(true)
+  })
+})
+
+describe('guidanceForGroup', () => {
+  const sharedWithGuidance: Exercise = {
+    ...exercises[0],
+    guidance: [
+      { groupTemplateId: 'u8', note: 'Keep instructions short.' },
+      { groupTemplateId: 'u10', note: 'Ask players what they noticed.' },
+    ],
+  }
+
+  it('selects only the active age-band note', () => {
+    expect(guidanceForGroup(sharedWithGuidance, 'u8')).toBe('Keep instructions short.')
+    expect(guidanceForGroup(sharedWithGuidance, 'u10')).toBe('Ask players what they noticed.')
+  })
+
+  it('returns no note for an age band without authored guidance', () => {
+    expect(guidanceForGroup(sharedWithGuidance, 'u12')).toBeUndefined()
   })
 })

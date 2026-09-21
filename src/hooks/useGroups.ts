@@ -6,6 +6,7 @@ export interface ApiGroup {
   /** The age-band catalog entry this group is an instance of (e.g. 'u8', 'u10') — stable even
    * if an admin renames the group itself. Used to key group-specific content like exercises. */
   templateId: string
+  templateLabel: string
   name: string
   emoji: string
   status: 'available' | 'coming_soon'
@@ -32,6 +33,7 @@ function mapGroup(group: RawGroup): ApiGroup {
   return {
     id: group.id,
     templateId: group.template_id,
+    templateLabel: group.group_templates?.label ?? group.template_id.toUpperCase(),
     name: group.name,
     emoji: group.group_templates?.emoji ?? '🏀',
     status: group.group_templates?.status ?? 'available',

@@ -1,4 +1,4 @@
-import type { Exercise } from '../hooks/useExercises'
+import { guidanceForGroup, type Exercise } from '../hooks/useExercises'
 import { CategoryBadges } from './CategoryBadges'
 import { RatingWidget } from './RatingWidget'
 import { Card } from './ui/card'
@@ -21,6 +21,8 @@ export function ExerciseTimeline({
   currentEntry,
   remainingLabel,
   segmentPct,
+  groupTemplateId,
+  groupTemplateLabel,
   onRate,
   ratingAverage,
   ratingCount,
@@ -28,11 +30,14 @@ export function ExerciseTimeline({
   currentEntry: TimelineEntry
   remainingLabel: string
   segmentPct: number
+  groupTemplateId: string
+  groupTemplateLabel: string
   onRate: (value: number) => void
   ratingAverage: number | null
   ratingCount: number
 }) {
   const { exercise } = currentEntry
+  const guidance = guidanceForGroup(exercise, groupTemplateId)
 
   return (
     <div className="px-4 pt-2">
@@ -72,6 +77,20 @@ export function ExerciseTimeline({
         <p className="mt-3 rounded-xl bg-orange-50 px-3 py-2 text-sm font-medium text-orange-800 dark:bg-orange-500/10 dark:text-orange-300">
           🎯 {exercise.goal}
         </p>
+
+        {guidance && (
+          <aside
+            aria-label={`Coaching guidance for ${groupTemplateLabel}`}
+            className="mt-3 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2.5 dark:border-sky-400/20 dark:bg-sky-400/10"
+          >
+            <p className="text-xs font-bold uppercase tracking-wide text-sky-700 dark:text-sky-300">
+              🧠 Coach {groupTemplateLabel}
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-sky-950 dark:text-sky-100">
+              {guidance}
+            </p>
+          </aside>
+        )}
 
         <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm text-neutral-700 dark:text-neutral-300">
           {exercise.steps.map((step, i) => (

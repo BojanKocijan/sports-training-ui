@@ -12,10 +12,23 @@ A mobile-first React app for running the U8 basketball training session:
 
 ### Run it
 
+Use Node 22+ (`nvm use` if you use nvm). Start the sibling `sports-training-api`
+first; its local port is 3002.
+
 ```bash
+cp .env.example .env.local
 npm install
 npm run dev
 ```
+
+The UI runs at `http://localhost:5174` and refuses to silently change ports if
+5174 is occupied. `VITE_API_URL=http://localhost:3002` must point to this project's
+API, whose `/health` returns `{"status":"ok"}`. On the API, set
+`ALLOWED_ORIGINS=http://localhost:5174,http://127.0.0.1:5174` (plus any deployed UI
+origins you use). `.env.local` overrides `.env`; restart after environment changes.
+For a phone on your LAN, run `npm run dev -- --host`, use the computer's LAN IP in
+`VITE_API_URL` instead of `localhost`, and add the phone's UI origin (e.g.
+`http://192.168.1.20:5174`) to the API's `ALLOWED_ORIGINS`.
 
 Open the printed local URL on your phone (same network) or in a mobile-width browser window.
 
