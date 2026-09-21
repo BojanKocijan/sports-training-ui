@@ -34,9 +34,9 @@ Assets in use (lion):
 
 | File | Size | What it is |
 |---|---|---|
-| `Leo boy/anthropomorphic_lion_v2_web.glb` | 1.3 MB | Web copy of the model (2048px colour texture, no normal map). |
+| `Leo boy/anthropomorphic_lion_v2_web.glb` | 1.1 MB | Web copy of the model (2048px colour texture, no normal map, no skin data). |
 | `Leo boy/anthropomorphic_lion_v2_region_mask.png` | 27 KB | RGB mask in the model's UV space: red = jersey and shorts, green = eye area. |
-| `Meshy_AI_cartoon_basketball_lo_..._texture_1k.glb` | 326 KB | The ball, attached to the right hand bone. |
+| `Meshy_AI_cartoon_basketball_lo_..._texture_1k.glb` | 156 KB | The ball, attached to the right hand bone. |
 | `Leo boy/anthropomorphic_lion_v2_bones_fixed.glb` | 9.1 MB | The repaired full-size model. The source for regenerating the web copy; the app does not load it. |
 
 The unrepaired Tripo exports are **not** committed. Keep them somewhere shared (they are needed
@@ -130,10 +130,9 @@ scripts/mascot3d/slim_model.py IN.glb OUT.glb --drop-skin                       
 ```
 
 `--drop-skin` removes the weights and skin so the mesh is a plain static `Mesh` (on the lion:
-1,347 KB down to 1,063 KB). The bone nodes stay in the hierarchy (checked: all 53 bone nodes and
-the hand bone are still there), so the hand-attached ball is expected to keep working, but the model
-can no longer be posed. **Not yet tried in the viewer**: load the result in `/poc-3d.html` with the
-ball on before shipping it. Only use it when the weights are useless or the pose is fixed (not for
+1,347 KB down to 1,063 KB). The bone nodes stay in the hierarchy (all 53 bone nodes and the hand
+bone are still there) and the hand-attached ball keeps working (checked in the viewer), but the model
+can no longer be posed. Only use it when the weights are useless or the pose is fixed (not for
 the shark, whose weights are real and useful).
 
 ### `masks.py`: the region mask and the iris table
@@ -232,11 +231,11 @@ Measured on the live site for the lion (3D mode, first visit):
 
 | What | Size | Notes |
 |---|---|---|
-| Lion web model | 1,348 KB | not compressed by Netlify |
-| Ball | 326 KB | not compressed |
+| Lion web model | 1,089 KB (was 1,348) | not compressed by Netlify |
+| Ball | 156 KB (was 326) | not compressed |
 | 3D JS chunk (three.js, fiber, drei) | 989 KB raw, about 265 KB gzip | lazy: only loaded on 3D |
 | Region mask | 27 KB | |
-| **Total** | **about 1.9 MB** | only when someone opens the 3D tab |
+| **Total** | **about 1.5 MB** (was about 1.9) | only when someone opens the 3D tab |
 
 The main app chunk is unaffected (about 67 KB gzip). Nothing loaded is over 1.5 MB; the only file
 that large in the repo is the unused `..._bones_fixed.glb` (9.1 MB).
@@ -245,11 +244,18 @@ Where the weight is: lion model = colour texture 450 KB, geometry about 600 KB, 
 (useless: 99.8% of vertices on the Hips); ball = colour texture 195 KB, metallic/roughness map
 65 KB (unused when matte), geometry 65 KB.
 
-Not done yet, in order of value: drop the lion's skin data (`--drop-skin`, about 280 KB), shrink the
-ball (512px colour, no metallic/roughness map, about 215 KB), and cache headers in `netlify.toml`
-(everything is currently served with `max-age=0`). Mesh compression (meshopt) and WebP textures
-could bring the lion to about 0.4 to 0.5 MB but need a new tool and a decoder. Whether Netlify
-compresses `.glb` under a different content type is untested.
+Trimmed since (perf/3d-size-trim): the lion's skin data is dropped from the web copy
+(`slim_model.py --drop-normal --drop-skin`: 1,380 KB down to 1,089 KB; checked in the viewer: the
+mesh, jersey, eyes and the hand-attached ball are unchanged), the ball is regenerated with a 512px
+colour texture and no metallic/roughness map (334 KB down to 156 KB; the file keeps its `_1k` name),
+and `netlify.toml` now sends long cache headers (`/assets/*` immutable for a year; `/images/*` one
+day, because those files keep stable names). First-visit 3D download is now about 1.5 MB instead of
+about 1.9 MB, and repeat visits skip revalidation.
+
+Still not done: mesh compression (meshopt) and WebP textures could bring the lion to about 0.4 to
+0.5 MB but need a new tool and a decoder. Whether Netlify compresses `.glb` under a different
+content type is untested. The cache headers were written but only confirmed after deploy (check the
+deploy preview with `curl -I`).
 
 ## 8. Known limits
 
