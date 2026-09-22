@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useClub } from "../hooks/useClub";
 import type { ApiGroup } from "../hooks/useGroups";
 import { GroupMenu } from "./GroupMenu";
+import { InviteTrainerDialog } from "./InviteTrainerDialog";
 import { PrivacyPolicyScreen } from "./PrivacyPolicyScreen";
 import { ThemeToggle } from "./ThemeToggle";
+import { TierCatalogDialog } from "./TierCatalogDialog";
 import { TrainerAccessMenu } from "./TrainerAccessMenu";
 import { Button } from "./ui/button";
 
@@ -23,7 +25,7 @@ export function ClubHeader({
   trainerAccess,
 }: {
   /** Omit pre-unlock — LockScreen has its own group picker for a different purpose (choosing
-   * which group's passcode to enter). */
+   * which group to enter). */
   groupSwitcher?: {
     groups: ApiGroup[];
     groupId: string;
@@ -34,13 +36,17 @@ export function ClubHeader({
   trainerAccess?: {
     kind: "trainer" | "parent";
     lock: () => void;
+    canInvite?: boolean;
+    inviteTrainer?: (email: string) => Promise<void>;
   };
 }) {
   const club = useClub();
   const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null);
   // Reachable both before and after unlocking a group — a privacy notice shouldn't require a
-  // trainer passcode to read.
+  // trainer account to read.
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [tiersOpen, setTiersOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const showLogo = Boolean(club.logoUrl) && failedLogoUrl !== club.logoUrl;
 
@@ -66,6 +72,11 @@ export function ClubHeader({
           <span className="truncate text-xs font-bold uppercase tracking-wide text-muted-foreground">
             {club.name}
           </span>
+          {club.tier === "free" && (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              FREE
+            </span>
+          )}
         </div>
         {groupSwitcher && (
           <GroupMenu
@@ -79,16 +90,31 @@ export function ClubHeader({
         <Button
           variant="ghost"
           size="sm"
+          onClick={() => setTiersOpen(true)}
+          className="px-0 py-0 text-[11px] text-muted-foreground underline-offset-2 hover:bg-transparent hover:underline"
+        >
+          Packages
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setPrivacyOpen(true)}
           className="px-0 py-0 text-[11px] text-muted-foreground underline-offset-2 hover:bg-transparent hover:underline"
         >
           Privacy
         </Button>
+        {trainerAccess?.canInvite && trainerAccess.inviteTrainer && (
+          <Button variant="ghost" size="sm" onClick={() => setInviteOpen(true)}>Invite trainer</Button>
+        )}
         <ThemeToggle />
         {trainerAccess && (
           <TrainerAccessMenu kind={trainerAccess.kind} onLock={trainerAccess.lock} />
         )}
       </div>
+      <TierCatalogDialog open={tiersOpen} onOpenChange={setTiersOpen} />
+      {trainerAccess?.inviteTrainer && (
+        <InviteTrainerDialog open={inviteOpen} onOpenChange={setInviteOpen} onInvite={trainerAccess.inviteTrainer} />
+      )}
       {privacyOpen && (
         <PrivacyPolicyScreen onClose={() => setPrivacyOpen(false)} />
       )}

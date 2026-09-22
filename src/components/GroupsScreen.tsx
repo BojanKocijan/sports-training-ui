@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useGroups } from '../hooks/useGroups'
 import { usePlans, type TrainingPlan } from '../hooks/usePlans'
-import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { isApiConfigured } from '../lib/apiClient'
 import { formatDate } from '../utils/format'
 import { PlanTrainingWizard } from './PlanTrainingWizard'
@@ -11,17 +10,14 @@ import { Skeleton } from './ui/skeleton'
 
 export function GroupsScreen({
   groupId,
-  trainerAccess,
 }: {
   groupId: string
-  trainerAccess: ReturnType<typeof useTrainerAccess>
 }) {
   const { groups } = useGroups()
   const group = groups.find((g) => g.id === groupId) ?? { name: groupId, emoji: '🏀' }
   const templateId = groups.find((g) => g.id === groupId)?.templateId ?? groupId
   // Always unlocked here — the app-level gate in App.tsx (see LockScreen) never renders this
   // screen otherwise.
-  const { passcode } = trainerAccess
   const { plans, upcoming, past, loading, error, createPlan, updatePlan, deletePlan } = usePlans(groupId)
 
   const [planning, setPlanning] = useState(false)
@@ -55,9 +51,9 @@ export function GroupsScreen({
     setSaveError(null)
     try {
       if (editingPlan) {
-        await updatePlan(passcode(), editingPlan.id, date, `${group.name} training`, group.emoji, exerciseIds)
+        await updatePlan(editingPlan.id, date, `${group.name} training`, group.emoji, exerciseIds)
       } else {
-        await createPlan(passcode(), date, `${group.name} training`, group.emoji, exerciseIds)
+        await createPlan(date, `${group.name} training`, group.emoji, exerciseIds)
       }
       closeForm()
     } catch (e) {
@@ -70,7 +66,7 @@ export function GroupsScreen({
   async function removePlan(id: string) {
     setRemovingId(id)
     try {
-      await deletePlan(passcode(), id)
+      await deletePlan(id)
       if (editingPlan?.id === id) closeForm()
     } catch {
       // surfaced via the shared `error` from usePlans on next refresh

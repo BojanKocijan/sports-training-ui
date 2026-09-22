@@ -32,11 +32,8 @@ export function SessionScreen({
   onBuildPlan: () => void
 }) {
   const { planTitle, planEmoji, planExercises, totalMinutes } = activePlan
-  const { unlocked, passcode } = trainerAccess
-  const { elapsedSeconds, running, controlError, start, pause, reset, jumpTo } = useSessionClock(
-    groupId,
-    passcode,
-  )
+  const { unlocked } = trainerAccess
+  const { elapsedSeconds, running, controlError, start, pause, reset, jumpTo } = useSessionClock(groupId)
   const { rate, stats } = useRatings(groupId)
   const { enter: enterFullscreen, exit: exitFullscreen } = useFullscreen()
   const totalSeconds = totalMinutes * 60
@@ -181,7 +178,6 @@ export function SessionScreen({
             groupId={groupId}
             planId={planId}
             categories={sessionCategories}
-            passcode={trainerAccess.passcode}
           />
         )}
 

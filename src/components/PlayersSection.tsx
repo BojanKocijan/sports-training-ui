@@ -11,10 +11,8 @@ import { Skeleton } from './ui/skeleton'
  * existing one to open PlayerDetailScreen. That screen is a sibling top-level screen rendered by
  * App.tsx, not a modal nested in here (see #73) — this section only owns the create form and the
  * grid itself, not the player data (App.tsx owns the single `usePlayers` instance and passes it
- * down, since PlayerDetailScreen needs it too). Gated behind the trainer passcode, same as
- * plans. */
+ * down, since PlayerDetailScreen needs it too). Trainer writes use an account session. */
 export function PlayersSection({
-  passcode,
   groupId,
   players,
   loading,
@@ -22,7 +20,6 @@ export function PlayersSection({
   createPlayer,
   onViewPlayer,
 }: {
-  passcode: () => string
   groupId: string
   players: Player[]
   loading: boolean
@@ -50,7 +47,6 @@ export function PlayersSection({
 
     try {
       await createPlayer(
-        passcode(),
         result.nickname,
         result.jerseyNumber,
         result.jerseyColor,

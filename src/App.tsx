@@ -4,6 +4,7 @@ import { ClubHeader } from './components/ClubHeader'
 import { ExercisesScreen } from './components/ExercisesScreen'
 import { GroupsScreen } from './components/GroupsScreen'
 import { LockScreen } from './components/LockScreen'
+import { MfaScreen } from './components/MfaScreen'
 import { ParentView } from './components/ParentView'
 import { PlayerDetailScreen } from './components/PlayerDetailScreen'
 import { PlayersScreen } from './components/PlayersScreen'
@@ -24,7 +25,7 @@ function App() {
   const { groupId, setGroupId } = useActiveGroup()
   const { groups } = useGroups()
   const { exercises } = useExercises()
-  const { plans, nextPlan } = usePlans(groupId)
+  const { plans, nextPlan, refresh: refreshPlans } = usePlans(groupId)
   const activeGroup = groups.find((group) => group.id === groupId)
   const groupTemplateId = activeGroup?.templateId ?? groupId
   const groupTemplateLabel = activeGroup?.templateLabel ?? groupTemplateId.toUpperCase()
@@ -39,9 +40,24 @@ function App() {
     updatePlayer,
     deletePlayer,
   } = usePlayers(groupId)
-  // Shared across tabs so a trainer code entered on Groups also unlocks session controls.
-  // Scoped to the active group — each group has its own passcode.
+  // The signed-in trainer's membership is scoped to the active group.
   const trainerAccess = useTrainerAccess(groupId)
+
+  useEffect(() => {
+    if (!trainerAccess.unlocked && trainerAccess.groupIds.length > 0 && !trainerAccess.groupIds.includes(groupId)) {
+      setGroupId(trainerAccess.groupIds[0])
+    }
+  }, [groupId, setGroupId, trainerAccess.groupIds, trainerAccess.unlocked])
+
+  useEffect(() => {
+    if (trainerAccess.kind === 'trainer') void refreshPlayers()
+  }, [trainerAccess.kind, refreshPlayers])
+
+  useEffect(() => {
+    if (trainerAccess.unlocked) void refreshPlans().catch(() => {
+      // The shared plans hook surfaces read failures on the relevant screen.
+    })
+  }, [trainerAccess.unlocked, refreshPlans])
 
   // Which player's detail screen is open, if any. Lifted up here instead of living inside
   // PlayersSection so it renders as a real sibling screen that replaces the trainer layout
@@ -83,7 +99,6 @@ function App() {
 
     try {
       await updatePlayer(
-        trainerAccess.passcode(),
         playerId,
         targetGroupId,
         nickname,
@@ -107,7 +122,7 @@ function App() {
     setRemovingPlayerId(id)
 
     try {
-      await deletePlayer(trainerAccess.passcode(), id)
+      await deletePlayer(id)
     } catch {
       // surfaced via the shared `playersError` from usePlayers on next refresh
     } finally {
@@ -134,7 +149,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-      {!trainerAccess.unlocked ? (
+      {trainerAccess.mfaRequired ? (
+        <MfaScreen />
+      ) : !trainerAccess.unlocked ? (
         <>
           <ClubHeader />
           <LockScreen groupId={groupId} onSelectGroup={setGroupId} trainerAccess={trainerAccess} />
@@ -149,7 +166,6 @@ function App() {
           player={viewingPlayer}
           plans={plans}
           groups={groups}
-          passcode={trainerAccess.passcode}
           onClose={closePlayerDetail}
           onRosterChange={refreshPlayers}
           onSaveEdit={(...args) => handleEditPlayer(viewingPlayer.id, ...args)}
@@ -165,16 +181,15 @@ function App() {
         <>
           <ClubHeader
             groupSwitcher={{ groups, groupId, setGroupId }}
-            trainerAccess={{ kind: 'trainer', lock: trainerAccess.lock }}
+            trainerAccess={{ kind: 'trainer', lock: trainerAccess.lock, canInvite: trainerAccess.canInvite, inviteTrainer: trainerAccess.inviteTrainer }}
           />
           <div className="lg:flex">
             <SideNav active={tab} onChange={setTab} />
             <div className="min-w-0 flex-1">
-              {tab === 'groups' && <GroupsScreen groupId={groupId} trainerAccess={trainerAccess} />}
+              {tab === 'groups' && <GroupsScreen groupId={groupId} />}
               {tab === 'players' && (
                 <PlayersScreen
                   groupId={groupId}
-                  trainerAccess={trainerAccess}
                   players={players}
                   loading={playersLoading}
                   error={playersError}

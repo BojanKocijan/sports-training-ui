@@ -17,12 +17,10 @@ export function PlayerProgressSection({
   groupId,
   planId,
   categories,
-  passcode,
 }: {
   groupId: string
   planId: string
   categories: CategoryId[]
-  passcode: () => string
 }) {
   const { players, loading, error } = usePlayers(groupId)
   const { categories: allCategories } = useCategories()
@@ -35,7 +33,7 @@ export function PlayerProgressSection({
     setPending((p) => ({ ...p, [key]: true }))
     setFailed((f) => ({ ...f, [key]: false }))
     try {
-      await ratePlayerProgress(passcode(), playerId, planId, categoryId, value)
+      await ratePlayerProgress(playerId, planId, categoryId, value)
       setRatings((r) => ({ ...r, [key]: value }))
     } catch {
       setFailed((f) => ({ ...f, [key]: true }))

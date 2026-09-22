@@ -21,7 +21,7 @@ const POLL_MS = 2000
  * running/paused state and elapsed time, and a start/pause/skip from any unlocked device applies
  * to everyone within a couple of seconds.
  */
-export function useSessionClock(groupId: string, passcode: () => string) {
+export function useSessionClock(groupId: string) {
   const [snapshot, setSnapshot] = useState<ServerSnapshot>({
     status: 'idle',
     elapsedSeconds: 0,
@@ -69,14 +69,14 @@ export function useSessionClock(groupId: string, passcode: () => string) {
       try {
         const data = await api.post<SessionState>(
           `/sessions/${encodeURIComponent(groupId)}/${path}`,
-          { passcode: passcode(), ...body },
+          body,
         )
         applyServerState(data)
       } catch (err) {
         setControlError(err instanceof Error ? err.message : 'Could not reach the session clock')
       }
     },
-    [groupId, passcode, applyServerState],
+    [groupId, applyServerState],
   )
 
   const start = useCallback(() => runAction('start'), [runAction])

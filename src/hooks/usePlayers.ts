@@ -77,7 +77,6 @@ export function usePlayers(groupId: string) {
   }, [refresh])
 
   async function createPlayer(
-    passcode: string,
     nickname: string,
     jerseyNumber: number | null,
     jerseyColor: JerseyColor | null,
@@ -88,7 +87,6 @@ export function usePlayers(groupId: string) {
     gender: Gender | null = null,
   ) {
     await api.post('/players', {
-      passcode,
       groupId,
       nickname,
       jerseyNumber,
@@ -103,7 +101,6 @@ export function usePlayers(groupId: string) {
   }
 
   async function updatePlayer(
-    passcode: string,
     id: string,
     targetGroupId: string,
     nickname: string,
@@ -118,7 +115,6 @@ export function usePlayers(groupId: string) {
     // update_player defaults mascot_id/eye_color/gender to null when omitted, so these must
     // always be sent — otherwise every edit would silently clear them.
     await api.put(`/players/${id}`, {
-      passcode,
       groupId: targetGroupId,
       nickname,
       jerseyNumber,
@@ -133,8 +129,8 @@ export function usePlayers(groupId: string) {
     await refresh()
   }
 
-  async function deletePlayer(passcode: string, id: string) {
-    await api.delete(`/players/${id}`, { passcode })
+  async function deletePlayer(id: string) {
+    await api.delete(`/players/${id}`)
     await refresh()
   }
 
@@ -153,14 +149,12 @@ export function usePlayers(groupId: string) {
  * for a category in a specific training. One row per (player, plan, category) server-side —
  * re-rating the same training+category just overwrites it. */
 export async function ratePlayerProgress(
-  passcode: string,
   playerId: string,
   planId: string,
   categoryId: string,
   rating: number,
 ) {
   await api.post(`/players/${playerId}/progress`, {
-    passcode,
     planId,
     categoryId,
     rating,
@@ -170,12 +164,11 @@ export async function ratePlayerProgress(
 /** The current parent code for a player, or null if none is set — a trainer can look this up
  * any time, not just right after issuing it (see sports-training-api#20). */
 export async function fetchParentCode(
-  passcode: string,
   playerId: string,
 ): Promise<string | null> {
   const { parentCode } = await api.post<{ parentCode: string | null }>(
     `/players/${playerId}/parent-code/read`,
-    { passcode },
+    {},
   )
   return parentCode
 }
@@ -183,20 +176,17 @@ export async function fetchParentCode(
 /** Issues a fresh parent code for a player, overwriting any existing one (an old code stops
  * working the moment a new one is generated). */
 export async function issueParentCode(
-  passcode: string,
   playerId: string,
 ): Promise<string> {
   const { parentCode } = await api.post<{ parentCode: string }>(
     `/players/${playerId}/parent-code`,
-    {
-      passcode,
-    },
+    {},
   )
   return parentCode
 }
 
 /** Revokes a player's parent code — the parent's next LockScreen attempt with the old code
- * fails, same as a trainer whose passcode was reset. */
-export async function revokeParentCode(passcode: string, playerId: string) {
-  await api.delete(`/players/${playerId}/parent-code`, { passcode })
+ * fails after revocation. */
+export async function revokeParentCode(playerId: string) {
+  await api.delete(`/players/${playerId}/parent-code`)
 }

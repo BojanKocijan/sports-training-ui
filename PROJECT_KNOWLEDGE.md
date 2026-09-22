@@ -26,14 +26,33 @@ Researched the Dutch amateur sports club market (Sept 2026):
 
 **The business case in one sentence:** federations already solve "who's coming and who's paid" for free — we solve "what do we actually do at training and is it working," which nobody else provides.
 
-### Monetization (the actual license unit)
+### Proposed tiers and licensing (FREE capacity enforced locally; paid tiers planned)
 
-One subscription per **sport, per club** (`sport_subscriptions`, already in the schema). A club with just basketball pays for one; a club that later adds a second sport pays for a second. No payment processing needed yet — subscriptions are provisioned manually until there's real demand to automate it.
+The founder's proposed packages replace the earlier idea of one subscription per sport per club. `sport_subscriptions` is an existing placeholder, **not** an entitlement or billing system. Paid pricing and features are proposals; FREE capacity rules are implemented in the tracked schema/migration, but take effect on the hosted database only after that migration is applied. Payment processing is not active.
+
+COACH / TEAM and CLUB should offer a choice of **monthly or seasonal billing**. The working assumption is a 12-month season. Proposed seasonal prices are about 16–17% below the total of 12 monthly payments; they are pricing proposals, not active checkout. FREE never expires, and FEDERATION keeps custom pricing.
+
+| Tier | Seasonal price | Monthly price | Capacity and included capabilities |
+|---|---|---|---|
+| **FREE** | **€0** | **€0** | 1 sport, 1 group, 6 players, 1 trainer; full core feature set; no expiry. |
+| **COACH / TEAM** | **€60 for the first group; €50 per additional group** | **€5.99 for the first group; €4.99 per additional group** | Standard roster included; owner plus limited co-coaches; personal/team workspace, custom exercises, custom training templates, parent access, progress, and live session. |
+| **CLUB** | **€280 including 5 groups; €45 per additional group** | **€27.99 including 5 groups; €4.49 per additional group** | Central billing, club admin, trainer management, shared club exercise library and training templates, cross-group visibility, club-owned historical data. |
+| **FEDERATION** | **Custom pricing** | **Custom pricing** | Multiple clubs and sports, federation admins, shared federation content/templates, cross-club governance and reporting. |
+
+At 5 groups COACH / TEAM costs €260 and CLUB €280 for a season; both cost €460 at 9 groups. CLUB becomes cheaper only from 10 groups, so its earlier value proposition is governance, shared assets and club-owned history rather than a volume discount.
+
+“Full core” means existing planning, live sessions, player progress and parent access remain available on FREE within its capacity limits; listing them under COACH / TEAM does not make them paid-only. Custom exercises and reusable templates are separate from the existing shared exercise library and dated training plans.
+
+**Platform superadmins** have full feature and tenant access without payment or expiry through a verified Auth account and TOTP MFA. They do not use a group passcode or browser-held service key. Explicit support context and audit trail remain future work.
+
+**Implementation direction:** `clubs` remains the workspace behind FREE, COACH / TEAM and CLUB, with `groups.club_id` ownership. Named trainer identity and membership are now tracked by the API migration. Parent codes remain scoped to one child. Before multi-club rollout, finish tenant filtering for remaining public reference endpoints and add paid licence/entitlement and billing records. Preserve historical data on downgrade or lapse; block over-limit writes instead of deleting data.
+
+**Business rules still to settle before paid enforcement:** confirm the 12-month season and proposed monthly prices; renewal/grace behavior; monthly cancellation and switching between billing intervals; “standard roster” size; co-coach seat count; COACH / TEAM and CLUB sport allowances; whether prices include VAT; ownership/transfer on upgrade and downgrade. FREE remains non-expiring regardless of those decisions. The migration assigns the existing U8/U10 club to FREE with its current data grandfathered: no new groups or players while above the FREE limits; existing player edits and same-club promotions continue. Trainer group passcodes are removed; the FREE trainer seat is a named Auth account.
 
 ### Go-to-market
 
-1. **Freemium/pilot for the trainer** — the trainer uses the basic version (session planning, live timer, progress tracking) for free, with no conversation with the club needed. That's the marketing.
-   - **Trainer as informal referrer** — once a trainer sees the value (like Basketball App now), give them a simple one-line message/link they can forward to the treasurer/president: *"I'm using this — the club needs to pay €X/season to keep access for all groups and parents."* The trainer doesn't need to "sell," just pass along the decision.
+1. **FREE for the trainer** — the trainer uses the basic version (session planning, live timer, progress tracking) for free, with no conversation with the club needed. That's the marketing.
+   - **Trainer as informal referrer** — once a trainer sees the value, give them a simple message/link they can forward to the treasurer/president: the club can pay for more groups, collaboration and shared content, while the core remains free within FREE limits. The trainer doesn't need to "sell," just pass along the decision.
    - **Club pays, becomes a reference** — every new paying club becomes proof for the next one (same school-by-school pattern Seesaw used).
 2. **Federation (NBB/Club.Basketball.nl) comes later** — once there are 5–10 paying clubs as proof, approach as a partner with a track record, not as an unknown competitor to their admin tool.
 
@@ -54,7 +73,7 @@ Industrijski benchmark-ovi za profitabilnost startupa se ne primenjuju direktno 
 
 **Fazni plan:**
 - **Godina 1-2 (validacija):** 10-20 klubova, €2.000-3.500 godišnjeg prometa, profit koji pokriva troškove i simboličan iznos — cilj je dokazana retencija i reference, ne zarada
-- **Godina 3-4 (skaliranje unutar niše):** ako retencija sezona-na-sezonu prelazi 80% i reference dovode nove klubove organski, razmotriti prelazak na klub-wide/enterprise pricing (€800-1.500/sezona, vidi Tier 3 "Club" u issue #67) i eventualno drugi sport (rukomet ili odbojka, ne fudbal zbog KNVB-ovog besplatnog Rinus alata) — realan cilj 50-100 klubova, prvi profit vredan pomena
+- **Godina 3-4 (skaliranje unutar niše):** ako retencija sezona-na-sezonu prelazi 80% i reference dovode nove klubove organski, razmotriti veće enterprise/federation ugovore iznad predložene početne CLUB cene (€280/sezona), i eventualno drugi sport (rukomet ili odbojka, ne fudbal zbog KNVB-ovog besplatnog Rinus alata) — realan cilj 50-100 klubova, prvi profit vredan pomena
 - **Godina 5+:** tek na ovom nivou postaje relevantno pitanje stalnog posla za oboje (osnivača i developera) — pod uslovom da prethodne faze potvrde model
 
 **Checkpoint:** kraj sezone 2027/2028 — eksplicitna tačka odluke da li nastaviti kao side-project, agresivnije pivotovati (enterprise pricing, dodatni sport, mogući spoljni kapital), ili preispitati ceo pristup. Metrika uspeha do tada: broj klubova, retencija sezona-na-sezonu, ne apsolutni profit.
@@ -111,8 +130,8 @@ Everything currently open in both repos, organized by the positioning above:
 **Competition**
 - Matches/results tracked per group — same shape as training plans, no new access model needed.
 
-**Multi-sport, gated by subscription**
-- When a club has more than one sport, each sport is filtered by whether the club actually subscribed to it (`sports` → `groups` filter chain).
+**Multi-sport, gated by entitlements**
+- FREE is limited to one sport; FEDERATION includes multiple clubs and sports. COACH / TEAM and CLUB sport allowances remain a business decision. Filter groups/content by the active tenant and its entitlements, not by the old `sport_subscriptions` placeholder alone.
 
 **Loose ends from earlier work**
 - Session-control ownership indicator when two trainers are both unlocked at once (low priority — accepted tradeoff, pick up only if it's caused a real collision).
@@ -126,7 +145,7 @@ Club membership administration, payment collection/processing, in-app two-way me
 
 ## 1. What this project does and why
 
-A mobile-first React app for running a youth basketball club's training sessions, built around the U8 group first. A trainer unlocks a group with a passcode, picks or builds a training plan from the exercise library, and runs a live timer during the actual session on their phone — the same shared clock is visible/controllable from any unlocked trainer's device in that group (backed by `sports-training-api`). Exercise ratings and history are stored per-device in `localStorage`; anything shared across devices (plans, club/group info, the passcode check) goes through the API.
+A mobile-first React app for running a youth basketball club's training sessions, built around the U8 group first. An invited trainer signs in with an email code and opens a group assigned to their account, picks or builds a training plan from the exercise library, and runs a live timer during the actual session on their phone — the same shared clock is visible/controllable from any unlocked trainer's device in that group (backed by `sports-training-api`). Exercise ratings and history are stored per-device in `localStorage`; anything shared across devices (plans, club/group info, account authorization) goes through the API.
 
 Screens today: **Groups** (roster/plans per group), **Players** (roster + progress per player), **Library** (browse/filter/rate exercises, build a custom or full 60-minute session), **Session** (the live run-through with bilingual coaching cues), plus **Setup** (pre-session checklist/coaching principles) and **Vocabulary** ("Words" — searchable bilingual Dutch/English coaching vocabulary), and a read-only **Parent view** unlocked by a trainer-issued single-child code.
 
@@ -138,8 +157,8 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 
 | Role | Description |
 |---|---|
-| Trainer | Full access after entering the group's passcode: builds plans, runs the session, rates players/exercises. |
-| Parent | Read-only single-child view via a trainer-issued code — no passcode, no write access. |
+| Trainer | Uses an invited email Auth account with group membership to build plans, run sessions and rate players/exercises. |
+| Parent | Read-only single-child view via a trainer-issued parent code — no trainer account or write access. |
 
 ---
 
@@ -149,7 +168,7 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 |---|---|---|
 | Framework | React 19 + TypeScript, Vite 8 | |
 | Styling | Tailwind v4 (`@tailwindcss/vite`) — no component library | Small app, direct utility classes; not a `@digital-ai/dot-components` project |
-| Local persistence | `localStorage` (per-device exercise ratings/history) | Shared state (plans, passcode, club/group data) goes through `sports-training-api` via `src/lib/apiClient.ts` |
+| Local persistence | `localStorage` (per-device exercise ratings/history) | Shared state (plans, account authorization, club/group data) goes through `sports-training-api` via `src/lib/apiClient.ts` |
 | Testing | Vitest + Testing Library, Playwright for e2e | |
 | Hosting | Netlify, auto-deploy on push to `main`; unit suite runs before `vite build`, blocking a bad deploy | GitHub Pages hosting was dropped in favor of Netlify-only |
 
@@ -191,12 +210,13 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 
 ## 7. Data layer
 
-`localStorage` for device-local state (exercise ratings/history). Everything shared across devices/trainers (plans, club/group data, passcode verification, live session clock) is fetched from `sports-training-api` — see that repo's `PROJECT_KNOWLEDGE.md` for the backend architecture.
+`localStorage` for device-local state (exercise ratings/history). Everything shared across devices/trainers (plans, club/group data, account authorization, live session clock) is fetched from `sports-training-api` — see that repo's `PROJECT_KNOWLEDGE.md` for the backend architecture.
 
 ---
 
 ## Changelog
 
+- **2026-09-22** — In-progress trainer login migration: email OTP and invitation replace group passcodes; parent codes stay child-scoped and read-only. FREE is the product tier, not a pilot. Hosted rollout awaits matching API migration and Auth email configuration.
 - **2026-09-21** — Local UI uses strict port 5174 and calls the sibling API on port 3002, avoiding other local services. Both projects require Node 22+; the API must allow the exact UI origin. The API client trims trailing slashes and sends JSON Content-Type only for requests with a body, so GET requests no longer trigger unnecessary preflights.
 
 - **2026-09-20** — sports-training-api#26 Age-scoped pedagogical guidance is now carried with database-backed exercises and shown only on the live `ExerciseTimeline`. The UI resolves the note by the active group's stable `templateId` (not its renameable display name), labels it with the template's display label, and omits the block when no note has been authored.

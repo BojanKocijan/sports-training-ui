@@ -42,7 +42,6 @@ export function PlayerDetailScreen({
   player,
   plans,
   groups,
-  passcode,
   onClose,
   onRosterChange,
   onSaveEdit,
@@ -54,7 +53,6 @@ export function PlayerDetailScreen({
   player: Player
   plans: TrainingPlan[]
   groups: { id: string; name: string; status: 'available' | 'coming_soon' }[]
-  passcode: () => string
   onClose: () => void
   /** Refreshes the roster (see usePlayers) — called after issuing/revoking a parent code, and
    * after a successful edit, so this view's own `player` prop (and the "has a code" badge)
@@ -119,7 +117,7 @@ export function PlayerDetailScreen({
   useEffect(() => {
     let cancelled = false
     setParentCodeLoading(true)
-    fetchParentCode(passcode(), player.id)
+    fetchParentCode(player.id)
       .then((code) => {
         if (!cancelled) setParentCode(code)
       })
@@ -132,13 +130,13 @@ export function PlayerDetailScreen({
     return () => {
       cancelled = true
     }
-  }, [passcode, player.id])
+  }, [player.id])
 
   async function handleIssueCode() {
     setParentCodePending(true)
     setParentCodeError(null)
     try {
-      const code = await issueParentCode(passcode(), player.id)
+      const code = await issueParentCode(player.id)
       setParentCode(code)
       onRosterChange()
     } catch (e) {
@@ -152,7 +150,7 @@ export function PlayerDetailScreen({
     setParentCodePending(true)
     setParentCodeError(null)
     try {
-      await revokeParentCode(passcode(), player.id)
+      await revokeParentCode(player.id)
       setParentCode(null)
       onRosterChange()
     } catch (e) {
@@ -208,7 +206,7 @@ export function PlayerDetailScreen({
     setPending((p) => ({ ...p, [categoryId]: true }))
     setRateError(null)
     try {
-      await ratePlayerProgress(passcode(), player.id, planId, categoryId, value)
+      await ratePlayerProgress(player.id, planId, categoryId, value)
       setJustSaved((s) => ({ ...s, [categoryId]: value }))
       await refresh()
     } catch (e) {

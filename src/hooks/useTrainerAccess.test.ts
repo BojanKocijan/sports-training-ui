@@ -1,182 +1,84 @@
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '../lib/apiClient'
+import { saveSession, type AccountSession } from '../lib/accountSession'
 import { useTrainerAccess } from './useTrainerAccess'
 
-vi.mock('../lib/apiClient', () => ({
-  api: {
-    post: vi.fn(),
-  },
-}))
-
+vi.mock('../lib/apiClient', () => ({ api: { post: vi.fn(), get: vi.fn() }, apiBaseUrl: 'http://localhost:3002' }))
 const postMock = vi.mocked(api.post)
+const getMock = vi.mocked(api.get)
+const session: AccountSession = {
+  accessToken: 'jwt', refreshToken: 'refresh', expiresAt: 9999999999,
+  user: { id: 'trainer-1', email: 'trainer@example.com', superadmin: false, mfaRequired: false },
+  groupIds: ['u8'], memberships: [{ club_id: 'club-1', group_id: 'u8', role: 'trainer', active: true }],
+}
+
+beforeEach(() => {
+  saveSession(null)
+  localStorage.clear()
+  vi.clearAllMocks()
+  getMock.mockResolvedValue({ groupIds: ['u8'], memberships: session.memberships })
+})
 
 describe('useTrainerAccess', () => {
-  beforeEach(() => {
-    localStorage.clear()
-    vi.clearAllMocks()
-  })
-
-  it('unlocks a trainer with a valid trainer code', async () => {
-    postMock.mockResolvedValue({
-      valid: true,
-      kind: 'trainer',
-    })
-
-    const { result } = renderHook(() => useTrainerAccess('u8'))
-
+  it('requests email OTP and unlocks only assigned groups after verification', async () => {
+    postMock.mockResolvedValueOnce({}).mockResolvedValueOnce(session)
+    const { result, rerender } = renderHook(({ groupId }) => useTrainerAccess(groupId), { initialProps: { groupId: 'u8' } })
     await act(async () => {
-      const unlocked = await result.current.tryUnlock('trainer-code', true)
-      expect(unlocked).toBe(true)
+      expect(await result.current.requestLoginCode('trainer@example.com')).toBe(true)
+      expect(await result.current.verifyLoginCode('trainer@example.com', '123456')).toBe(true)
     })
-
-    expect(postMock).toHaveBeenCalledWith('/auth/verify-passcode', {
-      groupId: 'u8',
-      passcode: 'trainer-code',
-    })
-
+    expect(postMock).toHaveBeenNthCalledWith(1, '/auth/request-code', { email: 'trainer@example.com' })
+    expect(postMock).toHaveBeenNthCalledWith(2, '/auth/verify-code', { email: 'trainer@example.com', code: '123456' })
     expect(result.current.unlocked).toBe(true)
     expect(result.current.kind).toBe('trainer')
-    expect(result.current.parentPlayer).toBeNull()
-    expect(result.current.passcode()).toBe('trainer-code')
-
-    expect(localStorage.getItem('u8-trainer-unlocked-u8')).toBe('1')
-    expect(localStorage.getItem('u8-trainer-passcode-u8')).toBe('trainer-code')
-    expect(localStorage.getItem('u8-trainer-kind-u8')).toBe('trainer')
-  })
-
-  it('rejects an invalid code and keeps the group locked', async () => {
-    postMock.mockResolvedValue({
-      valid: false,
-    })
-
-    const { result } = renderHook(() => useTrainerAccess('u8'))
-
-    await act(async () => {
-      const unlocked = await result.current.tryUnlock('wrong-code', true)
-      expect(unlocked).toBe(false)
-    })
-
+    expect(localStorage.getItem('sports-training-account-session')).toContain('jwt')
+    expect(localStorage.getItem('u8-trainer-passcode-u8')).toBeNull()
+    rerender({ groupId: 'u10' })
     expect(result.current.unlocked).toBe(false)
-    expect(result.current.kind).toBeNull()
-    expect(result.current.parentPlayer).toBeNull()
-    expect(result.current.error).toBe('Wrong code, try again.')
-
-    expect(localStorage.getItem('u8-trainer-unlocked-u8')).toBeNull()
   })
 
-  it('unlocks a parent and scopes access to that player', async () => {
-    postMock.mockResolvedValue({
-      valid: true,
-      kind: 'parent',
-      player: {
-        id: 'player-1',
-        nickname: 'Mario',
-      },
-    })
-
+  it('rejects a bad email code without unlocking', async () => {
+    postMock.mockRejectedValueOnce(new Error('Invalid or expired sign-in code'))
     const { result } = renderHook(() => useTrainerAccess('u8'))
+    await act(async () => { expect(await result.current.verifyLoginCode('trainer@example.com', '000000')).toBe(false) })
+    expect(result.current.unlocked).toBe(false)
+    expect(result.current.error).toBe('Invalid or expired sign-in code')
+  })
 
-    await act(async () => {
-      const unlocked = await result.current.tryUnlock('parent-code', true)
-      expect(unlocked).toBe(true)
-    })
-
-    expect(result.current.unlocked).toBe(true)
+  it('keeps a parent code separate and scoped to one child/group', async () => {
+    postMock.mockResolvedValueOnce({ valid: true, kind: 'parent', player: { id: 'child', nickname: 'Lion' } })
+    const { result, rerender } = renderHook(({ groupId }) => useTrainerAccess(groupId), { initialProps: { groupId: 'u8' } })
+    await act(async () => { expect(await result.current.tryUnlock('ABC234', true)).toBe(true) })
+    expect(postMock).toHaveBeenCalledWith('/auth/verify-parent-code', { groupId: 'u8', code: 'ABC234' })
     expect(result.current.kind).toBe('parent')
-    expect(result.current.parentPlayer).toEqual({
-      id: 'player-1',
-      nickname: 'Mario',
-    })
-    expect(result.current.passcode()).toBe('parent-code')
-
-    expect(localStorage.getItem('u8-trainer-kind-u8')).toBe('parent')
-    expect(
-      JSON.parse(localStorage.getItem('u8-trainer-parent-player-u8') ?? '{}'),
-    ).toEqual({
-      id: 'player-1',
-      nickname: 'Mario',
-    })
-  })
-
-  it('does not leak access when switching to another group', async () => {
-    postMock.mockResolvedValue({
-      valid: true,
-      kind: 'trainer',
-    })
-
-    const { result, rerender } = renderHook(
-      ({ groupId }) => useTrainerAccess(groupId),
-      {
-        initialProps: {
-          groupId: 'u8',
-        },
-      },
-    )
-
-    await act(async () => {
-      await result.current.tryUnlock('u8-code', false)
-    })
-
-    expect(result.current.unlocked).toBe(true)
-    expect(result.current.kind).toBe('trainer')
-    expect(result.current.passcode()).toBe('u8-code')
-
-    rerender({
-      groupId: 'u10',
-    })
-
+    expect(result.current.parentPlayer).toEqual({ id: 'child', nickname: 'Lion' })
+    expect(localStorage.getItem('sports-training-parent-u8')).toContain('ABC234')
+    rerender({ groupId: 'u10' })
     expect(result.current.unlocked).toBe(false)
-    expect(result.current.kind).toBeNull()
-    expect(result.current.parentPlayer).toBeNull()
-    expect(result.current.passcode()).toBe('')
   })
 
-  it('keeps session-only access out of localStorage', async () => {
-    postMock.mockResolvedValue({
-      valid: true,
-      kind: 'trainer',
-    })
-
+  it('rejects an invalid parent code', async () => {
+    postMock.mockResolvedValueOnce({ valid: false })
     const { result } = renderHook(() => useTrainerAccess('u8'))
-
-    await act(async () => {
-      await result.current.tryUnlock('session-code', false)
-    })
-
-    expect(result.current.unlocked).toBe(true)
-    expect(result.current.passcode()).toBe('session-code')
-
-    expect(localStorage.getItem('u8-trainer-unlocked-u8')).toBeNull()
-    expect(localStorage.getItem('u8-trainer-passcode-u8')).toBeNull()
-    expect(localStorage.getItem('u8-trainer-kind-u8')).toBeNull()
+    await act(async () => { expect(await result.current.tryUnlock('wrong', false)).toBe(false) })
+    expect(result.current.error).toBe('Wrong parent code, try again.')
   })
 
-  it('locks the active group and clears remembered access', async () => {
-    postMock.mockResolvedValue({
-      valid: true,
-      kind: 'trainer',
-    })
+  it('removes old saved trainer passcodes from upgraded devices', async () => {
+    localStorage.setItem('u8-trainer-passcode-u8', 'old-code')
+    renderHook(() => useTrainerAccess('u8'))
+    await waitFor(() => expect(localStorage.getItem('u8-trainer-passcode-u8')).toBeNull())
+  })
 
+  it('shows invite permission for a club owner and calls the invite endpoint', async () => {
+    const owner = { ...session, memberships: [{ club_id: 'club-1', group_id: null, role: 'owner', active: true }] }
+    saveSession(owner)
+    getMock.mockResolvedValue({ groupIds: ['u8'], memberships: owner.memberships })
+    postMock.mockResolvedValueOnce({ invited: true })
     const { result } = renderHook(() => useTrainerAccess('u8'))
-
-    await act(async () => {
-      await result.current.tryUnlock('trainer-code', true)
-    })
-
-    expect(result.current.unlocked).toBe(true)
-
-    act(() => {
-      result.current.lock()
-    })
-
-    expect(result.current.unlocked).toBe(false)
-    expect(result.current.kind).toBeNull()
-    expect(result.current.passcode()).toBe('')
-
-    expect(localStorage.getItem('u8-trainer-unlocked-u8')).toBeNull()
-    expect(localStorage.getItem('u8-trainer-passcode-u8')).toBeNull()
-    expect(localStorage.getItem('u8-trainer-kind-u8')).toBeNull()
-    expect(localStorage.getItem('u8-trainer-parent-player-u8')).toBeNull()
+    await waitFor(() => expect(result.current.canInvite).toBe(true))
+    await act(async () => { await result.current.inviteTrainer('colleague@example.com') })
+    expect(postMock).toHaveBeenCalledWith('/auth/invite', { email: 'colleague@example.com', groupId: 'u8', role: 'trainer' })
   })
 })
