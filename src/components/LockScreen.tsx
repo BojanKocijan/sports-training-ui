@@ -20,7 +20,7 @@ export function LockScreen({ groupId, onSelectGroup, trainerAccess }: {
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-56px)] max-w-md flex-col items-center justify-center gap-6 px-4 py-8 md:max-w-lg">
-      {groupsLoading ? <p className="text-sm text-neutral-400">Loading groups…</p>
+      {groupsLoading ? <p className="text-sm text-neutral-400">Loading groups...</p>
         : groupsError ? <p className="text-sm text-red-600">Could not load groups: {groupsError}</p>
         : <div className="flex flex-wrap justify-center gap-2">
           {groups.map((g) => <button key={g.id} type="button" disabled={g.status === 'coming_soon'}
@@ -33,7 +33,7 @@ export function LockScreen({ groupId, onSelectGroup, trainerAccess }: {
         <div className="flex gap-2" role="tablist" aria-label="Access type">
           <button type="button" role="tab" aria-selected={mode === 'trainer'} onClick={() => setMode('trainer')}
             className={`rounded-lg px-3 py-2 text-sm font-semibold ${mode === 'trainer' ? 'bg-orange-500 text-white' : 'text-neutral-500'}`}>
-            Trainer
+            Account
           </button>
           <button type="button" role="tab" aria-selected={mode === 'parent'} onClick={() => setMode('parent')}
             className={`rounded-lg px-3 py-2 text-sm font-semibold ${mode === 'parent' ? 'bg-orange-500 text-white' : 'text-neutral-500'}`}>
@@ -45,20 +45,20 @@ export function LockScreen({ groupId, onSelectGroup, trainerAccess }: {
           if (codeSent) await verifyLoginCode(email, emailCode)
           else if (await requestLoginCode(email)) setCodeSent(true)
         }}>
-          <h1 className="mt-4 text-lg font-bold dark:text-white">Trainer sign in</h1>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Use the email address your club admin invited.</p>
+          <h1 className="mt-4 text-lg font-bold dark:text-white">Sign in</h1>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Use the email address associated with your account.</p>
           <label className="mt-3 block text-sm dark:text-white" htmlFor="trainer-email">Email</label>
           <input id="trainer-email" type="email" autoComplete="email" required value={email}
             onChange={(event) => { setEmail(event.target.value); setCodeSent(false) }}
             className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 dark:border-white/10 dark:bg-neutral-800" />
-          {codeSent && <><label className="mt-3 block text-sm dark:text-white" htmlFor="trainer-email-code">Email code</label>
+          {codeSent && <><label className="mt-3 block text-sm dark:text-white" htmlFor="trainer-email-code">Sign-in code</label>
             <input id="trainer-email-code" type="text" inputMode="numeric" autoComplete="one-time-code" required
               value={emailCode} onChange={(event) => setEmailCode(event.target.value)}
               className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 dark:border-white/10 dark:bg-neutral-800" /></>}
           {error && <p className="mt-2 text-sm text-red-600" role="alert">{error}</p>}
           <button type="submit" disabled={checking || (codeSent && !emailCode)}
             className="mt-4 w-full rounded-xl bg-orange-500 py-2.5 text-sm font-bold text-white disabled:opacity-50">
-            {checking ? 'Please wait…' : codeSent ? 'Sign in' : 'Send email code'}
+            {checking ? 'Please wait...' : codeSent ? 'Sign in' : 'Send sign-in code'}
           </button>
           {codeSent && <button type="button" className="mt-3 text-sm text-neutral-500 underline"
             onClick={async () => { await requestLoginCode(email) }}>Send a new code</button>}
@@ -76,7 +76,7 @@ export function LockScreen({ groupId, onSelectGroup, trainerAccess }: {
           {error && <p className="mt-2 text-sm text-red-600" role="alert">{error}</p>}
           <button type="submit" disabled={checking || !parentCode}
             className="mt-4 w-full rounded-xl bg-orange-500 py-2.5 text-sm font-bold text-white disabled:opacity-50">
-            {checking ? 'Please wait…' : 'Open parent view'}
+            {checking ? 'Please wait...' : 'Open parent view'}
           </button>
         </form>}
       </Card>

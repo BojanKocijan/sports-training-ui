@@ -2,7 +2,7 @@ export interface AccountSession {
   accessToken: string
   refreshToken: string
   expiresAt: number
-  user: { id: string; email: string; superadmin: boolean; mfaRequired: boolean }
+  user: { id: string; email: string; superadmin: boolean }
   groupIds: string[]
   memberships: { club_id: string; group_id: string | null; role: string; active: boolean }[]
 }

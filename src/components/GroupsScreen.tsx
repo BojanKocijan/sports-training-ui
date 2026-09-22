@@ -86,7 +86,7 @@ export function GroupsScreen({
 
       {!isApiConfigured && (
         <div className="rounded-2xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          Shared planning isn't set up yet — add <code>VITE_API_URL</code> (see{' '}
+          Shared planning isn't set up yet, add <code>VITE_API_URL</code> (see{' '}
           <code>.env.example</code>) to connect a sports-training-api deployment.
         </div>
       )}
@@ -147,7 +147,7 @@ export function GroupsScreen({
                   removePlan(nextTraining.id)
                 }}
               >
-                {removingId === nextTraining.id ? '…' : 'Remove'}
+                {removingId === nextTraining.id ? '...' : 'Remove'}
               </Button>
             </div>
           </Card>
@@ -224,7 +224,7 @@ export function GroupsScreen({
                       removePlan(p.id)
                     }}
                   >
-                    {removingId === p.id ? '…' : 'Remove'}
+                    {removingId === p.id ? '...' : 'Remove'}
                   </Button>
                 </div>
               </Card>

@@ -9,7 +9,7 @@ const postMock = vi.mocked(api.post)
 const getMock = vi.mocked(api.get)
 const session: AccountSession = {
   accessToken: 'jwt', refreshToken: 'refresh', expiresAt: 9999999999,
-  user: { id: 'trainer-1', email: 'trainer@example.com', superadmin: false, mfaRequired: false },
+  user: { id: 'trainer-1', email: 'trainer@example.com', superadmin: false },
   groupIds: ['u8'], memberships: [{ club_id: 'club-1', group_id: 'u8', role: 'trainer', active: true }],
 }
 
@@ -69,6 +69,36 @@ describe('useTrainerAccess', () => {
     localStorage.setItem('u8-trainer-passcode-u8', 'old-code')
     renderHook(() => useTrainerAccess('u8'))
     await waitFor(() => expect(localStorage.getItem('u8-trainer-passcode-u8')).toBeNull())
+  })
+
+  it('lets a superadmin bootstrap a workspace owner', async () => {
+    const admin: AccountSession = {
+      ...session,
+      user: {
+        ...session.user,
+        email: 'admin@example.com',
+        superadmin: true,
+      },
+      memberships: [],
+    }
+
+    saveSession(admin)
+    getMock.mockResolvedValue({ groupIds: ['u8'], memberships: [] })
+    postMock.mockResolvedValueOnce({ invited: true })
+
+    const { result } = renderHook(() => useTrainerAccess('u8'))
+
+    await waitFor(() => expect(result.current.isSuperadmin).toBe(true))
+
+    await act(async () => {
+      await result.current.inviteOwner('owner@example.com')
+    })
+
+    expect(postMock).toHaveBeenCalledWith('/auth/invite', {
+      email: 'owner@example.com',
+      groupId: 'u8',
+      role: 'owner',
+    })
   })
 
   it('shows invite permission for a club owner and calls the invite endpoint', async () => {

@@ -37,7 +37,7 @@ export function InviteTrainerDialog({ open, onOpenChange, onInvite }: {
           className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2" />
         {error && <p role="alert" className="mt-2 text-sm text-red-600">{error}</p>}
         <button type="submit" disabled={busy} className="mt-4 rounded-lg bg-orange-500 px-4 py-2 font-semibold text-white disabled:opacity-50">
-          {busy ? 'Sending…' : 'Send invitation'}
+          {busy ? 'Sending...' : 'Send invitation'}
         </button>
       </form>}
     </DialogContent>

@@ -47,6 +47,34 @@ At 5 groups COACH / TEAM costs €260 and CLUB €280 for a season; both cost �
 
 **Implementation direction:** `clubs` remains the workspace behind FREE, COACH / TEAM and CLUB, with `groups.club_id` ownership. Named trainer identity and membership are now tracked by the API migration. Parent codes remain scoped to one child. Before multi-club rollout, finish tenant filtering for remaining public reference endpoints and add paid licence/entitlement and billing records. Preserve historical data on downgrade or lapse; block over-limit writes instead of deleting data.
 
+### Canonical account roles and authorization scopes
+
+Roles and product tiers are separate concepts: a **role** determines what a person may do and in which scope; a **tier** determines workspace capacity/features.
+
+- **Superadmin** — platform-wide role stored separately from club memberships (`platform_admins`). Requires a named Supabase Auth account plus TOTP/AAL2. Has access across clubs/groups, does not require a subscription and does not consume a trainer seat.
+- **Owner** — club/workspace-wide role. Stored as a club-level membership with `group_id = NULL`. An Owner implicitly has trainer capabilities in every group belonging to that workspace via `groups.club_id`; do not create a duplicate Trainer membership just so the Owner can coach. On FREE the Owner is the single adult/trainer seat.
+- **Club admin** — club/workspace-wide administrative role with `group_id = NULL`. Administration alone does not grant training-write capabilities. If a Club admin also coaches, give that user an additional group-scoped Trainer membership for the relevant group(s).
+- **Trainer** — group-scoped role. `group_id` is required and training access is limited to explicitly assigned groups.
+- **Co-coach** — group-scoped role. `group_id` is required and access is limited to explicitly assigned groups; exact paid-tier seat limits remain a future business rule.
+- **Parent** — not an Auth or trainer-membership role. Access is read-only and scoped to one child through that child's parent code.
+- **Federation admin** — future federation-scoped role. It must live in a separate federation membership model, not in `trainer_memberships`.
+
+Membership scope invariants:
+- `owner` and `club_admin` => `group_id IS NULL`
+- `trainer` and `co_coach` => `group_id IS NOT NULL`
+- an Owner can train a group when `owner.club_id == group.club_id`
+- a Club admin cannot train merely because they are a Club admin
+- Superadmin authorization is independent from club memberships
+- Parent authorization is independent from adult Auth accounts
+
+FREE authorization:
+- one non-expiring workspace
+- one sport
+- one ordinary group
+- six players
+- one adult account, which is the Owner and also performs the trainer role operationally
+- the Owner's club-level membership provides access to the FREE group's training functionality
+
 **Business rules still to settle before paid enforcement:** confirm the 12-month season and proposed monthly prices; renewal/grace behavior; monthly cancellation and switching between billing intervals; “standard roster” size; co-coach seat count; COACH / TEAM and CLUB sport allowances; whether prices include VAT; ownership/transfer on upgrade and downgrade. FREE remains non-expiring regardless of those decisions. The migration assigns the existing U8/U10 club to FREE with its current data grandfathered: no new groups or players while above the FREE limits; existing player edits and same-club promotions continue. Trainer group passcodes are removed; the FREE trainer seat is a named Auth account.
 
 ### Go-to-market

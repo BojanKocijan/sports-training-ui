@@ -11,7 +11,7 @@ export interface TimelineEntry {
 
 function timeRangeLabel(startSec: number, endSec: number) {
   const fmt = (s: number) => `${Math.floor(s / 60)}:00`
-  return `${fmt(startSec)} – ${fmt(endSec)}`
+  return `${fmt(startSec)}, ${fmt(endSec)}`
 }
 
 /** Only the exercise currently in progress — during a live session, showing the whole plan's

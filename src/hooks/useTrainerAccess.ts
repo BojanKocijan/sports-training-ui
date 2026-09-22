@@ -4,6 +4,7 @@ import { currentSession, saveSession, signOut, type AccountSession } from '../li
 import { clearParentCredential, saveParentCredential } from '../lib/parentSession'
 
 export interface ParentPlayer { id: string; nickname: string }
+export type AccountRole = 'superadmin' | 'owner' | 'club_admin' | 'trainer' | 'co_coach'
 type AccessKind = 'trainer' | 'parent'
 type ParentAccess = { code: string; player: ParentPlayer }
 
@@ -44,7 +45,7 @@ export function useTrainerAccess(groupId: string) {
         .then(async (response) => {
           if (!response.ok) throw new Error('Invitation session is not authorized')
           const me = await response.json() as { user: AccountSession['user']; groupIds: string[]; memberships: AccountSession['memberships'] }
-          if (!me.user.mfaRequired && me.groupIds.length === 0) throw new Error('No trainer group was assigned')
+          if (!me.user.superadmin && me.groupIds.length === 0) throw new Error('No trainer group was assigned')
           saveSession({
             accessToken: invitedAccess, refreshToken: invitedRefresh,
             expiresAt: Number(fragment.get('expires_at')) || Math.floor(Date.now() / 1000) + Number(fragment.get('expires_in') || 3600),
@@ -133,13 +134,43 @@ export function useTrainerAccess(groupId: string) {
     await api.post('/auth/invite', { email, groupId, role: 'trainer' })
   }, [groupId])
 
-  const mfaRequired = Boolean(account?.user.mfaRequired)
+  const inviteOwnerForGroup = useCallback(async (
+    email: string,
+    targetGroupId: string,
+  ) => {
+    await api.post('/auth/invite', {
+      email,
+      groupId: targetGroupId,
+      role: 'owner',
+    })
+  }, [])
+
+  const inviteOwner = useCallback(async (email: string) => {
+    await inviteOwnerForGroup(email, groupId)
+  }, [groupId, inviteOwnerForGroup])
+
+  const isSuperadmin = Boolean(account?.user.superadmin)
+
+  const clubRole = account?.memberships.find((m) => m.group_id === null)?.role
+  const groupRole = account?.memberships.find((m) => m.group_id === groupId)?.role
+  const membershipRole = clubRole ?? groupRole
+
+  const accountRole: AccountRole | null = account?.user.superadmin
+    ? 'superadmin'
+    : membershipRole === 'owner' ||
+        membershipRole === 'club_admin' ||
+        membershipRole === 'trainer' ||
+        membershipRole === 'co_coach'
+      ? membershipRole
+      : null
   const canInvite = Boolean(account?.user.superadmin || (account?.groupIds.includes(groupId) && account.memberships?.some(
     (m) => m.group_id === null && (m.role === 'owner' || m.role === 'club_admin'),
   )))
 
   return {
     ...state, checking, error, tryUnlock, requestLoginCode, verifyLoginCode,
-    lock, inviteTrainer, canInvite, mfaRequired, groupIds: account?.groupIds ?? [],
+    lock, inviteTrainer, inviteOwner, inviteOwnerForGroup,
+    canInvite, isSuperadmin, accountRole,
+    groupIds: account?.groupIds ?? [],
   }
 }

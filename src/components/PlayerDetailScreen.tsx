@@ -284,7 +284,7 @@ export function PlayerDetailScreen({
                 onClick={onRemove}
                 className="text-red-600 dark:text-red-400"
               >
-                {removing ? '…' : 'Remove'}
+                {removing ? '...' : 'Remove'}
               </Button>
               <Button variant="ghost" size="sm" onClick={onClose} className="text-neutral-400">
                 Close
@@ -368,7 +368,7 @@ export function PlayerDetailScreen({
           </TabsList>
 
           <TabsContent value="stats" className="space-y-2">
-            {loading && <p className="text-sm text-neutral-400">Loading progress…</p>}
+            {loading && <p className="text-sm text-neutral-400">Loading progress...</p>}
             {error && <p className="text-sm text-red-600">Could not load progress: {error}</p>}
             {groupedSkills.length === 0 && !loading && (
               <p className="text-sm text-neutral-400">No skill categories set up for this sport yet.</p>
@@ -397,7 +397,7 @@ export function PlayerDetailScreen({
           <TabsContent value="training" className="space-y-3">
             {sortedPlans.length === 0 ? (
               <p className="text-center text-sm text-neutral-400">
-                No trainings planned for this group yet — plan one on the Groups tab before rating.
+                No trainings planned for this group yet, plan one on the Groups tab before rating.
               </p>
             ) : (
               <>
@@ -507,19 +507,19 @@ export function PlayerDetailScreen({
                     {parentCode}
                   </p>
                   <p className="mt-0.5 text-xs text-orange-800 dark:text-orange-300">
-                    Share this with {player.nickname}'s parent — they enter it on the group's lock
+                    Share this with {player.nickname}'s parent, they enter it on the group's lock
                     screen, same as a trainer code.
                   </p>
                 </div>
               ) : (
                 <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                  No parent code yet — generate one to let this child's parent view their progress.
+                  No parent code yet, generate one to let this child's parent view their progress.
                 </p>
               )}
               {parentCodeError && <p className="mt-1 text-xs font-semibold text-red-600">{parentCodeError}</p>}
               <div className="mt-2 flex gap-2">
                 <Button variant="secondary" size="sm" disabled={parentCodePending} onClick={handleIssueCode}>
-                  {parentCodePending ? '…' : parentCode ? 'Regenerate code' : 'Generate code'}
+                  {parentCodePending ? '...' : parentCode ? 'Regenerate code' : 'Generate code'}
                 </Button>
                 {parentCode && (
                   <Button

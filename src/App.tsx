@@ -4,11 +4,11 @@ import { ClubHeader } from './components/ClubHeader'
 import { ExercisesScreen } from './components/ExercisesScreen'
 import { GroupsScreen } from './components/GroupsScreen'
 import { LockScreen } from './components/LockScreen'
-import { MfaScreen } from './components/MfaScreen'
 import { ParentView } from './components/ParentView'
 import { PlayerDetailScreen } from './components/PlayerDetailScreen'
 import { PlayersScreen } from './components/PlayersScreen'
 import { SessionScreen } from './components/SessionScreen'
+import { SuperAdminDashboard } from './components/SuperAdminDashboard'
 import { SideNav } from './components/SideNav'
 import { useActiveGroup } from './hooks/useActiveGroup'
 import { useActivePlan } from './hooks/useActivePlan'
@@ -21,6 +21,8 @@ import { formatDate } from './utils/format'
 
 function App() {
   const [tab, setTab] = useState<Tab>('groups')
+  const [superadminView, setSuperadminView] =
+    useState<'dashboard' | 'training'>('dashboard')
   const activePlan = useActivePlan()
   const { groupId, setGroupId } = useActiveGroup()
   const { groups } = useGroups()
@@ -42,6 +44,12 @@ function App() {
   } = usePlayers(groupId)
   // The signed-in trainer's membership is scoped to the active group.
   const trainerAccess = useTrainerAccess(groupId)
+
+  useEffect(() => {
+    if (!trainerAccess.unlocked) {
+      setSuperadminView('dashboard')
+    }
+  }, [trainerAccess.unlocked])
 
   useEffect(() => {
     if (!trainerAccess.unlocked && trainerAccess.groupIds.length > 0 && !trainerAccess.groupIds.includes(groupId)) {
@@ -149,9 +157,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-      {trainerAccess.mfaRequired ? (
-        <MfaScreen />
-      ) : !trainerAccess.unlocked ? (
+      {!trainerAccess.unlocked ? (
         <>
           <ClubHeader />
           <LockScreen groupId={groupId} onSelectGroup={setGroupId} trainerAccess={trainerAccess} />
@@ -161,6 +167,12 @@ function App() {
           <ClubHeader trainerAccess={{ kind: 'parent', lock: trainerAccess.lock }} />
           <ParentView groupId={groupId} player={trainerAccess.parentPlayer} />
         </>
+      ) : trainerAccess.isSuperadmin && superadminView === 'dashboard' ? (
+        <SuperAdminDashboard
+          onOpenTrainingApp={() => setSuperadminView('training')}
+          onLogout={trainerAccess.lock}
+          onInviteOwner={trainerAccess.inviteOwnerForGroup}
+        />
       ) : viewingPlayer ? (
         <PlayerDetailScreen
           player={viewingPlayer}
@@ -181,7 +193,20 @@ function App() {
         <>
           <ClubHeader
             groupSwitcher={{ groups, groupId, setGroupId }}
-            trainerAccess={{ kind: 'trainer', lock: trainerAccess.lock, canInvite: trainerAccess.canInvite, inviteTrainer: trainerAccess.inviteTrainer }}
+            trainerAccess={{
+              kind: 'trainer',
+              lock: trainerAccess.lock,
+              canInvite: trainerAccess.canInvite,
+              inviteTrainer: trainerAccess.inviteTrainer,
+              isSuperadmin: trainerAccess.isSuperadmin,
+              inviteOwner: trainerAccess.inviteOwner,
+              accountRole: trainerAccess.accountRole,
+            }}
+            onAdminHome={
+              trainerAccess.isSuperadmin
+                ? () => setSuperadminView('dashboard')
+                : undefined
+            }
           />
           <div className="lg:flex">
             <SideNav active={tab} onChange={setTab} />

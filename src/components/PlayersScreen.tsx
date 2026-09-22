@@ -28,7 +28,7 @@ export function PlayersScreen({
       <header className="mb-4">
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">Players</h1>
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          The kids in this group — nickname only, no real names — and how their training's going.
+          The kids in this group, nickname only, no real names, and how their training's going.
         </p>
         {club.tier === 'free' && (
           <p className="mt-2 text-sm text-muted-foreground">

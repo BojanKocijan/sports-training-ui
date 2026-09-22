@@ -38,7 +38,7 @@ export function ExercisesScreen() {
     return (
       <div className="mx-auto max-w-md space-y-4 px-4 pb-24 pt-4">
         <p className="text-sm text-neutral-400">
-          {error ? `Could not load exercises: ${error}` : 'Loading exercises…'}
+          {error ? `Could not load exercises: ${error}` : 'Loading exercises...'}
         </p>
       </div>
     )
@@ -58,7 +58,7 @@ export function ExercisesScreen() {
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search an exercise…"
+        placeholder="Search an exercise..."
         className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-orange-400 dark:border-white/10 dark:bg-neutral-900 dark:text-neutral-100"
       />
 

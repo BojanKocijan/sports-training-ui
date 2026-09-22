@@ -96,7 +96,7 @@ export function PlayersSection({
           </p>
 
           <p className="max-w-xs text-xs text-neutral-400">
-            Add the kids in this group — nickname only — to start tracking their
+            Add the kids in this group, nickname only, to start tracking their
             training.
           </p>
 

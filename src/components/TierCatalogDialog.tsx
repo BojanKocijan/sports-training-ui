@@ -62,7 +62,7 @@ export function TierCatalogDialog({
         {error ? (
           <p role="alert">Packages could not be loaded. Please try again later.</p>
         ) : tiers === null ? (
-          <p role="status">Loading packages…</p>
+          <p role="status">Loading packages...</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2" aria-label="Planned packages">
             {tiers.map((tier) => (
