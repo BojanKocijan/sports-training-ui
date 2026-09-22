@@ -1,9 +1,11 @@
 import { lazy, Suspense, useState } from 'react'
 import { DEFAULT_MASCOT_ID, type EyeColor, type Gender, type JerseyColor } from '../../hooks/usePlayers'
-import { MASCOTS_3D } from '../../lib/mascot3d'
+import { BACKDROPS, DEFAULT_BACKDROP, MASCOTS_3D, type BackdropId } from '../../lib/mascot3d'
 import { ErrorBoundary } from '../ErrorBoundary'
 import { JerseyGraphic } from '../JerseyGraphic'
 import { Skeleton } from '../ui/skeleton'
+
+const BACKDROP_IDS = Object.keys(BACKDROPS) as BackdropId[]
 
 // Loaded on first switch to 3D, so the three.js bundle and the models stay out of the main chunk.
 const Mascot3DPreview = lazy(() => import('../Mascot3DPreview'))
@@ -38,6 +40,7 @@ export function PlayerPreviewCard({
 }) {
   const [view, setView] = useState<PreviewView>('still')
   const [showBall, setShowBall] = useState(true)
+  const [backdrop, setBackdrop] = useState<BackdropId>(DEFAULT_BACKDROP)
   const has3d = (mascotId ?? DEFAULT_MASCOT_ID) in MASCOTS_3D
   const activeView: PreviewView = has3d ? view : 'still'
 
@@ -91,6 +94,24 @@ export function PlayerPreviewCard({
           )}
         </div>
       )}
+      {activeView === '3d' && (
+        <div role="group" aria-label="Backdrop" className="flex items-center gap-1.5">
+          {BACKDROP_IDS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              aria-label={BACKDROPS[id].label}
+              aria-pressed={backdrop === id}
+              onClick={() => setBackdrop(id)}
+              className={`h-5 w-5 rounded-full ${BACKDROPS[id].className} ${
+                backdrop === id
+                  ? 'ring-2 ring-neutral-900 ring-offset-1 dark:ring-neutral-50'
+                  : 'ring-1 ring-neutral-300 dark:ring-neutral-600'
+              }`}
+            />
+          ))}
+        </div>
+      )}
       {activeView === '3d' ? (
         <ErrorBoundary fallback={still}>
           <Suspense fallback={<Skeleton className="h-72 aspect-[4/5]" />}>
@@ -99,6 +120,7 @@ export function PlayerPreviewCard({
               jerseyColor={jerseyColor}
               eyeColor={eyeColor ?? null}
               showBall={showBall}
+              backdrop={backdrop}
             />
           </Suspense>
         </ErrorBoundary>
