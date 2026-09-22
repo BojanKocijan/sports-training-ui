@@ -1,8 +1,8 @@
 import { Center, OrbitControls, useGLTF, useTexture } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Suspense, useEffect, useMemo, useRef } from 'react'
-import { Color, Spherical, Vector3, Vector4 } from 'three'
-import type { Group, Mesh, MeshStandardMaterial, Texture } from 'three'
+import { Color, MathUtils, Quaternion, Spherical, Vector3, Vector4 } from 'three'
+import type { Group, Mesh, MeshStandardMaterial, Object3D, Texture } from 'three'
 import type { EyeColor, JerseyColor } from '../hooks/usePlayers'
 import { DEFAULT_JERSEY_TINT, EYE_TINTS, JERSEY_TINTS } from '../lib/mascot3d'
 
@@ -137,6 +137,37 @@ function useRegionTint(
   }, [uniforms, eyeHex])
 }
 
+// Upper-arm bones swung down from a T-pose. The right arm points to -x and the left to +x (the
+// mascot faces +z), so a rotation about the world z axis lowers them in opposite directions.
+const ARM_BONES = [
+  ['mixamorigRightArm', 1],
+  ['mixamorigLeftArm', -1],
+] as const
+
+function useArmsDown(scene: Group, degrees: number | undefined) {
+  useEffect(() => {
+    if (!degrees) return
+    scene.updateWorldMatrix(true, true)
+    const original: [Object3D, Quaternion][] = []
+    for (const [name, sign] of ARM_BONES) {
+      const bone = scene.getObjectByName(name)
+      if (!bone?.parent) {
+        console.warn(`Mascot3DScene: bone "${name}" not found; arm not lowered`)
+        continue
+      }
+      original.push([bone, bone.quaternion.clone()])
+      // Apply the swing in world space, then convert back to the bone's local space.
+      const swing = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), sign * MathUtils.degToRad(degrees))
+      const boneWorld = bone.getWorldQuaternion(new Quaternion())
+      const parentWorld = bone.parent.getWorldQuaternion(new Quaternion())
+      bone.quaternion.copy(parentWorld.invert().multiply(swing).multiply(boneWorld))
+    }
+    scene.updateWorldMatrix(true, true)
+    // The loaded scene is cached and shared, so put the bones back or a remount bends them twice.
+    return () => original.forEach(([bone, q]) => bone.quaternion.copy(q))
+  }, [scene, degrees])
+}
+
 function MascotModel({
   modelUrl,
   ballUrl,
@@ -146,6 +177,7 @@ function MascotModel({
   ballOffset,
   irisToneX,
   irisToneY,
+  armDownDegrees,
   jerseyColor,
   eyeColor,
   showBall,
@@ -159,6 +191,7 @@ function MascotModel({
   ballOffset: [number, number, number]
   irisToneX: number[]
   irisToneY: number[]
+  armDownDegrees?: number
   jerseyColor: JerseyColor | null
   eyeColor: EyeColor | null
   showBall: boolean
@@ -184,6 +217,7 @@ function MascotModel({
     irisToneX,
     irisToneY,
   )
+  useArmsDown(scene, armDownDegrees)
 
   useEffect(() => {
     if (!showBall) return
@@ -217,6 +251,7 @@ export function Mascot3DScene({
   ballOffset,
   irisToneX,
   irisToneY,
+  armDownDegrees,
   jerseyColor,
   eyeColor,
   showBall,
@@ -233,6 +268,7 @@ export function Mascot3DScene({
   ballOffset: [number, number, number]
   irisToneX: number[]
   irisToneY: number[]
+  armDownDegrees?: number
   jerseyColor: JerseyColor | null
   eyeColor: EyeColor | null
   showBall: boolean
@@ -270,6 +306,7 @@ export function Mascot3DScene({
             ballOffset={ballOffset}
             irisToneX={irisToneX}
             irisToneY={irisToneY}
+            armDownDegrees={armDownDegrees}
             jerseyColor={jerseyColor}
             eyeColor={eyeColor}
             showBall={showBall}
