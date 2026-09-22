@@ -13,11 +13,13 @@ vi.mock('../Mascot3DPreview', () => ({
     jerseyColor,
     eyeColor,
     showBall,
+    backdrop,
   }: {
     mascotId?: string | null
     jerseyColor: string | null
     eyeColor: string | null
     showBall: boolean
+    backdrop?: string
   }) => {
     if (state.throwOnRender) throw new Error('WebGL unavailable')
     return (
@@ -27,6 +29,7 @@ vi.mock('../Mascot3DPreview', () => ({
         data-color={jerseyColor ?? ''}
         data-eyes={eyeColor ?? ''}
         data-ball={String(showBall)}
+        data-backdrop={backdrop ?? ''}
       />
     )
   },
@@ -146,6 +149,22 @@ describe('PlayerPreviewCard', () => {
 
     expect(screen.getByTestId('still')).toBeInTheDocument()
     expect(screen.queryByTestId('mascot-3d')).not.toBeInTheDocument()
+  })
+
+  it('has a backdrop picker that only appears in 3D, defaults to neutral, and can be changed', async () => {
+    const user = userEvent.setup()
+    render(<PlayerPreviewCard {...baseProps} mascotId="lion" />)
+    expect(screen.queryByRole('group', { name: 'Backdrop' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '3D model' }))
+    const model = await screen.findByTestId('mascot-3d')
+    expect(model).toHaveAttribute('data-backdrop', 'neutral')
+    expect(screen.getByRole('button', { name: 'Neutral' })).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(screen.getByRole('button', { name: 'Night' }))
+    expect(screen.getByTestId('mascot-3d')).toHaveAttribute('data-backdrop', 'night')
+    expect(screen.getByRole('button', { name: 'Night' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Neutral' })).toHaveAttribute('aria-pressed', 'false')
   })
 
   it('falls back to the still image if the 3D view fails to render', async () => {

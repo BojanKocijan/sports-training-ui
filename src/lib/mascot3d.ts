@@ -111,3 +111,23 @@ export const EYE_TINTS: Record<EyeColor, string> = {
   green: '#3ce566',
   brown: '#ff6f09',
 }
+
+/** A "stage" behind the mascot in the spotlight preview (#106, #109) -- the canvas itself stays
+ * transparent (Mascot3DScene never sets scene.background), so this is just a CSS background on
+ * Mascot3DPreview's wrapper div. Not saved, same as the still/3D toggle and the ball switch. */
+export type BackdropId = 'neutral' | 'court' | 'night' | 'sky'
+
+export const BACKDROPS: Record<BackdropId, { label: string; className: string }> = {
+  neutral: { label: 'Neutral', className: 'bg-neutral-100 dark:bg-neutral-800' },
+  court: {
+    label: 'Court',
+    className: 'bg-gradient-to-b from-amber-100 to-orange-200 dark:from-amber-950 dark:to-orange-900',
+  },
+  night: { label: 'Night', className: 'bg-gradient-to-b from-slate-700 to-slate-950' },
+  sky: {
+    label: 'Sky',
+    className: 'bg-gradient-to-b from-sky-100 to-sky-300 dark:from-sky-950 dark:to-sky-900',
+  },
+}
+
+export const DEFAULT_BACKDROP: BackdropId = 'neutral'

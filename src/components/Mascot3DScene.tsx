@@ -1,7 +1,7 @@
 import { Center, OrbitControls, useGLTF, useTexture } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Suspense, useEffect, useMemo, useRef } from 'react'
-import { Color, Vector4 } from 'three'
+import { Color, Spherical, Vector3, Vector4 } from 'three'
 import type { Group, Mesh, MeshStandardMaterial, Texture } from 'three'
 import type { EyeColor, JerseyColor } from '../hooks/usePlayers'
 import { DEFAULT_JERSEY_TINT, EYE_TINTS, JERSEY_TINTS } from '../lib/mascot3d'
@@ -223,6 +223,7 @@ export function Mascot3DScene({
   matte = true,
   cameraPosition,
   enableZoom = true,
+  enableTilt = true,
 }: {
   modelUrl: string
   ballUrl: string
@@ -238,7 +239,20 @@ export function Mascot3DScene({
   matte?: boolean
   cameraPosition: [number, number, number]
   enableZoom?: boolean
+  /** true (default): free orbit, for the dev POC page where seeing the model from any angle
+   * matters. false: a "spotlight/turntable" lock -- only horizontal (azimuthal) rotation is
+   * allowed, the vertical (polar) angle is pinned to cameraPosition's own, so a drag can never
+   * tip the mascot onto its head or under its feet (#106, #109). */
+  enableTilt?: boolean
 }) {
+  // The polar angle cameraPosition already frames the shot at; locking min/max to this value (and
+  // leaving azimuth free) is the standard three.js OrbitControls recipe for a turntable restricted
+  // to one axis. Recomputed only when the camera preset changes, not every render.
+  const polarAngle = useMemo(
+    () => new Spherical().setFromVector3(new Vector3(...cameraPosition)).phi,
+    [cameraPosition],
+  )
+
   return (
     <Canvas camera={{ position: cameraPosition, fov: 45 }}>
       {/* Deliberately bright and fairly flat: the still art is flat-lit, and three.js divides light
@@ -263,7 +277,12 @@ export function Mascot3DScene({
           />
         </Center>
       </Suspense>
-      <OrbitControls enablePan={false} enableZoom={enableZoom} />
+      <OrbitControls
+        enablePan={false}
+        enableZoom={enableZoom}
+        minPolarAngle={enableTilt ? undefined : polarAngle}
+        maxPolarAngle={enableTilt ? undefined : polarAngle}
+      />
     </Canvas>
   )
 }

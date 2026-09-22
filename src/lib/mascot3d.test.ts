@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MASCOTS_3D } from './mascot3d'
+import { BACKDROPS, DEFAULT_BACKDROP, MASCOTS_3D } from './mascot3d'
 
 // The config-driven toggle (PlayerPreviewCard) trusts every entry here to be well-formed --
 // these are the invariants Mascot3DScene relies on without checking itself.
@@ -25,5 +25,15 @@ describe('MASCOTS_3D', () => {
     for (let i = 1; i < config.irisToneX.length; i++) {
       expect(config.irisToneX[i]).toBeGreaterThan(config.irisToneX[i - 1])
     }
+  })
+})
+
+describe('BACKDROPS', () => {
+  it('has a label and a class for every entry, and DEFAULT_BACKDROP points at a real one', () => {
+    for (const backdrop of Object.values(BACKDROPS)) {
+      expect(backdrop.label.length).toBeGreaterThan(0)
+      expect(backdrop.className.length).toBeGreaterThan(0)
+    }
+    expect(BACKDROPS[DEFAULT_BACKDROP]).toBeDefined()
   })
 })
