@@ -1,16 +1,20 @@
 import { useProgress } from '@react-three/drei'
-import type { EyeColor, JerseyColor } from '../hooks/usePlayers'
-import { LION_3D } from '../lib/mascot3d'
+import { DEFAULT_MASCOT_ID, type EyeColor, type JerseyColor } from '../hooks/usePlayers'
+import { MASCOTS_3D } from '../lib/mascot3d'
 import { Mascot3DScene } from './Mascot3DScene'
 
-/** The 3D lion sized to sit in the same slot as the still preview (JerseyGraphic size="lg":
- * h-72 at 4:5). Default export so PlayerPreviewCard can React.lazy() it -- the three.js bundle
- * and ~2MB of models are only downloaded once someone switches to 3D. */
+/** A mascot's 3D preview sized to sit in the same slot as the still preview (JerseyGraphic
+ * size="lg": h-72 at 4:5). Default export so PlayerPreviewCard can React.lazy() it -- the
+ * three.js bundle and the models are only downloaded once someone switches to 3D. Only renders
+ * mascots listed in MASCOTS_3D; the caller (PlayerPreviewCard) is responsible for not mounting
+ * this for a mascot without one. */
 export default function Mascot3DPreview({
+  mascotId,
   jerseyColor,
   eyeColor,
   showBall,
 }: {
+  mascotId?: string | null
   jerseyColor: JerseyColor | null
   eyeColor: EyeColor | null
   showBall: boolean
@@ -18,6 +22,7 @@ export default function Mascot3DPreview({
   // drei's loading store is global, so it works outside the Canvas: `active` is true while the
   // model, ball and mask are downloading/decoding.
   const { active } = useProgress()
+  const config = MASCOTS_3D[mascotId ?? DEFAULT_MASCOT_ID] ?? MASCOTS_3D[DEFAULT_MASCOT_ID]
 
   return (
     <div
@@ -25,11 +30,11 @@ export default function Mascot3DPreview({
       data-testid="mascot-3d"
     >
       <Mascot3DScene
-        {...LION_3D}
+        {...config}
         jerseyColor={jerseyColor}
         eyeColor={eyeColor}
         showBall={showBall}
-        cameraPosition={[0.85, 0.1, 1.45]}
+        cameraPosition={config.previewCamera}
         enableZoom={false}
       />
       {active && (

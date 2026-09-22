@@ -1,12 +1,13 @@
 # 3D mascots: how they are built and how the app uses them
 
 The player create/edit form can switch its live preview from the still image to a 3D model of
-the mascot, with the player's jersey colour, eye colour and an optional ball. Only the **lion**
-has a 3D model so far; the **shark (boy)** is next (#104). This document is the single place that
-explains the whole pipeline, so a new model can be added without rediscovering any of it.
+the mascot, with the player's jersey colour, eye colour and an optional ball. The **lion** and the
+**shark (boy)** have 3D models; more mascots are added the same way (section 6). This document is
+the single place that explains the whole pipeline, so a new model can be added without
+rediscovering any of it.
 
 Tracking: sports-training-api#68 (idea), #94 / #97 / #98 (POC, rig, ball), #99 / #100 (toggle,
-jersey colour, ball switch), #101 / #102 / #103 (eye colour), #104 (shark).
+jersey colour, ball switch), #101 / #102 / #103 (eye colour), #104 (shark, per-mascot config).
 
 - [1. What ships in the app](#1-what-ships-in-the-app)
 - [2. Building a model in Tripo](#2-building-a-model-in-tripo)
@@ -25,19 +26,22 @@ jersey colour, ball switch), #101 / #102 / #103 (eye colour), #104 (shark).
 | Toggle, ball switch, error fallback | `src/components/player-form/PlayerPreviewCard.tsx` | Still image is the default and the choice is never saved. Shown only for mascots with a 3D model. |
 | Lazy 3D preview | `src/components/Mascot3DPreview.tsx` | `React.lazy`, so three.js and the models are only downloaded when someone opens 3D. Shows "Loading 3D model…". |
 | Scene, shader, ball attachment | `src/components/Mascot3DScene.tsx` | Everything that draws the model. |
-| Asset URLs, colour tables | `src/lib/mascot3d.ts` | `LION_3D`, `JERSEY_TINTS`, `EYE_TINTS`. |
+| Asset URLs, colour tables, per-mascot config | `src/lib/mascot3d.ts` | `MASCOTS_3D` (keyed by mascot id: model/ball/mask URLs, hand bone, ball offset/scale, cameras, iris tone table), `JERSEY_TINTS`, `EYE_TINTS` (shared across mascots). |
 | Failure fallback | `src/components/ErrorBoundary.tsx` | No WebGL or a failed download falls back to the still image. |
-| Hidden dev page | `poc-3d.html`, `src/components/MascotViewer3D.tsx` | `/poc-3d.html`: the same scene with controls for matte, ball, jersey and eyes. Not linked from the app. |
+| Hidden dev page | `poc-3d.html`, `src/components/MascotViewer3D.tsx` | `/poc-3d.html`: the same scene with a mascot switcher and controls for matte, ball, jersey and eyes. Not linked from the app. |
 | Assets | `public/images/basketball/u8 u10/Leon/Original size/` | See below. |
 
-Assets in use (lion):
+Assets in use:
 
 | File | Size | What it is |
 |---|---|---|
-| `Leo boy/anthropomorphic_lion_v2_web.glb` | 1.1 MB | Web copy of the model (2048px colour texture, no normal map, no skin data). |
-| `Leo boy/anthropomorphic_lion_v2_region_mask.png` | 27 KB | RGB mask in the model's UV space: red = jersey and shorts, green = eye area. |
-| `Meshy_AI_cartoon_basketball_lo_..._texture_1k.glb` | 156 KB | The ball, attached to the right hand bone. |
-| `Leo boy/anthropomorphic_lion_v2_bones_fixed.glb` | 9.1 MB | The repaired full-size model. The source for regenerating the web copy; the app does not load it. |
+| `Leo boy/anthropomorphic_lion_v2_web.glb` | 1.1 MB | Lion web copy (2048px colour texture, no normal map, no skin data -- its weights were useless). |
+| `Leo boy/anthropomorphic_lion_v2_region_mask.png` | 27 KB | Lion RGB mask in the model's UV space: red = jersey and shorts, green = eye area. |
+| `Leo boy/anthropomorphic_lion_v2_bones_fixed.glb` | 9.1 MB | Lion's repaired full-size model. The source for regenerating the web copy; the app does not load it. |
+| `shark boy/blue_shark_web.glb` | 1.4 MB | Shark web copy (1536px colour texture, no normal map; skin data **kept** -- its weights are real). |
+| `shark boy/blue_shark_region_mask.png` | 45 KB | Shark RGB mask, same convention as the lion's. |
+| `shark boy/blue_shark_bones_fixed.glb` | 3.5 MB | Shark's repaired full-size model. Not loaded by the app. |
+| `Meshy_AI_cartoon_basketball_lo_..._texture_1k.glb` | 156 KB | The ball, shared by every mascot, attached to the right hand bone. |
 
 The unrepaired Tripo exports are **not** committed. Keep them somewhere shared (they are needed
 to reproduce the assets, see [section 4](#4-the-toolkit-scriptsmascot3d)).
@@ -212,18 +216,25 @@ rests on top of it; smaller values bury the hand inside the ball. Tune both by e
 
 ## 6. Adding a new mascot
 
-The shark (#104) is the first. Checklist, using the tools above:
+The shark (#104) was the first mascot added after the lion; `src/lib/mascot3d.ts` now keys
+`MASCOTS_3D` by mascot id, so the toggle (`PlayerPreviewCard`) shows automatically for any id
+listed there. Checklist for the next one, using the tools above:
 
 1. Build and export from Tripo ([section 2](#2-building-a-model-in-tripo)).
 2. `repair_rig.py MODEL.glb --check`, read the frame and the right-hand position, then repair.
-3. `slim_model.py` for the web copy.
+3. `slim_model.py` for the web copy. Keep the skin data unless the weights are useless (check the
+   `--check` output's skin-weights column) -- dropping it loses posability for no size win when
+   the weights are real.
 4. `masks.py view`, then `build` (eye centres, the jersey height band for this model), check both
    overlays, then `iris-table` against the mascot's own 2D art (`Web size/*-baby-*.webp`, the eyes
-   SVG and the eye layout box from `JerseyGraphic.tsx`).
-5. Add the model to the app. Today the constants are lion-only (`LION_3D`, `MASCOTS_WITH_3D`, the
-   hand bone, ball offset and scale, camera, iris table); #104 generalises them into a per-mascot
-   config keyed by mascot id.
-6. Look at it in `/poc-3d.html` with all jersey and eye colours, the ball on and off.
+   SVG and the eye layout box from `JerseyGraphic.tsx`). Watch for the jersey band catching teeth
+   or other achromatic head triangles at a similar height to the collar -- render a full-body
+   overlay (not just the atlas one) and narrow `--jersey-y` until only the jersey and shorts are
+   selected.
+5. Add a `Mascot3DConfig` entry to `MASCOTS_3D` (model/ball/mask URLs, hand bone, ball offset and
+   scale, both cameras, the iris table from step 4).
+6. Look at it in `/poc-3d.html` with the mascot switcher, all jersey and eye colours, the ball on
+   and off.
 
 ## 7. Size and load time
 

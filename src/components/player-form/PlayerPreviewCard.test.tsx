@@ -9,10 +9,12 @@ const state = vi.hoisted(() => ({ throwOnRender: false }))
 // page; these tests are about the toggle wiring around it.
 vi.mock('../Mascot3DPreview', () => ({
   default: ({
+    mascotId,
     jerseyColor,
     eyeColor,
     showBall,
   }: {
+    mascotId?: string | null
     jerseyColor: string | null
     eyeColor: string | null
     showBall: boolean
@@ -21,6 +23,7 @@ vi.mock('../Mascot3DPreview', () => ({
     return (
       <div
         data-testid="mascot-3d"
+        data-mascot={mascotId ?? ''}
         data-color={jerseyColor ?? ''}
         data-eyes={eyeColor ?? ''}
         data-ball={String(showBall)}
@@ -111,20 +114,35 @@ describe('PlayerPreviewCard', () => {
     expect(screen.getByTestId('mascot-3d')).toHaveAttribute('data-ball', 'false')
   })
 
-  it('offers no 3D toggle for a mascot without a 3D model', () => {
+  it('offers a still/3D toggle for the shark too', () => {
     render(<PlayerPreviewCard {...baseProps} mascotId="shark" />)
 
-    expect(screen.getByTestId('still')).toHaveAttribute('data-mascot', 'shark')
+    expect(screen.getByRole('button', { name: '3D model' })).toBeInTheDocument()
+  })
+
+  it('passes the mascot id through to the 3D preview', async () => {
+    const user = userEvent.setup()
+    render(<PlayerPreviewCard {...baseProps} mascotId="shark" />)
+
+    await user.click(screen.getByRole('button', { name: '3D model' }))
+
+    expect(await screen.findByTestId('mascot-3d')).toHaveAttribute('data-mascot', 'shark')
+  })
+
+  it('offers no 3D toggle for a mascot without a 3D model', () => {
+    render(<PlayerPreviewCard {...baseProps} mascotId="bear" />)
+
+    expect(screen.getByTestId('still')).toHaveAttribute('data-mascot', 'bear')
     expect(screen.queryByRole('button', { name: '3D model' })).not.toBeInTheDocument()
   })
 
-  it('drops back to the still image when the mascot changes away from the lion', async () => {
+  it('drops back to the still image when the mascot changes to one without a 3D model', async () => {
     const user = userEvent.setup()
     const { rerender } = render(<PlayerPreviewCard {...baseProps} mascotId="lion" />)
     await user.click(screen.getByRole('button', { name: '3D model' }))
     await screen.findByTestId('mascot-3d')
 
-    rerender(<PlayerPreviewCard {...baseProps} mascotId="shark" />)
+    rerender(<PlayerPreviewCard {...baseProps} mascotId="bear" />)
 
     expect(screen.getByTestId('still')).toBeInTheDocument()
     expect(screen.queryByTestId('mascot-3d')).not.toBeInTheDocument()
