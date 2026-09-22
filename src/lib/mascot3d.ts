@@ -32,6 +32,9 @@ export type Mascot3DConfig = {
    * from the still art's, so a plain lift shrinks the pupil and loses the ring. */
   irisToneX: number[]
   irisToneY: number[]
+  /** Swing the upper-arm bones down from a T-pose by this many degrees (needs real skin
+   * weights -- the lion's are useless, 99.8% on the Hips, so it stays undefined/A-pose-as-authored). */
+  armDownDegrees?: number
 }
 
 /** The lion's 3D assets (sports-training-api#68, #99). The model is the Tripo export with its
@@ -71,6 +74,8 @@ const SHARK_BOY_3D: Mascot3DConfig = {
   pocCamera: [1.8, 0.8, 3.2],
   irisToneX: [0.0, 0.028, 0.056, 0.078, 0.11, 0.204, 0.267, 0.311, 0.359, 0.399, 0.45],
   irisToneY: [0.0, 0.004, 0.008, 0.024, 0.055, 0.09, 0.145, 0.273, 0.506, 0.671, 0.7],
+  // The export is a T-pose; its skin weights are real, so the arms are bent down in code (#111).
+  armDownDegrees: 55,
 }
 
 /** Every mascot with a 3D model, keyed by mascot id (the same ids `usePlayers`/`JerseyGraphic`
