@@ -6,12 +6,19 @@ import {
   Users,
 } from 'lucide-react'
 import { useState } from 'react'
-import { useAdminOverview } from '../hooks/useAdminOverview'
+import { useAdminOverview, type AdminOverview } from '../hooks/useAdminOverview'
 import { AddOwnerDialog } from './AddOwnerDialog'
 import { ThemeToggle } from './ThemeToggle'
 import { TrainerAccessMenu } from './TrainerAccessMenu'
 import { Button } from './ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
+
+type Workspace = AdminOverview['workspaces'][number]
+type Access = AdminOverview['access'][number]
+type Parent = AdminOverview['parents'][number]
+
+/** Sidebar selection: the platform-wide overview, or one workspace by id. */
+const PLATFORM = 'platform'
 
 function roleLabel(role: string) {
   if (role === 'club_admin') return 'Club admin'
@@ -30,12 +37,166 @@ function dateLabel(value: string | null) {
   }).format(new Date(value))
 }
 
-function statusLabel(
-  status: 'active' | 'invited' | 'inactive',
-) {
+function statusLabel(status: 'active' | 'invited' | 'inactive') {
   if (status === 'active') return 'Active'
   if (status === 'invited') return 'Invited'
   return 'Inactive'
+}
+
+const th = 'px-4 py-3 font-semibold'
+const td = 'px-4 py-3'
+const tdMuted = 'px-4 py-3 text-muted-foreground'
+const pill = 'rounded-full bg-muted px-2 py-1 text-xs font-semibold'
+const tableWrap = 'overflow-x-auto rounded-2xl border border-border bg-card'
+const emptyCell = 'px-4 py-8 text-center text-muted-foreground'
+
+function StatTile({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-xl bg-muted p-3 text-center">
+      <p className="text-xl font-bold">{value}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
+    </div>
+  )
+}
+
+function AdminsTable({ admins }: { admins: AdminOverview['platformAdmins'] }) {
+  return (
+    <div className={tableWrap}>
+      <table className="w-full min-w-[500px] text-left text-sm">
+        <thead className="border-b border-border bg-muted/50">
+          <tr>
+            <th className={th}>Email</th>
+            <th className={th}>Access</th>
+            <th className={th}>Added</th>
+            <th className={th}>Last sign in</th>
+          </tr>
+        </thead>
+        <tbody>
+          {admins.map((admin) => (
+            <tr key={admin.userId} className="border-b border-border last:border-b-0">
+              <td className={`${td} font-medium`}>{admin.email || 'Unknown email'}</td>
+              <td className={td}>Platform-wide</td>
+              <td className={tdMuted}>{dateLabel(admin.createdAt)}</td>
+              <td className={tdMuted}>{dateLabel(admin.lastSignInAt)}</td>
+            </tr>
+          ))}
+          {admins.length === 0 && (
+            <tr>
+              <td colSpan={4} className={emptyCell}>No platform admins.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function TrainersTable({ entries }: { entries: Access[] }) {
+  return (
+    <div className={tableWrap}>
+      <table className="w-full min-w-[800px] text-left text-sm">
+        <thead className="border-b border-border bg-muted/50">
+          <tr>
+            <th className={th}>Email</th>
+            <th className={th}>Role</th>
+            <th className={th}>Groups</th>
+            <th className={th}>Status</th>
+            <th className={th}>Added</th>
+            <th className={th}>Last sign in</th>
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((entry) => (
+            <tr
+              key={`${entry.userId}-${entry.clubId}-${entry.groupId ?? 'club'}`}
+              className="border-b border-border last:border-b-0"
+            >
+              <td className={`${td} font-medium`}>{entry.email || 'Unknown email'}</td>
+              <td className={td}>{roleLabel(entry.role)}</td>
+              <td className={td}>{entry.groupName ?? 'All groups'}</td>
+              <td className={td}><span className={pill}>{statusLabel(entry.status)}</span></td>
+              <td className={tdMuted}>{dateLabel(entry.createdAt)}</td>
+              <td className={tdMuted}>{dateLabel(entry.lastSignInAt)}</td>
+            </tr>
+          ))}
+          {entries.length === 0 && (
+            <tr>
+              <td colSpan={6} className={emptyCell}>No trainers assigned yet.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function ParentsTable({ parents }: { parents: Parent[] }) {
+  return (
+    <div className={tableWrap}>
+      <table className="w-full min-w-[700px] text-left text-sm">
+        <thead className="border-b border-border bg-muted/50">
+          <tr>
+            <th className={th}>Email</th>
+            <th className={th}>Child</th>
+            <th className={th}>Group</th>
+            <th className={th}>Status</th>
+            <th className={th}>Invited</th>
+            <th className={th}>Last sign in</th>
+          </tr>
+        </thead>
+        <tbody>
+          {parents.map((parent) => (
+            <tr key={parent.linkId} className="border-b border-border last:border-b-0">
+              <td className={`${td} font-medium`}>{parent.email}</td>
+              <td className={td}>{parent.childName}</td>
+              <td className={td}>{parent.groupName ?? '—'}</td>
+              <td className={td}>
+                <span className={pill}>{parent.status === 'active' ? 'Confirmed' : 'Invited'}</span>
+              </td>
+              <td className={tdMuted}>{dateLabel(parent.createdAt)}</td>
+              <td className={tdMuted}>{dateLabel(parent.lastSignInAt)}</td>
+            </tr>
+          ))}
+          {parents.length === 0 && (
+            <tr>
+              <td colSpan={6} className={emptyCell}>No parents linked to a child yet.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function WorkspaceCard({
+  workspace,
+  onOpen,
+}: {
+  workspace: Workspace
+  onOpen: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition-colors hover:border-primary/50"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="font-bold text-foreground">{workspace.name}</h3>
+          <p className="mt-1 text-xs text-muted-foreground">{workspace.slug}</p>
+        </div>
+        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold uppercase text-primary">
+          {workspace.tier ?? 'No tier'}
+        </span>
+      </div>
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        <StatTile label="Groups" value={workspace.groupCount} />
+        <StatTile label="Players" value={workspace.playerCount} />
+        <StatTile label="Staff" value={workspace.staffCount} />
+      </div>
+    </button>
+  )
 }
 
 export function SuperAdminDashboard({
@@ -45,58 +206,31 @@ export function SuperAdminDashboard({
 }: {
   onOpenTrainingApp: () => void
   onLogout: () => void
-  onInviteOwner: (
-    email: string,
-    groupId: string,
-  ) => Promise<void>
+  onInviteOwner: (email: string, groupId: string) => Promise<void>
 }) {
-  const {
-    overview,
-    loading,
-    error,
-    refresh,
-  } = useAdminOverview()
+  const { overview, loading, error, refresh } = useAdminOverview()
+  const [selected, setSelected] = useState<string>(PLATFORM)
+  const [ownerWorkspaceId, setOwnerWorkspaceId] = useState<string | null>(null)
 
-  const [
-    ownerWorkspaceId,
-    setOwnerWorkspaceId,
-  ] = useState<string | null>(null)
-
-  const ownerWorkspace =
-    overview?.workspaces.find(
-      (workspace) =>
-        workspace.id === ownerWorkspaceId,
-    ) ?? null
+  const workspace = overview?.workspaces.find((w) => w.id === selected) ?? null
+  const ownerWorkspace = overview?.workspaces.find((w) => w.id === ownerWorkspaceId) ?? null
 
   const stats = overview
     ? [
-        {
-          label: 'Workspaces',
-          value: overview.stats.workspaces,
-          icon: Building2,
-        },
-        {
-          label: 'Staff accounts',
-          value: overview.stats.staffAccounts,
-          icon: Users,
-        },
-        {
-          label: 'Platform admins',
-          value: overview.stats.platformAdmins,
-          icon: ShieldCheck,
-        },
-        {
-          label: 'Groups',
-          value: overview.stats.groups,
-          icon: Layers3,
-        },
-        {
-          label: 'Players',
-          value: overview.stats.players,
-          icon: UserRound,
-        },
+        { label: 'Workspaces', value: overview.stats.workspaces, icon: Building2 },
+        { label: 'Staff accounts', value: overview.stats.staffAccounts, icon: Users },
+        { label: 'Platform admins', value: overview.stats.platformAdmins, icon: ShieldCheck },
+        { label: 'Groups', value: overview.stats.groups, icon: Layers3 },
+        { label: 'Players', value: overview.stats.players, icon: UserRound },
       ]
     : []
+
+  const navItem = (active: boolean) =>
+    `flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors ${
+      active
+        ? 'bg-primary/10 text-primary'
+        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+    }`
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
@@ -106,396 +240,213 @@ export function SuperAdminDashboard({
             <p className="text-xs font-semibold uppercase tracking-wide text-primary">
               Platform administration
             </p>
-
-            <h1 className="text-xl font-bold text-foreground">
-              Sports Training
-            </h1>
+            <h1 className="text-xl font-bold text-foreground">Sports Training</h1>
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onOpenTrainingApp}
-            >
+            <Button variant="secondary" size="sm" onClick={onOpenTrainingApp}>
               Open training app
             </Button>
-
             <ThemeToggle />
-
-            <TrainerAccessMenu
-              kind="trainer"
-              accountRole="superadmin"
-              onLock={onLogout}
-            />
+            <TrainerAccessMenu kind="trainer" accountRole="superadmin" onLock={onLogout} />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl space-y-8 px-4 py-6">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">
-            Platform overview
-          </h2>
-
-          <p className="mt-1 text-sm text-muted-foreground">
-            Workspaces, account access and current platform usage.
-          </p>
-        </div>
-
-        {loading && (
-          <p
-            role="status"
-            className="text-sm text-muted-foreground"
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 md:flex-row">
+        <nav aria-label="Workspaces" className="shrink-0 md:w-60">
+          <button
+            type="button"
+            aria-current={selected === PLATFORM ? 'page' : undefined}
+            onClick={() => setSelected(PLATFORM)}
+            className={navItem(selected === PLATFORM)}
           >
-            Loading platform data...
-          </p>
-        )}
+            <span>Platform overview</span>
+          </button>
 
-        {error && (
-          <div
-            role="alert"
-            className="rounded-xl border border-destructive/30 bg-destructive/5 p-4"
-          >
-            <p className="text-sm text-destructive">
-              {error}
+          <p className="mb-1 mt-4 px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Workspaces
+          </p>
+          <ul className="space-y-1">
+            {overview?.workspaces.map((w) => (
+              <li key={w.id}>
+                <button
+                  type="button"
+                  aria-current={selected === w.id ? 'page' : undefined}
+                  onClick={() => setSelected(w.id)}
+                  className={navItem(selected === w.id)}
+                >
+                  <span className="truncate">{w.name}</span>
+                  <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
+                    {w.tier ?? '—'}
+                  </span>
+                </button>
+              </li>
+            ))}
+            {overview && overview.workspaces.length === 0 && (
+              <li className="px-3 py-2 text-sm text-muted-foreground">No workspaces yet.</li>
+            )}
+          </ul>
+        </nav>
+
+        <main className="min-w-0 flex-1 space-y-8">
+          {loading && (
+            <p role="status" className="text-sm text-muted-foreground">
+              Loading platform data...
             </p>
+          )}
 
-            <Button
-              variant="secondary"
-              size="sm"
-              className="mt-3"
-              onClick={() => void refresh()}
-            >
-              Try again
-            </Button>
-          </div>
-        )}
+          {error && (
+            <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+              <p className="text-sm text-destructive">{error}</p>
+              <Button variant="secondary" size="sm" className="mt-3" onClick={() => void refresh()}>
+                Try again
+              </Button>
+            </div>
+          )}
 
-        {overview && (
-          <>
-            <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              {stats.map(
-                ({
-                  label,
-                  value,
-                  icon: Icon,
-                }) => (
-                  <div
-                    key={label}
-                    className="rounded-2xl border border-border bg-card p-4 shadow-sm"
-                  >
+          {overview && !workspace && (
+            <>
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Platform overview</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Workspaces and current platform usage. Pick a workspace on the left for its details.
+                </p>
+              </div>
+
+              <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                {stats.map(({ label, value, icon: Icon }) => (
+                  <div key={label} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        {label}
-                      </span>
-
+                      <span className="text-sm text-muted-foreground">{label}</span>
                       <Icon className="h-4 w-4 text-primary" />
                     </div>
-
-                    <p className="mt-3 text-3xl font-bold text-foreground">
-                      {value}
-                    </p>
+                    <p className="mt-3 text-3xl font-bold text-foreground">{value}</p>
                   </div>
-                ),
-              )}
-            </section>
+                ))}
+              </section>
 
-            <section>
-              <div className="mb-3">
-                <h2 className="text-lg font-bold text-foreground">
-                  Workspaces
-                </h2>
+              <section>
+                <div className="mb-3">
+                  <h2 className="text-lg font-bold text-foreground">Workspaces</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Subscription and usage belong to each workspace.
+                  </p>
+                </div>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {overview.workspaces.map((w) => (
+                    <WorkspaceCard key={w.id} workspace={w} onOpen={() => setSelected(w.id)} />
+                  ))}
+                </div>
+              </section>
 
-                <p className="text-sm text-muted-foreground">
-                  Subscription and usage belong to each workspace.
-                </p>
-              </div>
+              <section>
+                <div className="mb-3">
+                  <h2 className="text-lg font-bold text-foreground">Platform admins</h2>
+                  <p className="text-sm text-muted-foreground">Accounts with platform-wide access.</p>
+                </div>
+                <AdminsTable admins={overview.platformAdmins} />
+              </section>
+            </>
+          )}
 
-              <div className="grid gap-4 lg:grid-cols-2">
-                {overview.workspaces.map(
-                  (workspace) => (
-                    <article
-                      key={workspace.id}
-                      className="rounded-2xl border border-border bg-card p-5 shadow-sm"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="font-bold text-foreground">
-                            {workspace.name}
-                          </h3>
-
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {workspace.slug}
-                          </p>
-                        </div>
-
-                        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold uppercase text-primary">
-                          {workspace.tier ??
-                            'No tier'}
-                        </span>
-                      </div>
-
-                      <div className="mt-5 grid grid-cols-3 gap-3 text-center">
-                        <div className="rounded-xl bg-muted p-3">
-                          <p className="text-xl font-bold">
-                            {
-                              workspace.groupCount
-                            }
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Groups
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl bg-muted p-3">
-                          <p className="text-xl font-bold">
-                            {
-                              workspace.playerCount
-                            }
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Players
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl bg-muted p-3">
-                          <p className="text-xl font-bold">
-                            {
-                              workspace.staffCount
-                            }
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Staff
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex justify-end">
-                        {workspace.ownerCount >
-                        0 ? (
-                          <span className="text-xs font-medium text-muted-foreground">
-                            Owner assigned
-                          </span>
-                        ) : (
-                          <Button
-                            size="sm"
-                            disabled={
-                              !workspace.primaryGroupId
-                            }
-                            onClick={() =>
-                              setOwnerWorkspaceId(
-                                workspace.id,
-                              )
-                            }
-                          >
-                            Add owner
-                          </Button>
-                        )}
-                      </div>
-                    </article>
-                  ),
+          {overview && workspace && (
+            <>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">{workspace.name}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {workspace.slug} ·{' '}
+                    <span className="font-semibold uppercase text-primary">{workspace.tier ?? 'No tier'}</span>
+                  </p>
+                </div>
+                {workspace.ownerCount > 0 ? (
+                  <span className="text-xs font-medium text-muted-foreground">Owner assigned</span>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={!workspace.primaryGroupId}
+                    onClick={() => setOwnerWorkspaceId(workspace.id)}
+                  >
+                    Add owner
+                  </Button>
                 )}
               </div>
-            </section>
 
-            <section>
-              <div className="mb-3">
-                <h2 className="text-lg font-bold text-foreground">
-                  People
-                </h2>
+              <section className="grid grid-cols-3 gap-3">
+                <StatTile label="Groups" value={workspace.groupCount} />
+                <StatTile label="Players" value={workspace.playerCount} />
+                <StatTile label="Staff" value={workspace.staffCount} />
+              </section>
 
-                <p className="text-sm text-muted-foreground">
-                  Everyone with access: platform admins, trainers and parents.
-                </p>
-              </div>
+              {workspace.groups && workspace.groups.length > 0 && (
+                <section>
+                  <h3 className="mb-3 text-lg font-bold text-foreground">Groups</h3>
+                  <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {workspace.groups.map((g) => (
+                      <li
+                        key={g.id}
+                        className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm"
+                      >
+                        <span className="font-medium">{g.name}</span>
+                        <span className="text-muted-foreground">
+                          {g.playerCount} {g.playerCount === 1 ? 'player' : 'players'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
 
-              <Tabs defaultValue="admins">
-                <TabsList>
-                  <TabsTrigger value="admins">
-                    Admins ({overview.platformAdmins.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="trainers">
-                    Trainers ({overview.access.length})
-                  </TabsTrigger>
-                  <TabsTrigger value="parents">
-                    Parents ({overview.parents.length})
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="admins">
-                  <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-                    <table className="w-full min-w-[500px] text-left text-sm">
-                      <thead className="border-b border-border bg-muted/50">
-                        <tr>
-                          <th className="px-4 py-3 font-semibold">Email</th>
-                          <th className="px-4 py-3 font-semibold">Access</th>
-                          <th className="px-4 py-3 font-semibold">Added</th>
-                          <th className="px-4 py-3 font-semibold">Last sign in</th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-                        {overview.platformAdmins.map((admin) => (
-                          <tr
-                            key={admin.userId}
-                            className="border-b border-border last:border-b-0"
-                          >
-                            <td className="px-4 py-3 font-medium">
-                              {admin.email || 'Unknown email'}
-                            </td>
-                            <td className="px-4 py-3">Platform-wide</td>
-                            <td className="px-4 py-3 text-muted-foreground">
-                              {dateLabel(admin.createdAt)}
-                            </td>
-                            <td className="px-4 py-3 text-muted-foreground">
-                              {dateLabel(admin.lastSignInAt)}
-                            </td>
-                          </tr>
-                        ))}
-
-                        {overview.platformAdmins.length === 0 && (
-                          <tr>
-                            <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
-                              No platform admins.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="trainers">
-                  <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-                    <table className="w-full min-w-[900px] text-left text-sm">
-                      <thead className="border-b border-border bg-muted/50">
-                        <tr>
-                          <th className="px-4 py-3 font-semibold">Email</th>
-                          <th className="px-4 py-3 font-semibold">Role</th>
-                          <th className="px-4 py-3 font-semibold">Workspace</th>
-                          <th className="px-4 py-3 font-semibold">Groups</th>
-                          <th className="px-4 py-3 font-semibold">Status</th>
-                          <th className="px-4 py-3 font-semibold">Added</th>
-                          <th className="px-4 py-3 font-semibold">Last sign in</th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-                        {overview.access.map((entry) => (
-                          <tr
-                            key={`${entry.userId}-${entry.clubId}-${entry.groupId ?? 'club'}`}
-                            className="border-b border-border last:border-b-0"
-                          >
-                            <td className="px-4 py-3 font-medium">
-                              {entry.email || 'Unknown email'}
-                            </td>
-                            <td className="px-4 py-3">{roleLabel(entry.role)}</td>
-                            <td className="px-4 py-3">{entry.workspace}</td>
-                            <td className="px-4 py-3">{entry.groupName ?? 'All groups'}</td>
-                            <td className="px-4 py-3">
-                              <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">
-                                {statusLabel(entry.status)}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-muted-foreground">
-                              {dateLabel(entry.createdAt)}
-                            </td>
-                            <td className="px-4 py-3 text-muted-foreground">
-                              {dateLabel(entry.lastSignInAt)}
-                            </td>
-                          </tr>
-                        ))}
-
-                        {overview.access.length === 0 && (
-                          <tr>
-                            <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                              No staff accounts assigned yet.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="parents">
-                  <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-                    <table className="w-full min-w-[700px] text-left text-sm">
-                      <thead className="border-b border-border bg-muted/50">
-                        <tr>
-                          <th className="px-4 py-3 font-semibold">Email</th>
-                          <th className="px-4 py-3 font-semibold">Child</th>
-                          <th className="px-4 py-3 font-semibold">Group</th>
-                          <th className="px-4 py-3 font-semibold">Status</th>
-                          <th className="px-4 py-3 font-semibold">Invited</th>
-                          <th className="px-4 py-3 font-semibold">Last sign in</th>
-                        </tr>
-                      </thead>
-
-                      <tbody>
-                        {overview.parents.map((parent) => (
-                          <tr
-                            key={parent.linkId}
-                            className="border-b border-border last:border-b-0"
-                          >
-                            <td className="px-4 py-3 font-medium">{parent.email}</td>
-                            <td className="px-4 py-3">{parent.childName}</td>
-                            <td className="px-4 py-3">{parent.groupName ?? '—'}</td>
-                            <td className="px-4 py-3">
-                              <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">
-                                {parent.status === 'active' ? 'Confirmed' : 'Invited'}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-muted-foreground">
-                              {dateLabel(parent.createdAt)}
-                            </td>
-                            <td className="px-4 py-3 text-muted-foreground">
-                              {dateLabel(parent.lastSignInAt)}
-                            </td>
-                          </tr>
-                        ))}
-
-                        {overview.parents.length === 0 && (
-                          <tr>
-                            <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                              No parents linked to a child yet.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </section>
-          </>
-        )}
-      </main>
+              <section>
+                <div className="mb-3">
+                  <h3 className="text-lg font-bold text-foreground">People</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Trainers and parents in {workspace.name}.
+                  </p>
+                </div>
+                <WorkspacePeople overview={overview} workspaceId={workspace.id} />
+              </section>
+            </>
+          )}
+        </main>
+      </div>
 
       {ownerWorkspace?.primaryGroupId && (
         <AddOwnerDialog
           open={Boolean(ownerWorkspace)}
           onOpenChange={(open) => {
-            if (!open) {
-              setOwnerWorkspaceId(null)
-            }
+            if (!open) setOwnerWorkspaceId(null)
           }}
           onInvite={async (email) => {
             const primaryGroupId = ownerWorkspace.primaryGroupId
-
             if (!primaryGroupId) return
-
-            await onInviteOwner(
-              email,
-              primaryGroupId,
-            )
-
+            await onInviteOwner(email, primaryGroupId)
             setOwnerWorkspaceId(null)
             await refresh()
           }}
         />
       )}
     </div>
+  )
+}
+
+function WorkspacePeople({ overview, workspaceId }: { overview: AdminOverview; workspaceId: string }) {
+  const trainers = overview.access.filter((entry) => entry.clubId === workspaceId)
+  const parents = overview.parents.filter((parent) => parent.clubId === workspaceId)
+
+  return (
+    <Tabs defaultValue="trainers">
+      <TabsList>
+        <TabsTrigger value="trainers">Trainers ({trainers.length})</TabsTrigger>
+        <TabsTrigger value="parents">Parents ({parents.length})</TabsTrigger>
+      </TabsList>
+      <TabsContent value="trainers">
+        <TrainersTable entries={trainers} />
+      </TabsContent>
+      <TabsContent value="parents">
+        <ParentsTable parents={parents} />
+      </TabsContent>
+    </Tabs>
   )
 }
