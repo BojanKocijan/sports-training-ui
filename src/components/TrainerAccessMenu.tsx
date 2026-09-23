@@ -1,4 +1,4 @@
-import { LogOut } from 'lucide-react'
+import { ArrowLeftRight, LogOut } from 'lucide-react'
 import type { AccountRole } from '../hooks/useTrainerAccess'
 import { Button } from './ui/button'
 import {
@@ -29,10 +29,16 @@ export function TrainerAccessMenu({
   kind,
   accountRole,
   onLock,
+  onOpenParentView,
+  onSwitchToTrainer,
 }: {
   kind: 'trainer' | 'parent'
   accountRole?: AccountRole | null
   onLock: () => void
+  /** Only for a trainer whose email is also linked to a child. */
+  onOpenParentView?: () => void
+  /** Only in the parent view of an account that is also a trainer. */
+  onSwitchToTrainer?: () => void
 }) {
   const { emoji, label } =
     kind === 'parent'
@@ -60,6 +66,18 @@ export function TrainerAccessMenu({
           {emoji} {label}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {onOpenParentView && (
+          <DropdownMenuItem onClick={onOpenParentView}>
+            <ArrowLeftRight />
+            My children (parent view)
+          </DropdownMenuItem>
+        )}
+        {onSwitchToTrainer && (
+          <DropdownMenuItem onClick={onSwitchToTrainer}>
+            <ArrowLeftRight />
+            Back to trainer view
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem variant="destructive" onClick={onLock}>
           <LogOut />
           Log out

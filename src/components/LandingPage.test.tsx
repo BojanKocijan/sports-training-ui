@@ -14,11 +14,12 @@ const access = {
 describe('LandingPage', () => {
   it('offers a trainer sign-in and explains how parents get in', () => {
     render(<LandingPage trainerAccess={access} />)
-    expect(screen.getByRole('heading', { name: /trainer sign in/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /^sign in$/i })).toBeInTheDocument()
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument()
-    expect(screen.getAllByText(/^for trainers$/i).length).toBeGreaterThanOrEqual(2) // sign-in badge + audience card
+    expect(screen.getByText(/trainers & invited parents/i)).toBeInTheDocument()
     expect(screen.getByText(/are you a parent\?/i)).toBeInTheDocument()
-    expect(screen.getByText(/child's trainer invites you by email/i)).toBeInTheDocument()
+    expect(screen.getByText(/parents can't create an account on their own/i)).toBeInTheDocument()
+    expect(screen.getByText(/there is no sign-up here/i)).toBeInTheDocument()
   })
 
   it('shows basketball as available and more sports as coming soon', () => {

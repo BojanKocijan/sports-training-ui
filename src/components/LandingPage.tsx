@@ -99,7 +99,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
           <img src="/logos/coachcub-logo.webp" alt="CoachCub" width={1844} height={403} className="h-9 w-auto md:h-11" />
         </a>
         <a href="#sign-in" className="rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600">
-          Trainer sign in
+          Sign in
         </a>
       </header>
 
@@ -124,8 +124,9 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
             <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-neutral-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-neutral-200">
               <p className="font-bold text-neutral-900 dark:text-neutral-50">Are you a parent?</p>
               <p className="mt-1">
-                You don't sign up here. Your child's trainer invites you by email. Confirm the invitation,
-                then sign in above with the same address to follow your child's progress.
+                Parents can't create an account on their own. Your child's trainer sends an invitation to your
+                email: accept it there to create your account, and then you can sign in here to follow your
+                child's progress. If you also coach, the same account works as a trainer.
               </p>
             </div>
           </div>
