@@ -106,7 +106,7 @@ export function SetupScreen() {
           <p className="text-sm text-neutral-700 dark:text-neutral-200">
             This app stores no names, photos, or any information about the children who attend
             training. Shared training plans (just a date, a group, and which exercises) live in a
-            shared database, unlocked by a team-wide trainer code — not a personal account.
+            shared database, unlocked by a team-wide trainer code, not a personal account.
             Everything else (ratings, your setup checklist) stays only on your own device.
           </p>
           <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">

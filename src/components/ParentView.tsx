@@ -29,7 +29,7 @@ export function ParentView({
           {player.nickname}'s progress
         </h1>
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          A read-only view for parents — no edit controls here.
+          A read-only view for parents, no edit controls here.
         </p>
       </header>
 

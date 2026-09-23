@@ -65,7 +65,6 @@ describe('usePlayers', () => {
 
     await act(async () => {
       await result.current.createPlayer(
-        'trainer-code',
         'Mila',
         12,
         'blue',
@@ -76,7 +75,6 @@ describe('usePlayers', () => {
     })
 
     expect(postMock).toHaveBeenCalledWith('/players', {
-      passcode: 'trainer-code',
       groupId: 'u8',
       nickname: 'Mila',
       jerseyNumber: 12,
@@ -107,7 +105,6 @@ describe('usePlayers', () => {
 
     await act(async () => {
       await result.current.updatePlayer(
-        'trainer-code',
         playerU8.id,
         'u10',
         'Mila',
@@ -120,7 +117,6 @@ describe('usePlayers', () => {
     })
 
     expect(putMock).toHaveBeenCalledWith('/players/player-1', {
-      passcode: 'trainer-code',
       groupId: 'u10',
       nickname: 'Mila',
       jerseyNumber: 12,
@@ -150,12 +146,10 @@ describe('usePlayers', () => {
     })
 
     await act(async () => {
-      await result.current.deletePlayer('trainer-code', playerU8.id)
+      await result.current.deletePlayer( playerU8.id)
     })
 
-    expect(deleteMock).toHaveBeenCalledWith('/players/player-1', {
-      passcode: 'trainer-code',
-    })
+    expect(deleteMock).toHaveBeenCalledWith('/players/player-1')
 
     expect(getMock).toHaveBeenCalledTimes(2)
 

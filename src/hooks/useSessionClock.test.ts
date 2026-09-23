@@ -29,7 +29,7 @@ describe('useSessionClock', () => {
     })
 
     const { result } = renderHook(() =>
-      useSessionClock('u8', () => 'trainer-code'),
+      useSessionClock('u8'),
     )
 
     await waitFor(() => {
@@ -50,7 +50,7 @@ describe('useSessionClock', () => {
     })
 
     const { result, unmount } = renderHook(() =>
-      useSessionClock('u8', () => 'trainer-code'),
+      useSessionClock('u8'),
     )
 
     await act(async () => {
@@ -69,7 +69,7 @@ describe('useSessionClock', () => {
     unmount()
   })
 
-  it('sends start, pause, seek and reset with the trainer passcode', async () => {
+  it('sends start, pause, seek and reset without a trainer passcode', async () => {
     getMock.mockResolvedValue({
       status: 'paused',
       elapsedSeconds: 0,
@@ -92,7 +92,7 @@ describe('useSessionClock', () => {
     })
 
     const { result } = renderHook(() =>
-      useSessionClock('u8', () => 'trainer-code'),
+      useSessionClock('u8'),
     )
 
     await waitFor(() => {
@@ -104,7 +104,6 @@ describe('useSessionClock', () => {
     })
 
     expect(postMock).toHaveBeenCalledWith('/sessions/u8/start', {
-      passcode: 'trainer-code',
     })
     expect(result.current.running).toBe(true)
 
@@ -113,7 +112,6 @@ describe('useSessionClock', () => {
     })
 
     expect(postMock).toHaveBeenCalledWith('/sessions/u8/pause', {
-      passcode: 'trainer-code',
     })
     expect(result.current.elapsedSeconds).toBe(7)
 
@@ -122,7 +120,6 @@ describe('useSessionClock', () => {
     })
 
     expect(postMock).toHaveBeenCalledWith('/sessions/u8/seek', {
-      passcode: 'trainer-code',
       seconds: 13,
     })
     expect(result.current.elapsedSeconds).toBe(13)
@@ -132,7 +129,6 @@ describe('useSessionClock', () => {
     })
 
     expect(postMock).toHaveBeenCalledWith('/sessions/u8/reset', {
-      passcode: 'trainer-code',
     })
     expect(result.current.elapsedSeconds).toBe(0)
     expect(result.current.running).toBe(false)
@@ -150,7 +146,7 @@ describe('useSessionClock', () => {
     })
 
     const { result } = renderHook(() =>
-      useSessionClock('u8', () => 'trainer-code'),
+      useSessionClock('u8'),
     )
 
     await waitFor(() => {
@@ -162,7 +158,6 @@ describe('useSessionClock', () => {
     })
 
     expect(postMock).toHaveBeenCalledWith('/sessions/u8/seek', {
-      passcode: 'trainer-code',
       seconds: 0,
     })
   })
@@ -179,7 +174,7 @@ describe('useSessionClock', () => {
     postMock.mockRejectedValueOnce(new Error('Forbidden'))
 
     const { result, rerender } = renderHook(
-      ({ groupId }) => useSessionClock(groupId, () => 'trainer-code'),
+      ({ groupId }) => useSessionClock(groupId),
       {
         initialProps: { groupId: 'u8' },
       },

@@ -20,7 +20,7 @@ export function GroupProgressSummary({ groupId }: { groupId: string }) {
         <SportLoader />
       ) : byCategory.length === 0 ? (
         <p className="text-sm text-neutral-400">
-          No ratings logged yet — rate players during a training to build this up.
+          No ratings logged yet, rate players during a training to build this up.
         </p>
       ) : (
         <Card className="space-y-2 rounded-2xl p-3">

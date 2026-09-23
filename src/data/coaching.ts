@@ -29,7 +29,7 @@ export const coachingPrinciples = [
   'Give beginners permission to simplify the task',
   'Give experienced children an extra challenge quietly',
   'Stop an activity while it is still fun',
-  'Praise courage, kindness and effort — not only baskets',
+  'Praise courage, kindness and effort, not only baskets',
   'Demonstrate first; speak second',
   'Use the same hand signals and key words in both languages',
 ]

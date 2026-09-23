@@ -5,7 +5,7 @@ import { DEFAULT_SPORT_ID, sportInfo, type SportId } from '../data/sports'
  * sports.ts's "Generalize to any-sport" note) without this component needing to know about it. */
 export function SportLoader({
   sportId = DEFAULT_SPORT_ID,
-  label = 'Loading…',
+  label = 'Loading...',
 }: {
   sportId?: SportId
   label?: string

@@ -204,14 +204,12 @@ export function usePlans(groupId: string) {
   const nextPlan: TrainingPlan | null = upcoming.length > 0 ? upcoming[0] : null
 
   async function createPlan(
-    passcode: string,
     trainingDate: string,
     title: string,
     emoji: string,
     exerciseIds: string[],
   ) {
     await api.post('/plans', {
-      passcode,
       groupId,
       trainingDate,
       title,
@@ -223,7 +221,6 @@ export function usePlans(groupId: string) {
   }
 
   async function updatePlan(
-    passcode: string,
     id: string,
     trainingDate: string,
     title: string,
@@ -231,7 +228,6 @@ export function usePlans(groupId: string) {
     exerciseIds: string[],
   ) {
     await api.put(`/plans/${id}`, {
-      passcode,
       trainingDate,
       title,
       emoji,
@@ -241,8 +237,8 @@ export function usePlans(groupId: string) {
     await refresh()
   }
 
-  async function deletePlan(passcode: string, id: string) {
-    await api.delete(`/plans/${id}`, { passcode })
+  async function deletePlan(id: string) {
+    await api.delete(`/plans/${id}`)
 
     await refresh()
   }

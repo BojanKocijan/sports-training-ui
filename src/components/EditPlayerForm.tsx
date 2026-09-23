@@ -189,7 +189,7 @@ export function EditPlayerForm({
           onClick={submit}
           className="rounded-full bg-orange-500 px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
         >
-          {saving ? 'Saving…' : 'Save'}
+          {saving ? 'Saving...' : 'Save'}
         </button>
 
         <button type="button" onClick={onCancel} className="text-xs font-semibold text-neutral-400">
