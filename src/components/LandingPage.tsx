@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { SignInCard } from './SignInCard'
 
@@ -43,6 +44,48 @@ const DEMO_SKILLS = [
 
 const UPCOMING_SPORTS = ['Football', 'Volleyball', 'Handball']
 
+/** True when the visitor asked the OS for less motion or turned on Data Saver: those get the
+ * still poster instead of a downloading, looping video. */
+function prefersStill() {
+  try {
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches || Boolean(connection?.saveData)
+  } catch {
+    return false
+  }
+}
+
+/** The panther dribbling towards the camera. The clip has no transparency, so it sits in a
+ * rounded card tinted like its own backdrop; the poster paints instantly while it loads. */
+function HeroVideo() {
+  const [still] = useState(prefersStill)
+  const frame = 'mt-6 aspect-video w-full max-w-xl overflow-hidden rounded-3xl bg-[#f1e4cc] shadow-md'
+
+  if (still) {
+    return (
+      <div className={frame}>
+        <img src="/videos/mascot-dribble-poster.webp" alt="A panther mascot dribbling a basketball" className="h-full w-full object-cover" />
+      </div>
+    )
+  }
+  return (
+    <div className={frame}>
+      <video
+        className="h-full w-full object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster="/videos/mascot-dribble-poster.webp"
+        aria-label="A panther mascot dribbling a basketball"
+      >
+        <source src="/videos/mascot-dribble.mp4" type="video/mp4" />
+      </video>
+    </div>
+  )
+}
+
 /** Public front door: what the app is, who it is for, and the sign-in. Shown whenever nobody is
  * signed in. Sign-in is for trainers; parents get in after a trainer invites their email. */
 export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
@@ -70,16 +113,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
               Kids pick a mascot that grows with their skills. Trainers rate drills in two taps.
               Parents follow the progress and cheer them on.
             </p>
-            <div className="mt-6 flex items-end gap-3" aria-hidden>
-              {MASCOTS.slice(0, 3).map((m, i) => (
-                <div
-                  key={m.name}
-                  className={`overflow-hidden rounded-3xl ${m.tint} ${i === 1 ? 'h-40 w-32 md:h-52 md:w-40' : 'h-32 w-24 md:h-44 md:w-32'}`}
-                >
-                  <img src={m.src} alt="" className="h-full w-full object-contain" loading="eager" />
-                </div>
-              ))}
-            </div>
+            <HeroVideo />
           </div>
 
           <div id="sign-in" className="mx-auto w-full max-w-md scroll-mt-6">

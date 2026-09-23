@@ -29,6 +29,23 @@ describe('LandingPage', () => {
     expect(screen.getByRole('img', { name: 'CoachCub' })).toBeInTheDocument()
   })
 
+  it('plays the hero video muted and looping with a poster', () => {
+    const { container } = render(<LandingPage trainerAccess={access} />)
+    const video = container.querySelector('video')
+    expect(video).not.toBeNull()
+    expect(video).toHaveProperty('muted', true)
+    expect(video).toHaveProperty('loop', true)
+    expect(video?.getAttribute('poster')).toBe('/videos/mascot-dribble-poster.webp')
+  })
+
+  it('shows only the poster when the visitor prefers reduced motion', () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('reduce'), media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
+    const { container } = render(<LandingPage trainerAccess={access} />)
+    expect(container.querySelector('video')).toBeNull()
+    expect(screen.getByAltText(/panther mascot dribbling/i)).toBeInTheDocument()
+    vi.unstubAllGlobals()
+  })
+
   it('shows all eight mascots', () => {
     render(<LandingPage trainerAccess={access} />)
     expect(screen.getAllByAltText(/the mascot$/i)).toHaveLength(8)
