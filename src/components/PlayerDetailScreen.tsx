@@ -15,7 +15,7 @@ import type { TrainingPlan } from '../hooks/usePlans'
 import { groupSkillCategories, useSkillCategories } from '../hooks/useSkillCategories'
 import { formatDate, toLocalIso } from '../utils/format'
 import { EditPlayerForm } from './EditPlayerForm'
-import { JerseyGraphic } from './JerseyGraphic'
+import { PlayerPreviewCard } from './player-form/PlayerPreviewCard'
 import { SportLoader } from './SportLoader'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
@@ -328,15 +328,15 @@ export function PlayerDetailScreen({
             </div>
           </div>
 
-          <JerseyGraphic
-            color={player.jersey_color}
-            eyeColor={player.eye_color ?? undefined}
-            gender={player.gender ?? undefined}
-            number={player.jersey_number}
+          <PlayerPreviewCard
             nickname={player.nickname}
-            size="xl"
+            jerseyColor={player.jersey_color}
+            eyeColor={player.eye_color}
+            gender={player.gender}
+            jerseyNumber={player.jersey_number}
             groupId={player.group_id}
             mascotId={player.mascot_id}
+            hideCaption
           />
 
           <div className="flex gap-3">

@@ -28,6 +28,7 @@ export function PlayerPreviewCard({
   groupId,
   mascotId,
   hideMeta = false,
+  hideCaption = false,
 }: {
   nickname: string
   jerseyColor: JerseyColor | null
@@ -43,6 +44,10 @@ export function PlayerPreviewCard({
    * where that chrome would either duplicate what's on screen or visually overflow its own
    * bounding box. Still image only while hidden -- #106 follow-up to bring 3D into the stage. */
   hideMeta?: boolean
+  /** Hides just the trailing nickname caption while keeping the still/3D toggle and ball/backdrop
+   * controls -- for callers (e.g. PlayerDetailScreen, #117) that already show the player's name in
+   * their own heading and would otherwise show it twice. */
+  hideCaption?: boolean
 }) {
   const [view, setView] = useState<PreviewView>('still')
   const [showBall, setShowBall] = useState(true)
@@ -133,7 +138,7 @@ export function PlayerPreviewCard({
       ) : (
         still
       )}
-      {!hideMeta && (
+      {!hideMeta && !hideCaption && (
         <p className="max-w-full truncate text-xs font-semibold text-neutral-500 dark:text-neutral-400">
           {nickname.trim() || 'New player'}
         </p>
