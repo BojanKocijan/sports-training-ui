@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { API_URL, GROUP_ID, mockGate, unlock } from './support/mockApi'
 
-/** Screenshots the 3D mascot preview inside the edit-player form (not the hidden /poc-3d.html
+/** Screenshots the 3D mascot preview inside the edit-player screen (not the hidden /poc-3d.html
  * dev page), for each mascot that has a 3D model — so a layout/camera/framing regression has a
  * picture, not just a description, to attach to its issue. The create-player flow
- * (SpotlightPlayerEditor, #106) doesn't expose the still/3D toggle -- it's 2D-only there, see
+ * (CreatePlayerWizard) doesn't expose the still/3D toggle -- it's 2D-only there, see
  * PlayerPreviewCard's `hideMeta` prop and #117 -- so this drives an existing mock player into
- * EditPlayerForm, which still renders the toggle. Saved under test-results/ (gitignored) via
+ * SpotlightPlayerEditor (edit), which still renders the toggle. Saved under test-results/ (gitignored) via
  * `testInfo.outputPath` so `npx playwright test mascot-3d` prints exactly where to find it. Not
  * a golden-image diff (three.js output is not pixel-stable across GPUs/drivers), so this only
  * asserts the canvas rendered — read the screenshot yourself. */

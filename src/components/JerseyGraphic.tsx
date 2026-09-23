@@ -101,8 +101,8 @@ const DYNAMIC_SIZE_CLASSES = {
  * color. Every layout box below is traced directly in Figma (J9dSOUC5az7RoMJlNegRtr, node
  * 4008:346), not eyeballed. */
 
-// gender and eye_color are both real per-player fields now (see GenderPicker/EyeColorPicker) --
-// these defaults only apply when a caller omits the prop entirely (e.g. no player object yet).
+// gender and eye_color are both real per-player fields now -- these defaults only apply when a
+// caller omits the prop entirely (e.g. no player object yet).
 const DEFAULT_EYE_COLOR: EyeColor = 'blue'
 const DEFAULT_GENDER: NonNullable<MascotAvatar['gender']> = 'boy'
 
@@ -178,9 +178,9 @@ function animalArt(assetBase: string, slug: string, gender: 'boy' | 'girl', eyes
 }
 
 // Mirrors the mascot_avatars 'baby' stage seed exactly -- used only when no groupId/apiMatch is
-// available (e.g. the live preview in CreatePlayerForm/EditPlayerForm), so that path never
-// depends on the retired per-color leon-{color}.webp files. Keyed by mascot id so choosing the
-// shark before its avatar rows have loaded doesn't flash a lion.
+// available (e.g. the live preview in CreatePlayerWizard/SpotlightPlayerEditor), so that path
+// never depends on the retired per-color leon-{color}.webp files. Keyed by mascot id so choosing
+// the shark before its avatar rows have loaded doesn't flash a lion.
 const FALLBACK_DYNAMIC_AVATAR: Record<string, Record<NonNullable<MascotAvatar['gender']>, DynamicArt>> = {
   lion: { boy: lionArt('boy'), girl: lionArt('girl') },
   shark: {
@@ -219,6 +219,17 @@ const FALLBACK_DYNAMIC_AVATAR: Record<string, Record<NonNullable<MascotAvatar['g
  * (already absolute) against the app's base path. */
 function assetUrl(url: string): string {
   return /^(\/|https?:)/.test(url) ? url : `${import.meta.env.BASE_URL}${url}`
+}
+
+/** A mascot's still-image URL for a face-thumbnail card (the animal-picker step, before gender
+ * is known yet) -- the 'boy' base pose, since every animal has one and the thumbnail only needs
+ * to show which animal this is, not the exact art a chosen gender would render. Falls back to
+ * the default mascot for an id with no local fallback art (e.g. a real DB-only mascot this
+ * build predates). */
+export function mascotFaceUrl(mascotId: string | null | undefined): string {
+  const id = mascotId ?? DEFAULT_MASCOT_ID
+  const avatar = (FALLBACK_DYNAMIC_AVATAR[id] ?? FALLBACK_DYNAMIC_AVATAR[DEFAULT_MASCOT_ID]).boy
+  return assetUrl(avatar.image_url)
 }
 
 // Fractions -> CSS percentages, rounded so float noise (36.096000000000004%) never reaches the DOM.
@@ -370,7 +381,7 @@ export function JerseyGraphic({
   size?: keyof typeof SIZE_CLASSES
   /** Resolves the artwork through the group's mascot_avatars (sport + age stage, see
    * sports-training-api#49/#52) instead of the hardcoded fallback below. Omit for contexts with
-   * no group yet (e.g. the live preview in CreatePlayerForm/EditPlayerForm). */
+   * no group yet (e.g. the live preview in CreatePlayerWizard/SpotlightPlayerEditor). */
   groupId?: string
   mascotId?: string | null
   /** Pass the player's real gender when known (see usePlayers' Gender type) -- defaults to

@@ -7,27 +7,15 @@ import {
   type EyeColor,
   type Gender,
   type JerseyColor,
+  type Player,
 } from '../../hooks/usePlayers'
 import { useMascots } from '../../hooks/useMascots'
+import { mascotFaceUrl } from '../JerseyGraphic'
+import { CustomizationDial } from './CustomizationDial'
 import { toIntOrNull } from './parseNumber'
 import { PlayerPreviewCard } from './PlayerPreviewCard'
-import { CustomizationDial } from './CustomizationDial'
 import { TileOption } from './TileOption'
 
-export interface PlayerWizardResult {
-  nickname: string
-  jerseyNumber: number | null
-  jerseyColor: JerseyColor | null
-  heightCm: number | null
-  weightKg: number | null
-  mascotId: string
-  eyeColor: EyeColor | null
-  gender: Gender | null
-  groupId: string
-}
-
-// Duplicated from JerseyColorPicker.tsx / EyeColorPicker.tsx (module-private there) so this
-// prototype doesn't touch those files -- extract to a shared module if this ships for real.
 const JERSEY_SWATCH: Record<JerseyColor, string> = {
   orange: 'bg-orange-500',
   blue: 'bg-blue-500',
@@ -44,7 +32,6 @@ const EYE_SWATCH: Record<EyeColor, string> = {
   brown: 'bg-[#FF6F09]',
 }
 const GENDER_ICON: Record<Gender, string> = { boy: '🧑', girl: '👧' }
-const MASCOT_ICON: Record<string, string> = { lion: '🦁', shark: '🦈' }
 
 type Category = 'animal' | 'gender' | 'jersey' | 'eyes' | 'details'
 const CATEGORIES: { id: Category; label: string; icon: string }[] = [
@@ -58,53 +45,95 @@ const CATEGORIES: { id: Category; label: string; icon: string }[] = [
 const inputClass =
   'w-full rounded-xl border border-black/10 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-orange-500 dark:border-white/10 dark:bg-neutral-800 dark:text-neutral-50'
 
-/** #106 -- the create-player flow (CreatePlayerForm). Replaces the old PlayerWizard's linear
- * nickname -> animal -> gender -> jersey -> eyes -> details steps with one screen: the avatar on
- * a "spotlight" stage, an inline-editable name, and a bottom category dial that swaps a big-tile
- * option grid below it -- the pattern from #106's references, in the app's own light/friendly
- * palette rather than their dark game-UI look. Background and ball stay inside PlayerPreviewCard
- * (they're 3D-only and already live there, #100/#110) rather than duplicated into this dial. */
+/** One small face-thumbnail card in the animal category's grid -- real mascot art (the 'boy'
+ * base pose) rather than an emoji, same as CreatePlayerWizard's own AnimalCard. Duplicated
+ * rather than shared since the two live in different step/tab shells with different selected-
+ * state chrome; extract if a third consumer shows up. */
+function AnimalCard({ name, mascotId, selected, onClick }: { name: string; mascotId: string; selected: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onClick}
+      className={`relative flex flex-col items-center gap-1 rounded-2xl border-2 p-2 transition-colors ${
+        selected ? 'border-orange-500 bg-orange-50 dark:bg-orange-500/10' : 'border-transparent bg-neutral-100 dark:bg-neutral-800'
+      }`}
+    >
+      {selected && (
+        <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
+          ✓
+        </span>
+      )}
+      <div className="h-14 w-14 overflow-hidden rounded-full bg-white dark:bg-neutral-900">
+        <img src={mascotFaceUrl(mascotId)} alt="" className="h-full w-full object-cover object-top" />
+      </div>
+      <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-200">{name}</span>
+    </button>
+  )
+}
+
+/** Edits an existing player, pre-filled from `player` -- rendered in place inside
+ * PlayerDetailScreen (Edit no longer closes the details view/jumps to the roster grid). This
+ * used to be the create-player flow (#106); create now uses CreatePlayerWizard's step-by-step
+ * screens instead, since building a brand-new player suits being walked through it one choice
+ * at a time, while editing an existing one should show every field at once, already filled in,
+ * on the same avatar-forward layout (still image/tile-grid style) rather than a plain stacked
+ * form. Also carries the group picker (in the Details tab), since moving a player only makes
+ * sense once they already exist. */
 export function SpotlightPlayerEditor({
-  groupId,
+  player,
+  groups,
   saving,
   saveError,
   onCancel,
   onSave,
 }: {
-  groupId: string
+  player: Player
+  groups: { id: string; name: string; status: 'available' | 'coming_soon' }[]
   saving: boolean
   saveError: string | null
   onCancel: () => void
-  onSave: (result: PlayerWizardResult) => void
+  onSave: (
+    nickname: string,
+    jerseyNumber: number | null,
+    jerseyColor: JerseyColor | null,
+    heightCm: number | null,
+    weightKg: number | null,
+    groupId: string,
+    mascotId: string | null,
+    eyeColor: EyeColor | null,
+    gender: Gender | null,
+  ) => void
 }) {
-  const [nickname, setNickname] = useState('')
-  const [editingName, setEditingName] = useState(true) // starts in edit mode: nothing to show yet
-  const [mascotId, setMascotId] = useState(DEFAULT_MASCOT_ID)
-  const [gender, setGender] = useState<Gender | null>(null)
-  const [jerseyColor, setJerseyColor] = useState<JerseyColor | null>(null)
-  const [jerseyNumber, setJerseyNumber] = useState('')
-  const [eyeColor, setEyeColor] = useState<EyeColor | null>(null)
-  const [heightCm, setHeightCm] = useState('')
-  const [weightKg, setWeightKg] = useState('')
+  const [nickname, setNickname] = useState(player.nickname)
+  const [editingName, setEditingName] = useState(false)
+  const [mascotId, setMascotId] = useState(player.mascot_id ?? DEFAULT_MASCOT_ID)
+  const [gender, setGender] = useState<Gender | null>(player.gender)
+  const [jerseyColor, setJerseyColor] = useState<JerseyColor | null>(player.jersey_color)
+  const [jerseyNumber, setJerseyNumber] = useState(player.jersey_number?.toString() ?? '')
+  const [eyeColor, setEyeColor] = useState<EyeColor | null>(player.eye_color)
+  const [heightCm, setHeightCm] = useState(player.height_cm?.toString() ?? '')
+  const [weightKg, setWeightKg] = useState(player.weight_kg?.toString() ?? '')
+  const [groupId, setGroupId] = useState(player.group_id)
   const [category, setCategory] = useState<Category>('animal')
   const { mascots } = useMascots()
 
   const trimmedNickname = nickname.trim()
-  const canSave = trimmedNickname.length > 0 && !saving
+  const canSave = trimmedNickname.length > 0 && groupId.length > 0 && !saving
 
   function submit() {
     if (!canSave) return
-    onSave({
-      nickname: trimmedNickname,
-      jerseyNumber: toIntOrNull(jerseyNumber),
+    onSave(
+      trimmedNickname,
+      toIntOrNull(jerseyNumber),
       jerseyColor,
-      heightCm: toIntOrNull(heightCm),
-      weightKg: toIntOrNull(weightKg),
+      toIntOrNull(heightCm),
+      toIntOrNull(weightKg),
+      groupId,
       mascotId,
       eyeColor,
       gender,
-      groupId,
-    })
+    )
   }
 
   return (
@@ -151,12 +180,17 @@ export function SpotlightPlayerEditor({
         )}
 
         {/* The "stage": a soft radial highlight behind the mascot plus a ground shadow under its
-            feet, instead of the reference's dark lit pedestal -- same spotlight idea, the app's
-            own light palette. `overflow-hidden` because the scaled mascot below paints outside
-            its own layout box (CSS transforms don't affect layout size) -- without it, the top of
-            the scaled avatar bleeds upward and paints over the name field above this stage. */}
+            feet. `-mx-4` bleeds the stage past this screen's own `px-4` so the scaled avatar
+            gets the full viewport width to work with, not viewport-minus-2rem. Height is a fixed
+            rem, not a `vh` value -- a viewport-relative height could end up shorter than the
+            scaled content on a short/landscape screen, silently clipping the mascot's top instead
+            of ever shrinking it. 36rem (not CreatePlayerWizard's 29rem) because this card shows
+            its still/3D toggle + ball/backdrop controls (unlike the wizard's `hideMeta`), and
+            those rows get scaled up right along with the image inside the same `scale-[1.6]`
+            div -- needs headroom for them or their top edge clips too. Keep in sync with the
+            scale factor below if either changes. */}
         <div
-          className="relative mb-4 flex min-h-[60vh] items-center justify-center overflow-hidden rounded-3xl"
+          className="relative -mx-4 mb-4 flex h-[36rem] items-center justify-center overflow-hidden rounded-3xl"
           style={{
             background:
               'radial-gradient(ellipse 70% 55% at 50% 42%, var(--tw-gradient-stops))',
@@ -166,10 +200,7 @@ export function SpotlightPlayerEditor({
           } as React.CSSProperties}
         >
           <div className="pointer-events-none absolute bottom-[13%] left-1/2 h-5 w-44 -translate-x-1/2 rounded-full bg-black/10 blur-sm dark:bg-black/30" />
-          {/* PlayerPreviewCard itself stays the shared h-72 size (it's also used compact -- roster
-              cards, EditPlayerForm); scaled up here so the mascot reads as the hero of this
-              screen, ~2/3 of the viewport height, without touching that shared component. */}
-          <div className="scale-[1.85]">
+          <div className="scale-[1.6]">
             <PlayerPreviewCard
               nickname=""
               jerseyColor={jerseyColor}
@@ -178,7 +209,7 @@ export function SpotlightPlayerEditor({
               jerseyNumber={toIntOrNull(jerseyNumber)}
               groupId={groupId}
               mascotId={mascotId}
-              hideMeta
+              hideCaption
             />
           </div>
         </div>
@@ -189,13 +220,7 @@ export function SpotlightPlayerEditor({
           {category === 'animal' && (
             <div className="grid grid-cols-3 gap-2">
               {(mascots.length > 0 ? mascots : [{ id: DEFAULT_MASCOT_ID, name: 'Lion' }]).map((m) => (
-                <TileOption
-                  key={m.id}
-                  label={m.name}
-                  icon={MASCOT_ICON[m.id] ?? '🐾'}
-                  selected={mascotId === m.id}
-                  onClick={() => setMascotId(m.id)}
-                />
+                <AnimalCard key={m.id} name={m.name} mascotId={m.id} selected={mascotId === m.id} onClick={() => setMascotId(m.id)} />
               ))}
             </div>
           )}
@@ -284,6 +309,30 @@ export function SpotlightPlayerEditor({
                     className={inputClass}
                   />
                 </div>
+              </div>
+              <div>
+                <label
+                  htmlFor="edit-player-group"
+                  className="mb-1 block text-xs font-semibold uppercase tracking-wide text-neutral-400"
+                >
+                  Group
+                </label>
+                <select
+                  id="edit-player-group"
+                  value={groupId}
+                  onChange={(e) => setGroupId(e.target.value)}
+                  disabled={saving}
+                  className={`${inputClass} disabled:opacity-50`}
+                >
+                  {groups
+                    .filter((group) => group.status === 'available')
+                    .map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                </select>
+                <p className="mt-1 text-xs text-neutral-400">Moving a player keeps their individual progress history.</p>
               </div>
             </div>
           )}
