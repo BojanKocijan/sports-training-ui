@@ -240,7 +240,7 @@ export function SuperAdminDashboard({
             <p className="text-xs font-semibold uppercase tracking-wide text-primary">
               Platform administration
             </p>
-            <h1 className="text-xl font-bold text-foreground">Sports Training</h1>
+            <h1 className="text-xl font-bold text-foreground">CoachCub</h1>
           </div>
 
           <div className="flex items-center gap-2">
