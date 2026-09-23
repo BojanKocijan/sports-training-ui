@@ -1,9 +1,12 @@
-# sports-training-ui
-Trainers
+# CoachCub
 
-## U8 Training App
+Youth basketball training, made playful. Trainers plan trainings and rate skills, kids pick a
+mascot that grows with their skills, and parents (invited by the trainer's email) follow their
+child's progress. Basketball today, more sports coming soon. Live at https://coachcub.app.
 
-A mobile-first React app for running the U8 basketball training session:
+## What the app does
+
+A mobile-first React app for running youth basketball training sessions:
 
 - **Setup** — pre-session equipment checklist, coach roles, coaching principles
 - **Exercises** — the exercise library: filter by category (dribbling, passing, shooting, defense & movement, agility, team play, warm-up), rate how much the kids liked each one, and build a focused custom training or start the full 60-minute session
