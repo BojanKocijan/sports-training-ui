@@ -21,6 +21,7 @@ import { SportLoader } from './SportLoader'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
+import { CategoryIcon } from './CategoryIcon'
 
 const SCALE = [
   { value: 1, emoji: '😐' },
@@ -233,10 +234,12 @@ export function PlayerDetailScreen({
   }
 
   function SkillBar({
+    categoryId,
     label,
     emoji,
     stat,
   }: {
+    categoryId: string
     label: string
     emoji: string
     stat: PlayerCategoryStat | undefined
@@ -245,7 +248,8 @@ export function PlayerDetailScreen({
     return (
       <div className="flex items-center gap-2">
         <span className="w-32 shrink-0 truncate text-xs font-semibold text-neutral-600 dark:text-neutral-300">
-          {emoji} {label}
+          <CategoryIcon id={categoryId} fallback={emoji} className="mr-1 h-3.5 w-3.5 align-[-2px]" />
+          {label}
         </span>
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
           <div
@@ -373,6 +377,7 @@ export function PlayerDetailScreen({
             {groupedSkills.map(({ parent, children }) => (
               <Card key={parent.id} size="sm" className="gap-2 px-3">
                 <SkillBar
+                  categoryId={parent.id}
                   label={parent.label}
                   emoji={parent.emoji}
                   stat={statForParent(
@@ -383,7 +388,7 @@ export function PlayerDetailScreen({
                 {children.length > 0 && (
                   <div className="space-y-1.5 border-t border-black/5 pt-2 dark:border-white/5">
                     {children.map((child) => (
-                      <SkillBar key={child.id} label={child.label} emoji={child.emoji} stat={statFor(child.id)} />
+                      <SkillBar key={child.id} categoryId={child.id} label={child.label} emoji={child.emoji} stat={statFor(child.id)} />
                     ))}
                   </div>
                 )}
@@ -430,7 +435,8 @@ export function PlayerDetailScreen({
                           >
                             <div className="flex items-center justify-between">
                               <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">
-                                {cat.emoji} {cat.label}
+                                <CategoryIcon id={cat.id} fallback={cat.emoji} className="mr-1 h-4 w-4 align-[-3px]" />
+                                {cat.label}
                               </span>
                               {stat && (
                                 <span className="text-xs font-medium text-neutral-400">

@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { LandingPage } from './LandingPage'
@@ -13,9 +14,12 @@ const access = {
 describe('LandingPage', () => {
   it('offers a trainer sign-in and explains how parents get in', () => {
     render(<LandingPage trainerAccess={access} />)
-    expect(screen.getByRole('heading', { name: /trainer sign in/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /^sign in$/i })).toBeInTheDocument()
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument()
-    expect(screen.getByText(/child’s trainer invites you by email/i)).toBeInTheDocument()
+    expect(screen.getByText(/trainers & invited parents/i)).toBeInTheDocument()
+    expect(screen.getByText(/are you a parent\?/i)).toBeInTheDocument()
+    expect(screen.getByText(/parents can't create an account on their own/i)).toBeInTheDocument()
+    expect(screen.getByText(/there is no sign-up here/i)).toBeInTheDocument()
   })
 
   it('shows basketball as available and more sports as coming soon', () => {
@@ -44,6 +48,17 @@ describe('LandingPage', () => {
     expect(container.querySelector('video')).toBeNull()
     expect(screen.getByAltText(/panther mascot dribbling/i)).toBeInTheDocument()
     vi.unstubAllGlobals()
+  })
+
+  it('discloses that the characters are AI-generated with illustrator and 3D artist input', () => {
+    render(<LandingPage trainerAccess={access} />)
+    expect(screen.getAllByText(/AI-generated, guided by the experience of an illustrator and a 3D artist/i).length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('opens the privacy notice from the footer, even when signed out', async () => {
+    render(<LandingPage trainerAccess={access} />)
+    await userEvent.click(screen.getByRole('button', { name: /^privacy$/i }))
+    expect(screen.getByText(/sign in with an email address too/i)).toBeInTheDocument()
   })
 
   it('shows all eight mascots', () => {

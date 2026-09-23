@@ -21,6 +21,8 @@ import { formatDate } from './utils/format'
 
 function App() {
   const [tab, setTab] = useState<Tab>('groups')
+  // A trainer whose email is also linked to a child can flip to that child's parent view.
+  const [asParent, setAsParent] = useState(false)
   const [superadminView, setSuperadminView] =
     useState<'dashboard' | 'training'>('dashboard')
   const activePlan = useActivePlan()
@@ -159,9 +161,15 @@ function App() {
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
       {!trainerAccess.unlocked ? (
         <LandingPage trainerAccess={trainerAccess} />
-      ) : trainerAccess.kind === 'parent' ? (
+      ) : trainerAccess.kind === 'parent' || (asParent && trainerAccess.children.length > 0) ? (
         <>
-          <ClubHeader trainerAccess={{ kind: 'parent', lock: trainerAccess.lock }} />
+          <ClubHeader
+            trainerAccess={{
+              kind: 'parent',
+              lock: trainerAccess.lock,
+              onSwitchToTrainer: trainerAccess.kind === 'trainer' ? () => setAsParent(false) : undefined,
+            }}
+          />
           <ParentHome linkedChildren={trainerAccess.children} />
         </>
       ) : trainerAccess.isSuperadmin && superadminView === 'dashboard' ? (
@@ -197,6 +205,7 @@ function App() {
               isSuperadmin: trainerAccess.isSuperadmin,
               inviteOwner: trainerAccess.inviteOwner,
               accountRole: trainerAccess.accountRole,
+              onOpenParentView: trainerAccess.children.length > 0 ? () => setAsParent(true) : undefined,
             }}
             onAdminHome={
               trainerAccess.isSuperadmin

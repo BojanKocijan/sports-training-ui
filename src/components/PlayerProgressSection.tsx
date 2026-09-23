@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { categoryInfo, type CategoryId, useCategories } from '../hooks/useCategories'
 import { ratePlayerProgress, usePlayers } from '../hooks/usePlayers'
 import { Card } from './ui/card'
+import { CategoryIcon } from './CategoryIcon'
 
 const SCALE = [
   { value: 1, emoji: '😐' },
@@ -62,7 +63,8 @@ export function PlayerProgressSection({
                 return (
                   <div key={categoryId} className="flex items-center justify-between gap-2">
                     <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                      {cat.emoji} {cat.label}
+                      <CategoryIcon id={categoryId} fallback={cat.emoji} className="mr-1 h-3.5 w-3.5 align-[-2px]" />
+                      {cat.label}
                     </span>
                     <div className="flex items-center gap-1">
                       {SCALE.map((s) => (

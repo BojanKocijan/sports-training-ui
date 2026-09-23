@@ -1,4 +1,7 @@
+import { IconBallBasketball, IconClipboardList, IconHeartHandshake, type Icon } from '@tabler/icons-react'
 import { useState } from 'react'
+import { CategoryIcon } from './CategoryIcon'
+import { PrivacyPolicyScreen } from './PrivacyPolicyScreen'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { SignInCard } from './SignInCard'
 
@@ -16,30 +19,30 @@ const MASCOTS = [
   { name: 'Lioness', src: `${MASCOT_BASE}/Leon/Web%20size/leon-baby-girl.webp`, tint: 'bg-yellow-100 dark:bg-yellow-500/15' },
 ]
 
-const AUDIENCES = [
+const AUDIENCES: { title: string; icon: Icon; text: string }[] = [
   {
     title: 'For kids',
-    emoji: '🏀',
+    icon: IconBallBasketball,
     text: 'Pick your own mascot, give it your jersey colour and number, and watch it grow as your skills do. Every practice earns you something.',
   },
   {
     title: 'For parents',
-    emoji: '👨‍👩‍👧',
+    icon: IconHeartHandshake,
     text: 'See how your child is doing at a glance: their mascot, skill by skill progress and the next trainings. Your trainer invites you by email.',
   },
   {
     title: 'For trainers',
-    emoji: '📋',
+    icon: IconClipboardList,
     text: 'Plan trainings, rate skills in two taps, keep every player’s history, and invite parents to follow along. No spreadsheets.',
   },
 ]
 
 // Fictional demo data only: an example of what a parent sees, not a real player.
 const DEMO_SKILLS = [
-  { label: 'Dribbling', emoji: '⚡', value: 2.6 },
-  { label: 'Shooting', emoji: '🎯', value: 2.1 },
-  { label: 'Passing', emoji: '🤝', value: 2.9 },
-  { label: 'Defense', emoji: '🛡️', value: 1.8 },
+  { id: 'dribbling', label: 'Dribbling', value: 2.6 },
+  { id: 'shooting', label: 'Shooting', value: 2.1 },
+  { id: 'passing', label: 'Passing', value: 2.9 },
+  { id: 'defense', label: 'Defense', value: 1.8 },
 ]
 
 const UPCOMING_SPORTS = ['Football', 'Volleyball', 'Handball']
@@ -89,6 +92,8 @@ function HeroVideo() {
 /** Public front door: what the app is, who it is for, and the sign-in. Shown whenever nobody is
  * signed in. Sign-in is for trainers; parents get in after a trainer invites their email. */
 export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
+  const [privacyOpen, setPrivacyOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white text-neutral-900 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-950 dark:text-neutral-50">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
@@ -96,7 +101,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
           <img src="/logos/coachcub-logo.webp" alt="CoachCub" width={1844} height={403} className="h-9 w-auto md:h-11" />
         </a>
         <a href="#sign-in" className="rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600">
-          Trainer sign in
+          Sign in
         </a>
       </header>
 
@@ -104,23 +109,28 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
         <section className="mx-auto grid max-w-6xl items-center gap-8 px-4 pb-12 pt-6 md:grid-cols-2 md:pt-12">
           <div>
             <p className="inline-block rounded-full bg-orange-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
-              Youth basketball, made playful
+              For youth basketball trainers
             </p>
             <h1 className="mt-4 text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
               Every practice is a step towards a bigger cub.
             </h1>
             <p className="mt-4 max-w-xl text-lg text-neutral-600 dark:text-neutral-300">
-              Kids pick a mascot that grows with their skills. Trainers rate drills in two taps.
-              Parents follow the progress and cheer them on.
+              CoachCub is built for trainers: plan trainings, rate skills in two taps and invite parents.
+              Kids pick a mascot that grows with their skills, and invited parents follow the progress.
             </p>
             <HeroVideo />
           </div>
 
           <div id="sign-in" className="mx-auto w-full max-w-md scroll-mt-6">
             <SignInCard trainerAccess={trainerAccess} />
-            <p className="mt-3 text-center text-sm text-neutral-500 dark:text-neutral-400">
-              Parents: your child’s trainer invites you by email. Confirm it, then sign in here with the same address.
-            </p>
+            <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-neutral-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-neutral-200">
+              <p className="font-bold text-neutral-900 dark:text-neutral-50">Are you a parent?</p>
+              <p className="mt-1">
+                Parents can't create an account on their own. Your child's trainer sends an invitation to your
+                email: accept it there to create your account, and then you can sign in here to follow your
+                child's progress. If you also coach, the same account works as a trainer.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -129,7 +139,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {AUDIENCES.map((a) => (
               <article key={a.title} className="rounded-3xl border border-black/5 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-neutral-900">
-                <p className="text-3xl" aria-hidden>{a.emoji}</p>
+                <a.icon aria-hidden className="h-9 w-9 text-orange-500" stroke={1.75} />
                 <h3 className="mt-2 text-lg font-bold">{a.title}</h3>
                 <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">{a.text}</p>
               </article>
@@ -160,7 +170,8 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
                 {DEMO_SKILLS.map((s) => (
                   <div key={s.label} className="flex items-center gap-3">
                     <span className="w-28 shrink-0 text-xs font-semibold text-neutral-600 dark:text-neutral-300">
-                      {s.emoji} {s.label}
+                      <CategoryIcon id={s.id} className="mr-1 h-3.5 w-3.5 align-[-2px]" />
+                      {s.label}
                     </span>
                     <div className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
                       <div className="h-full rounded-full bg-orange-500" style={{ width: `${(s.value / 3) * 100}%` }} />
@@ -179,6 +190,9 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
         <section className="mx-auto max-w-6xl px-4 py-10">
           <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">Meet the team</h2>
           <p className="mt-1 text-neutral-600 dark:text-neutral-300">Every child picks the mascot that feels like them.</p>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            Our mascots and the hero video are AI-generated, guided by the experience of an illustrator and a 3D artist.
+          </p>
           <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {MASCOTS.map((m) => (
               <li key={m.name} className={`flex flex-col items-center rounded-3xl p-3 ${m.tint}`}>
@@ -207,7 +221,18 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
 
       <footer className="mx-auto max-w-6xl px-4 py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">
         <p>Trainers, <a href="#sign-in" className="font-semibold text-orange-600 underline">sign in</a> to set up your group and invite parents.</p>
+        <p className="mx-auto mt-4 max-w-xl">
+          Our mascots and the hero video are AI-generated, guided by the experience of an illustrator and a 3D artist.
+        </p>
+        <p className="mt-3">
+          <button type="button" onClick={() => setPrivacyOpen(true)} className="font-semibold underline">
+            Privacy
+          </button>
+          {' · '}
+          <a href="mailto:support@coachcub.app" className="underline">support@coachcub.app</a>
+        </p>
       </footer>
+      {privacyOpen && <PrivacyPolicyScreen onClose={() => setPrivacyOpen(false)} />}
     </div>
   )
 }

@@ -19,9 +19,12 @@ export function SignInCard({ trainerAccess }: { trainerAccess: ReturnType<typeof
           else if (await requestLoginCode(email)) setCodeSent(true)
         }}
       >
-        <h2 className="text-lg font-bold dark:text-white">Trainer sign in</h2>
+        <p className="inline-block rounded-full bg-orange-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
+          Trainers &amp; invited parents
+        </p>
+        <h2 className="mt-2 text-lg font-bold dark:text-white">Sign in</h2>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          Use the email your club invited. We'll send you a sign-in code, no password needed.
+          Use the email you were invited with. We'll send you a sign-in code, no password needed. There is no sign-up here.
         </p>
         <label className="mt-3 block text-sm dark:text-white" htmlFor="trainer-email">Email</label>
         <input

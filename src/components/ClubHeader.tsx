@@ -43,6 +43,10 @@ export function ClubHeader({
     isSuperadmin?: boolean;
     inviteOwner?: (email: string) => Promise<void>;
     accountRole?: AccountRole | null;
+    /** Trainer who is also a linked parent: opens their child's parent view. */
+    onOpenParentView?: () => void;
+    /** Parent view of an account that is also a trainer: back to the trainer app. */
+    onSwitchToTrainer?: () => void;
   };
   onAdminHome?: () => void;
 }) {
@@ -136,6 +140,8 @@ export function ClubHeader({
             kind={trainerAccess.kind}
             accountRole={trainerAccess.accountRole}
             onLock={trainerAccess.lock}
+            onOpenParentView={trainerAccess.onOpenParentView}
+            onSwitchToTrainer={trainerAccess.onSwitchToTrainer}
           />
         )}
       </div>

@@ -8,6 +8,7 @@ import { SportLoader } from './SportLoader'
 import { PlayerPreviewCard } from './player-form/PlayerPreviewCard'
 import { Card } from './ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
+import { CategoryIcon } from './CategoryIcon'
 
 /** Read-only view unlocked by a parent code (see sports-training-api#20) — scoped to one child
  * plus the group's overall progress and schedule. No edit controls anywhere, no way to switch
@@ -73,7 +74,8 @@ export function ParentView({
                   return (
                     <div key={c.categoryId} className="flex items-center gap-3">
                       <span className="w-28 shrink-0 truncate text-xs font-semibold text-neutral-600 dark:text-neutral-300">
-                        {cat.emoji} {cat.label}
+                        <CategoryIcon id={c.categoryId} fallback={cat.emoji} className="mr-1 h-3.5 w-3.5 align-[-2px]" />
+                    {cat.label}
                       </span>
                       <div className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
                         <div

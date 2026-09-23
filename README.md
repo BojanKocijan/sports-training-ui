@@ -4,6 +4,11 @@ Youth basketball training, made playful. Trainers plan trainings and rate skills
 mascot that grows with their skills, and parents (invited by the trainer's email) follow their
 child's progress. Basketball today, more sports coming soon. Live at https://coachcub.app.
 
+## About the artwork
+
+The mascots and the landing-page video are AI-generated, guided by the experience of an illustrator
+and a 3D artist.
+
 ## What the app does
 
 A mobile-first React app for running youth basketball training sessions:
