@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useCategories } from '../hooks/useCategories'
 import {
-  fetchParentCode,
-  issueParentCode,
+  addParentLink,
+  fetchParentLinks,
   ratePlayerProgress,
-  revokeParentCode,
+  removeParentLink,
   type EyeColor,
   type Gender,
   type JerseyColor,
+  type ParentLink,
   type Player,
 } from '../hooks/usePlayers'
 import { usePlayerProgress, type PlayerCategoryStat } from '../hooks/usePlayerProgress'
@@ -43,7 +44,6 @@ export function PlayerDetailScreen({
   plans,
   groups,
   onClose,
-  onRosterChange,
   onSaveEdit,
   saving,
   saveError,
@@ -54,10 +54,6 @@ export function PlayerDetailScreen({
   plans: TrainingPlan[]
   groups: { id: string; name: string; status: 'available' | 'coming_soon' }[]
   onClose: () => void
-  /** Refreshes the roster (see usePlayers) — called after issuing/revoking a parent code, and
-   * after a successful edit, so this view's own `player` prop (and the "has a code" badge)
-   * reflect the change without a manual reopen. */
-  onRosterChange: () => void
   /** Edit now happens in place, right here — Edit switches this view into SpotlightPlayerEditor
    * instead of closing the screen and jumping back to the roster grid (see #68 follow-up:
    * editing used to visibly swap screens, which read as a bug). Remove still lives only here,
@@ -108,55 +104,56 @@ export function PlayerDetailScreen({
   }
 
   const { byCategory, loading, error, refresh } = usePlayerProgress(player.id)
-  const [parentCode, setParentCode] = useState<string | null>(null)
-  const [parentCodeLoading, setParentCodeLoading] = useState(true)
-  const [parentCodePending, setParentCodePending] = useState(false)
-  const [parentCodeError, setParentCodeError] = useState<string | null>(null)
+  const [parentLinks, setParentLinks] = useState<ParentLink[]>([])
+  const [parentLinksLoading, setParentLinksLoading] = useState(true)
+  const [parentPending, setParentPending] = useState(false)
+  const [parentError, setParentError] = useState<string | null>(null)
+  const [parentEmail, setParentEmail] = useState('')
 
-  // Trainer-only — never fetched or shown anywhere in the parent-facing view (see ParentView).
+  // Trainer-only -- parents never see who else is linked (see ParentView).
   useEffect(() => {
     let cancelled = false
-    setParentCodeLoading(true)
-    fetchParentCode(player.id)
-      .then((code) => {
-        if (!cancelled) setParentCode(code)
+    setParentLinksLoading(true)
+    fetchParentLinks(player.id)
+      .then((links) => {
+        if (!cancelled) setParentLinks(links)
       })
       .catch((e) => {
-        if (!cancelled) setParentCodeError(e instanceof Error ? e.message : 'Could not load the code')
+        if (!cancelled) setParentError(e instanceof Error ? e.message : 'Could not load linked parents')
       })
       .finally(() => {
-        if (!cancelled) setParentCodeLoading(false)
+        if (!cancelled) setParentLinksLoading(false)
       })
     return () => {
       cancelled = true
     }
   }, [player.id])
 
-  async function handleIssueCode() {
-    setParentCodePending(true)
-    setParentCodeError(null)
+  async function handleAddParent(event: FormEvent) {
+    event.preventDefault()
+    setParentPending(true)
+    setParentError(null)
     try {
-      const code = await issueParentCode(player.id)
-      setParentCode(code)
-      onRosterChange()
+      const link = await addParentLink(player.id, parentEmail.trim())
+      if (link) setParentLinks((prev) => (prev.some((l) => l.id === link.id) ? prev : [...prev, link]))
+      setParentEmail('')
     } catch (e) {
-      setParentCodeError(e instanceof Error ? e.message : 'Could not generate a code')
+      setParentError(e instanceof Error ? e.message : 'Could not link this email')
     } finally {
-      setParentCodePending(false)
+      setParentPending(false)
     }
   }
 
-  async function handleRevokeCode() {
-    setParentCodePending(true)
-    setParentCodeError(null)
+  async function handleRemoveParent(linkId: string) {
+    setParentPending(true)
+    setParentError(null)
     try {
-      await revokeParentCode(player.id)
-      setParentCode(null)
-      onRosterChange()
+      await removeParentLink(player.id, linkId)
+      setParentLinks((prev) => prev.filter((l) => l.id !== linkId))
     } catch (e) {
-      setParentCodeError(e instanceof Error ? e.message : 'Could not revoke the code')
+      setParentError(e instanceof Error ? e.message : 'Could not unlink this email')
     } finally {
-      setParentCodePending(false)
+      setParentPending(false)
     }
   }
 
@@ -497,41 +494,48 @@ export function PlayerDetailScreen({
 
             <Card size="sm" className="gap-1 px-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
-                Parent code · visible to trainers only
+                Parents · visible to trainers only
               </p>
-              {parentCodeLoading ? (
+              {parentLinksLoading ? (
                 <SportLoader />
-              ) : parentCode ? (
-                <div className="mt-1.5 rounded-xl bg-orange-50 p-2.5 dark:bg-orange-500/10">
-                  <p className="font-mono text-lg font-bold tracking-widest text-orange-700 dark:text-orange-300">
-                    {parentCode}
-                  </p>
-                  <p className="mt-0.5 text-xs text-orange-800 dark:text-orange-300">
-                    Share this with {player.nickname}'s parent, they enter it on the group's lock
-                    screen, same as a trainer code.
-                  </p>
-                </div>
-              ) : (
+              ) : parentLinks.length === 0 ? (
                 <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                  No parent code yet, generate one to let this child's parent view their progress.
+                  No parent linked yet. Add an email and {player.nickname}'s parent gets an invite to
+                  confirm, then can sign in to see their progress.
                 </p>
+              ) : (
+                <ul className="mt-1 space-y-1.5">
+                  {parentLinks.map((link) => (
+                    <li key={link.id} className="flex items-center justify-between gap-2 text-sm">
+                      <span className="min-w-0 truncate text-neutral-800 dark:text-neutral-100">{link.email}</span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <span className={`text-xs font-semibold ${link.confirmed_at ? 'text-green-600' : 'text-neutral-400'}`}>
+                          {link.confirmed_at ? 'Confirmed' : 'Invite sent'}
+                        </span>
+                        <Button variant="destructive" size="sm" disabled={parentPending}
+                          onClick={() => handleRemoveParent(link.id)}>
+                          Remove
+                        </Button>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               )}
-              {parentCodeError && <p className="mt-1 text-xs font-semibold text-red-600">{parentCodeError}</p>}
-              <div className="mt-2 flex gap-2">
-                <Button variant="secondary" size="sm" disabled={parentCodePending} onClick={handleIssueCode}>
-                  {parentCodePending ? '...' : parentCode ? 'Regenerate code' : 'Generate code'}
+              {parentError && <p className="mt-1 text-xs font-semibold text-red-600">{parentError}</p>}
+              <form className="mt-2 flex gap-2" onSubmit={handleAddParent}>
+                <input
+                  type="email"
+                  required
+                  aria-label="Parent email"
+                  placeholder="parent@example.com"
+                  value={parentEmail}
+                  onChange={(event) => setParentEmail(event.target.value)}
+                  className="min-w-0 flex-1 rounded-xl border border-black/10 px-3 py-1.5 text-sm dark:border-white/10 dark:bg-neutral-800"
+                />
+                <Button type="submit" variant="secondary" size="sm" disabled={parentPending || !parentEmail.trim()}>
+                  {parentPending ? '...' : 'Send invite'}
                 </Button>
-                {parentCode && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={parentCodePending}
-                    onClick={handleRevokeCode}
-                  >
-                    Revoke
-                  </Button>
-                )}
-              </div>
+              </form>
             </Card>
           </TabsContent>
         </Tabs>

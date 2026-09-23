@@ -4,7 +4,7 @@ import { ClubHeader } from './components/ClubHeader'
 import { ExercisesScreen } from './components/ExercisesScreen'
 import { GroupsScreen } from './components/GroupsScreen'
 import { LockScreen } from './components/LockScreen'
-import { ParentView } from './components/ParentView'
+import { ParentHome } from './components/ParentHome'
 import { PlayerDetailScreen } from './components/PlayerDetailScreen'
 import { PlayersScreen } from './components/PlayersScreen'
 import { SessionScreen } from './components/SessionScreen'
@@ -162,10 +162,10 @@ function App() {
           <ClubHeader />
           <LockScreen groupId={groupId} onSelectGroup={setGroupId} trainerAccess={trainerAccess} />
         </>
-      ) : trainerAccess.kind === 'parent' && trainerAccess.parentPlayer ? (
+      ) : trainerAccess.kind === 'parent' ? (
         <>
           <ClubHeader trainerAccess={{ kind: 'parent', lock: trainerAccess.lock }} />
-          <ParentView groupId={groupId} player={trainerAccess.parentPlayer} />
+          <ParentHome linkedChildren={trainerAccess.children} />
         </>
       ) : trainerAccess.isSuperadmin && superadminView === 'dashboard' ? (
         <SuperAdminDashboard
@@ -179,7 +179,6 @@ function App() {
           plans={plans}
           groups={groups}
           onClose={closePlayerDetail}
-          onRosterChange={refreshPlayers}
           onSaveEdit={(...args) => handleEditPlayer(viewingPlayer.id, ...args)}
           saving={savingPlayer}
           saveError={savePlayerError}

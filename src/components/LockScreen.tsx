@@ -9,14 +9,10 @@ export function LockScreen({ groupId, onSelectGroup, trainerAccess }: {
   trainerAccess: ReturnType<typeof useTrainerAccess>
 }) {
   const { groups, loading: groupsLoading, error: groupsError } = useGroups()
-  const { checking, error, tryUnlock, requestLoginCode, verifyLoginCode } = trainerAccess
-  const [mode, setMode] = useState<'trainer' | 'parent'>('trainer')
+  const { checking, error, requestLoginCode, verifyLoginCode } = trainerAccess
   const [email, setEmail] = useState('')
   const [emailCode, setEmailCode] = useState('')
   const [codeSent, setCodeSent] = useState(false)
-  const [parentCode, setParentCode] = useState('')
-  const [rememberParentCode, setRememberParentCode] = useState(false)
-  const activeGroup = groups.find((g) => g.id === groupId)
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-56px)] max-w-md flex-col items-center justify-center gap-6 px-4 py-8 md:max-w-lg">
@@ -30,23 +26,13 @@ export function LockScreen({ groupId, onSelectGroup, trainerAccess }: {
           </button>)}
         </div>}
       <Card className="w-full rounded-3xl p-5 shadow-lg">
-        <div className="flex gap-2" role="tablist" aria-label="Access type">
-          <button type="button" role="tab" aria-selected={mode === 'trainer'} onClick={() => setMode('trainer')}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold ${mode === 'trainer' ? 'bg-orange-500 text-white' : 'text-neutral-500'}`}>
-            Account
-          </button>
-          <button type="button" role="tab" aria-selected={mode === 'parent'} onClick={() => setMode('parent')}
-            className={`rounded-lg px-3 py-2 text-sm font-semibold ${mode === 'parent' ? 'bg-orange-500 text-white' : 'text-neutral-500'}`}>
-            Parent
-          </button>
-        </div>
-        {mode === 'trainer' ? <form onSubmit={async (event) => {
+        <form onSubmit={async (event) => {
           event.preventDefault()
           if (codeSent) await verifyLoginCode(email, emailCode)
           else if (await requestLoginCode(email)) setCodeSent(true)
         }}>
-          <h1 className="mt-4 text-lg font-bold dark:text-white">Sign in</h1>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Use the email address associated with your account.</p>
+          <h1 className="text-lg font-bold dark:text-white">Sign in</h1>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Trainers and parents: use the email address your club or your child's trainer has on file. We'll email you a sign-in code.</p>
           <label className="mt-3 block text-sm dark:text-white" htmlFor="trainer-email">Email</label>
           <input id="trainer-email" type="email" autoComplete="email" required value={email}
             onChange={(event) => { setEmail(event.target.value); setCodeSent(false) }}
@@ -62,23 +48,7 @@ export function LockScreen({ groupId, onSelectGroup, trainerAccess }: {
           </button>
           {codeSent && <button type="button" className="mt-3 text-sm text-neutral-500 underline"
             onClick={async () => { await requestLoginCode(email) }}>Send a new code</button>}
-        </form> : <form onSubmit={async (event) => { event.preventDefault(); await tryUnlock(parentCode, rememberParentCode) }}>
-          <h1 className="mt-4 text-lg font-bold dark:text-white">Parent access</h1>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Enter the child code for {activeGroup?.name ?? groupId} given by the trainer.</p>
-          <label className="mt-3 block text-sm dark:text-white" htmlFor="parent-code">Parent code</label>
-          <input id="parent-code" type="password" required value={parentCode}
-            onChange={(event) => setParentCode(event.target.value)}
-            className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 dark:border-white/10 dark:bg-neutral-800" />
-          <label className="mt-2 flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-            <input type="checkbox" checked={rememberParentCode} onChange={(event) => setRememberParentCode(event.target.checked)} />
-            Remember this code on this device
-          </label>
-          {error && <p className="mt-2 text-sm text-red-600" role="alert">{error}</p>}
-          <button type="submit" disabled={checking || !parentCode}
-            className="mt-4 w-full rounded-xl bg-orange-500 py-2.5 text-sm font-bold text-white disabled:opacity-50">
-            {checking ? 'Please wait...' : 'Open parent view'}
-          </button>
-        </form>}
+        </form>
       </Card>
     </div>
   )

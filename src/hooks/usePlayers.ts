@@ -161,32 +161,29 @@ export async function ratePlayerProgress(
   })
 }
 
-/** The current parent code for a player, or null if none is set — a trainer can look this up
- * any time, not just right after issuing it (see sports-training-api#20). */
-export async function fetchParentCode(
-  playerId: string,
-): Promise<string | null> {
-  const { parentCode } = await api.post<{ parentCode: string | null }>(
-    `/players/${playerId}/parent-code/read`,
-    {},
-  )
-  return parentCode
+export interface ParentLink {
+  id: string
+  email: string
+  /** Null until the parent has confirmed the invite and signed in once. */
+  confirmed_at: string | null
+  created_at: string
 }
 
-/** Issues a fresh parent code for a player, overwriting any existing one (an old code stops
- * working the moment a new one is generated). */
-export async function issueParentCode(
-  playerId: string,
-): Promise<string> {
-  const { parentCode } = await api.post<{ parentCode: string }>(
-    `/players/${playerId}/parent-code`,
-    {},
-  )
-  return parentCode
+/** Parent emails linked to a player (trainer-only) with whether each has confirmed yet. */
+export async function fetchParentLinks(playerId: string): Promise<ParentLink[]> {
+  return api.get<ParentLink[]>(`/players/${playerId}/parents`)
 }
 
-/** Revokes a player's parent code — the parent's next LockScreen attempt with the old code
- * fails after revocation. */
-export async function revokeParentCode(playerId: string) {
-  await api.delete(`/players/${playerId}/parent-code`)
+/** Links a parent's email to a player and sends them the confirmation invite. */
+export async function addParentLink(playerId: string, email: string): Promise<ParentLink | null> {
+  const { link } = await api.post<{ link: ParentLink | null; invited: boolean }>(
+    `/players/${playerId}/parents`,
+    { email },
+  )
+  return link
+}
+
+/** Unlinks a parent's email from a player; they lose access on their next request. */
+export async function removeParentLink(playerId: string, linkId: string) {
+  await api.delete(`/players/${playerId}/parents/${linkId}`)
 }
