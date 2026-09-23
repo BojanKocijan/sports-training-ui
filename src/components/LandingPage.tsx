@@ -107,23 +107,27 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
         <section className="mx-auto grid max-w-6xl items-center gap-8 px-4 pb-12 pt-6 md:grid-cols-2 md:pt-12">
           <div>
             <p className="inline-block rounded-full bg-orange-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
-              Youth basketball, made playful
+              For youth basketball trainers
             </p>
             <h1 className="mt-4 text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
               Every practice is a step towards a bigger cub.
             </h1>
             <p className="mt-4 max-w-xl text-lg text-neutral-600 dark:text-neutral-300">
-              Kids pick a mascot that grows with their skills. Trainers rate drills in two taps.
-              Parents follow the progress and cheer them on.
+              CoachCub is built for trainers: plan trainings, rate skills in two taps and invite parents.
+              Kids pick a mascot that grows with their skills, and invited parents follow the progress.
             </p>
             <HeroVideo />
           </div>
 
           <div id="sign-in" className="mx-auto w-full max-w-md scroll-mt-6">
             <SignInCard trainerAccess={trainerAccess} />
-            <p className="mt-3 text-center text-sm text-neutral-500 dark:text-neutral-400">
-              Parents: your child’s trainer invites you by email. Confirm it, then sign in here with the same address.
-            </p>
+            <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-neutral-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-neutral-200">
+              <p className="font-bold text-neutral-900 dark:text-neutral-50">Are you a parent?</p>
+              <p className="mt-1">
+                You don't sign up here. Your child's trainer invites you by email. Confirm the invitation,
+                then sign in above with the same address to follow your child's progress.
+              </p>
+            </div>
           </div>
         </section>
 

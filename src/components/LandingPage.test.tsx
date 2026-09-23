@@ -16,7 +16,9 @@ describe('LandingPage', () => {
     render(<LandingPage trainerAccess={access} />)
     expect(screen.getByRole('heading', { name: /trainer sign in/i })).toBeInTheDocument()
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument()
-    expect(screen.getByText(/child’s trainer invites you by email/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/^for trainers$/i).length).toBeGreaterThanOrEqual(2) // sign-in badge + audience card
+    expect(screen.getByText(/are you a parent\?/i)).toBeInTheDocument()
+    expect(screen.getByText(/child's trainer invites you by email/i)).toBeInTheDocument()
   })
 
   it('shows basketball as available and more sports as coming soon', () => {
