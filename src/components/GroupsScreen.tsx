@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useGroups } from '../hooks/useGroups'
 import { usePlans, type TrainingPlan } from '../hooks/usePlans'
-import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { isApiConfigured } from '../lib/apiClient'
 import { formatDate } from '../utils/format'
 import { PlanTrainingWizard } from './PlanTrainingWizard'
@@ -11,17 +10,14 @@ import { Skeleton } from './ui/skeleton'
 
 export function GroupsScreen({
   groupId,
-  trainerAccess,
 }: {
   groupId: string
-  trainerAccess: ReturnType<typeof useTrainerAccess>
 }) {
   const { groups } = useGroups()
   const group = groups.find((g) => g.id === groupId) ?? { name: groupId, emoji: '🏀' }
   const templateId = groups.find((g) => g.id === groupId)?.templateId ?? groupId
   // Always unlocked here — the app-level gate in App.tsx (see LockScreen) never renders this
   // screen otherwise.
-  const { passcode } = trainerAccess
   const { plans, upcoming, past, loading, error, createPlan, updatePlan, deletePlan } = usePlans(groupId)
 
   const [planning, setPlanning] = useState(false)
@@ -55,9 +51,9 @@ export function GroupsScreen({
     setSaveError(null)
     try {
       if (editingPlan) {
-        await updatePlan(passcode(), editingPlan.id, date, `${group.name} training`, group.emoji, exerciseIds)
+        await updatePlan(editingPlan.id, date, `${group.name} training`, group.emoji, exerciseIds)
       } else {
-        await createPlan(passcode(), date, `${group.name} training`, group.emoji, exerciseIds)
+        await createPlan(date, `${group.name} training`, group.emoji, exerciseIds)
       }
       closeForm()
     } catch (e) {
@@ -70,7 +66,7 @@ export function GroupsScreen({
   async function removePlan(id: string) {
     setRemovingId(id)
     try {
-      await deletePlan(passcode(), id)
+      await deletePlan(id)
       if (editingPlan?.id === id) closeForm()
     } catch {
       // surfaced via the shared `error` from usePlans on next refresh
@@ -90,7 +86,7 @@ export function GroupsScreen({
 
       {!isApiConfigured && (
         <div className="rounded-2xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          Shared planning isn't set up yet — add <code>VITE_API_URL</code> (see{' '}
+          Shared planning isn't set up yet, add <code>VITE_API_URL</code> (see{' '}
           <code>.env.example</code>) to connect a sports-training-api deployment.
         </div>
       )}
@@ -151,7 +147,7 @@ export function GroupsScreen({
                   removePlan(nextTraining.id)
                 }}
               >
-                {removingId === nextTraining.id ? '…' : 'Remove'}
+                {removingId === nextTraining.id ? '...' : 'Remove'}
               </Button>
             </div>
           </Card>
@@ -228,7 +224,7 @@ export function GroupsScreen({
                       removePlan(p.id)
                     }}
                   >
-                    {removingId === p.id ? '…' : 'Remove'}
+                    {removingId === p.id ? '...' : 'Remove'}
                   </Button>
                 </div>
               </Card>

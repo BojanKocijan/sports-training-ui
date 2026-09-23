@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { useClub } from "../hooks/useClub";
 import type { ApiGroup } from "../hooks/useGroups";
+import type { AccountRole } from "../hooks/useTrainerAccess";
 import { GroupMenu } from "./GroupMenu";
+import { InviteTrainerDialog } from "./InviteTrainerDialog";
 import { PrivacyPolicyScreen } from "./PrivacyPolicyScreen";
 import { ThemeToggle } from "./ThemeToggle";
+import { TierCatalogDialog } from "./TierCatalogDialog";
 import { TrainerAccessMenu } from "./TrainerAccessMenu";
 import { Button } from "./ui/button";
 
@@ -21,9 +24,10 @@ function clubInitials(name: string) {
 export function ClubHeader({
   groupSwitcher,
   trainerAccess,
+  onAdminHome,
 }: {
   /** Omit pre-unlock — LockScreen has its own group picker for a different purpose (choosing
-   * which group's passcode to enter). */
+   * which group to enter). */
   groupSwitcher?: {
     groups: ApiGroup[];
     groupId: string;
@@ -34,13 +38,21 @@ export function ClubHeader({
   trainerAccess?: {
     kind: "trainer" | "parent";
     lock: () => void;
+    canInvite?: boolean;
+    inviteTrainer?: (email: string) => Promise<void>;
+    isSuperadmin?: boolean;
+    inviteOwner?: (email: string) => Promise<void>;
+    accountRole?: AccountRole | null;
   };
+  onAdminHome?: () => void;
 }) {
   const club = useClub();
   const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null);
   // Reachable both before and after unlocking a group — a privacy notice shouldn't require a
-  // trainer passcode to read.
+  // trainer account to read.
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [tiersOpen, setTiersOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const showLogo = Boolean(club.logoUrl) && failedLogoUrl !== club.logoUrl;
 
@@ -66,6 +78,11 @@ export function ClubHeader({
           <span className="truncate text-xs font-bold uppercase tracking-wide text-muted-foreground">
             {club.name}
           </span>
+          {club.tier === "free" && !trainerAccess?.isSuperadmin && (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              FREE
+            </span>
+          )}
         </div>
         {groupSwitcher && (
           <GroupMenu
@@ -76,6 +93,26 @@ export function ClubHeader({
         )}
       </div>
       <div className="flex shrink-0 items-center gap-3">
+        {!trainerAccess?.isSuperadmin && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setTiersOpen(true)}
+            className="px-0 py-0 text-[11px] text-muted-foreground underline-offset-2 hover:bg-transparent hover:underline"
+          >
+            Packages
+          </Button>
+        )}
+
+        {trainerAccess?.isSuperadmin && onAdminHome && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onAdminHome}
+          >
+            Admin dashboard
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="sm"
@@ -84,11 +121,31 @@ export function ClubHeader({
         >
           Privacy
         </Button>
+        {club.tier !== "free" &&
+          !trainerAccess?.isSuperadmin &&
+          trainerAccess?.canInvite &&
+          trainerAccess.inviteTrainer && (
+          <Button variant="ghost" size="sm" onClick={() => setInviteOpen(true)}>
+            Invite trainer
+          </Button>
+        )}
         <ThemeToggle />
         {trainerAccess && (
-          <TrainerAccessMenu kind={trainerAccess.kind} onLock={trainerAccess.lock} />
+          <TrainerAccessMenu
+            kind={trainerAccess.kind}
+            accountRole={trainerAccess.accountRole}
+            onLock={trainerAccess.lock}
+          />
         )}
       </div>
+      <TierCatalogDialog open={tiersOpen} onOpenChange={setTiersOpen} />
+      {club.tier !== "free" && trainerAccess?.inviteTrainer && (
+        <InviteTrainerDialog
+          open={inviteOpen}
+          onOpenChange={setInviteOpen}
+          onInvite={trainerAccess.inviteTrainer}
+        />
+      )}
       {privacyOpen && (
         <PrivacyPolicyScreen onClose={() => setPrivacyOpen(false)} />
       )}

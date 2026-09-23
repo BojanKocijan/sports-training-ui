@@ -1,4 +1,5 @@
 import { LogOut } from 'lucide-react'
+import type { AccountRole } from '../hooks/useTrainerAccess'
 import { Button } from './ui/button'
 import {
   DropdownMenu,
@@ -9,22 +10,36 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 
-const KIND_INFO = {
+const ACCOUNT_ROLE_INFO: Record<AccountRole, { emoji: string; label: string }> = {
+  superadmin: { emoji: '🛡️', label: 'Superadmin' },
+  owner: { emoji: '👑', label: 'Owner' },
+  club_admin: { emoji: '⚙️', label: 'Club admin' },
   trainer: { emoji: '🧑‍🏫', label: 'Trainer' },
-  parent: { emoji: '👨‍👩‍👧', label: 'Parent' },
-} as const
+  co_coach: { emoji: '🤝', label: 'Co-coach' },
+}
 
-/** Top-right avatar + menu replacing the old inline "✓ Trainer access unlocked · Lock" bar
- * repeated on every gated screen (Groups, Players, ParentView) — shown once, globally, in
- * ClubHeader instead, same pattern as GroupMenu. */
+const PARENT_INFO = { emoji: '👨‍👩‍👧', label: 'Parent' }
+const ACCOUNT_FALLBACK = { emoji: '👤', label: 'Account' }
+
+/**
+ * Global account menu shown in ClubHeader.
+ * Parent access is child-scoped and separate from staff account roles.
+ */
 export function TrainerAccessMenu({
   kind,
+  accountRole,
   onLock,
 }: {
   kind: 'trainer' | 'parent'
+  accountRole?: AccountRole | null
   onLock: () => void
 }) {
-  const { emoji, label } = KIND_INFO[kind]
+  const { emoji, label } =
+    kind === 'parent'
+      ? PARENT_INFO
+      : accountRole
+        ? ACCOUNT_ROLE_INFO[accountRole]
+        : ACCOUNT_FALLBACK
 
   return (
     <DropdownMenu>
@@ -42,7 +57,7 @@ export function TrainerAccessMenu({
 
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          {emoji} {label} access
+          {emoji} {label}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={onLock}>

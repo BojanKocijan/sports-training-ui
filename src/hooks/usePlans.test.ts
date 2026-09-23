@@ -80,7 +80,6 @@ describe('usePlans', () => {
 
     await act(async () => {
       await result.current.createPlan(
-        'trainer-code',
         plan.training_date,
         plan.title,
         plan.emoji,
@@ -89,7 +88,6 @@ describe('usePlans', () => {
     })
 
     expect(mocks.post).toHaveBeenCalledWith('/plans', {
-      passcode: 'trainer-code',
       groupId: 'u8',
       trainingDate: plan.training_date,
       title: plan.title,
@@ -127,7 +125,6 @@ describe('usePlans', () => {
 
     await act(async () => {
       await result.current.updatePlan(
-        'trainer-code',
         plan.id,
         updatedPlan.training_date,
         updatedPlan.title,
@@ -137,7 +134,6 @@ describe('usePlans', () => {
     })
 
     expect(mocks.put).toHaveBeenCalledWith(`/plans/${plan.id}`, {
-      passcode: 'trainer-code',
       trainingDate: updatedPlan.training_date,
       title: updatedPlan.title,
       emoji: updatedPlan.emoji,
@@ -165,12 +161,10 @@ describe('usePlans', () => {
     })
 
     await act(async () => {
-      await result.current.deletePlan('trainer-code', plan.id)
+      await result.current.deletePlan( plan.id)
     })
 
-    expect(mocks.delete).toHaveBeenCalledWith(`/plans/${plan.id}`, {
-      passcode: 'trainer-code',
-    })
+    expect(mocks.delete).toHaveBeenCalledWith(`/plans/${plan.id}`)
 
     await waitFor(() => {
       expect(result.current.plans).toEqual([])

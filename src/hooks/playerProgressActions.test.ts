@@ -29,7 +29,6 @@ describe('player progress actions', () => {
     postMock.mockResolvedValueOnce(undefined)
 
     await ratePlayerProgress(
-      'trainer-code',
       'player-1',
       'plan-u8-1',
       'dribbling',
@@ -38,7 +37,6 @@ describe('player progress actions', () => {
 
     expect(postMock).toHaveBeenCalledTimes(1)
     expect(postMock).toHaveBeenCalledWith('/players/player-1/progress', {
-      passcode: 'trainer-code',
       planId: 'plan-u8-1',
       categoryId: 'dribbling',
       rating: 3,
@@ -50,11 +48,10 @@ describe('player progress actions', () => {
       parentCode: 'PARENT-123',
     })
 
-    const code = await fetchParentCode('trainer code & symbols', 'player-1')
+    const code = await fetchParentCode('player-1')
 
     expect(code).toBe('PARENT-123')
     expect(postMock).toHaveBeenCalledWith('/players/player-1/parent-code/read', {
-      passcode: 'trainer code & symbols',
     })
     expect(api.get).not.toHaveBeenCalled()
     expect(postMock.mock.calls.some(([path]) => path.includes('passcode='))).toBe(false)
@@ -66,7 +63,7 @@ describe('player progress actions', () => {
     })
 
     await expect(
-      fetchParentCode('trainer-code', 'player-1'),
+      fetchParentCode('player-1'),
     ).resolves.toBeNull()
   })
 
@@ -75,21 +72,18 @@ describe('player progress actions', () => {
       parentCode: 'PARENT-456',
     })
 
-    const code = await issueParentCode('trainer-code', 'player-1')
+    const code = await issueParentCode('player-1')
 
     expect(code).toBe('PARENT-456')
     expect(postMock).toHaveBeenCalledWith('/players/player-1/parent-code', {
-      passcode: 'trainer-code',
     })
   })
 
   it('revokes a parent code', async () => {
     deleteMock.mockResolvedValueOnce(undefined)
 
-    await revokeParentCode('trainer-code', 'player-1')
+    await revokeParentCode('player-1')
 
-    expect(deleteMock).toHaveBeenCalledWith('/players/player-1/parent-code', {
-      passcode: 'trainer-code',
-    })
+    expect(deleteMock).toHaveBeenCalledWith('/players/player-1/parent-code')
   })
 })

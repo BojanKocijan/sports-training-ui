@@ -114,7 +114,7 @@ export function PlanTrainingWizard({
             </div>
             {date && takenDateSet.has(date) && (
               <p className="mt-2 text-xs font-semibold text-red-600">
-                {groupLabel} already has a training on this date — pick another day.
+                {groupLabel} already has a training on this date, pick another day.
               </p>
             )}
             <p className="mt-2 flex items-center gap-1.5 text-xs text-neutral-400">
@@ -216,7 +216,7 @@ export function PlanTrainingWizard({
               disabled={saving}
               onClick={() => onSave(date, [...selected])}
             >
-              {saving ? 'Saving…' : mode === 'edit' ? 'Save changes' : 'Save training'}
+              {saving ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Save training'}
             </Button>
           )}
         </div>

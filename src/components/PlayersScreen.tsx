@@ -1,12 +1,11 @@
+import { useClub } from '../hooks/useClub'
 import type { Player, usePlayers } from '../hooks/usePlayers'
-import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { GroupProgressSummary } from './GroupProgressSummary'
 import { PlayersSection } from './PlayersSection'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 
 export function PlayersScreen({
   groupId,
-  trainerAccess,
   players,
   loading,
   error,
@@ -14,7 +13,6 @@ export function PlayersScreen({
   onViewPlayer,
 }: {
   groupId: string
-  trainerAccess: ReturnType<typeof useTrainerAccess>
   players: Player[]
   loading: boolean
   error: string | null
@@ -23,15 +21,20 @@ export function PlayersScreen({
 }) {
   // Always unlocked here — the app-level gate in App.tsx (see LockScreen) never renders this
   // screen otherwise. Logging out is handled globally, via the ClubHeader trainer-access menu.
-  const { passcode } = trainerAccess
+  const club = useClub()
 
   return (
     <div className="mx-auto max-w-md px-4 pb-28 pt-4 md:max-w-3xl lg:max-w-5xl">
       <header className="mb-4">
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">Players</h1>
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          The kids in this group — nickname only, no real names — and how their training's going.
+          The kids in this group, nickname only, no real names, and how their training's going.
         </p>
+        {club.tier === 'free' && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            FREE supports 6 players across the club. Existing players stay; adding more is blocked while above the limit.
+          </p>
+        )}
       </header>
 
       <Tabs defaultValue="stats">
@@ -42,7 +45,6 @@ export function PlayersScreen({
 
         <TabsContent value="stats">
           <PlayersSection
-            passcode={passcode}
             groupId={groupId}
             players={players}
             loading={loading}

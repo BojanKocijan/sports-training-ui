@@ -32,11 +32,8 @@ export function SessionScreen({
   onBuildPlan: () => void
 }) {
   const { planTitle, planEmoji, planExercises, totalMinutes } = activePlan
-  const { unlocked, passcode } = trainerAccess
-  const { elapsedSeconds, running, controlError, start, pause, reset, jumpTo } = useSessionClock(
-    groupId,
-    passcode,
-  )
+  const { unlocked } = trainerAccess
+  const { elapsedSeconds, running, controlError, start, pause, reset, jumpTo } = useSessionClock(groupId)
   const { rate, stats } = useRatings(groupId)
   const { enter: enterFullscreen, exit: exitFullscreen } = useFullscreen()
   const totalSeconds = totalMinutes * 60
@@ -92,7 +89,7 @@ export function SessionScreen({
     const next = timeline[finishedIndex + 1]?.exercise
     notify(
       next ? `Time's up: ${finished.title}` : 'Session complete! 🏆',
-      next ? `Next: ${next.emoji} ${next.title}` : 'Great job, coaches — time for high-fives.',
+      next ? `Next: ${next.emoji} ${next.title}` : 'Great job, coaches, time for high-fives.',
     )
   }, [elapsedSeconds, running, timeline])
 
@@ -154,8 +151,8 @@ export function SessionScreen({
         </div>
         <p className="mt-1.5 text-[11px] font-semibold text-neutral-400 dark:text-neutral-500">
           {unlocked
-            ? '🔓 Synced live — controls here apply to every trainer'
-            : '🔒 Viewing live — unlock trainer access on Groups to control'}
+            ? '🔓 Synced live, controls here apply to every trainer'
+            : '🔒 Viewing live, unlock trainer access on Groups to control'}
         </p>
         {controlError && <p className="mt-1 text-xs font-semibold text-red-600">{controlError}</p>}
       </header>
@@ -181,7 +178,6 @@ export function SessionScreen({
             groupId={groupId}
             planId={planId}
             categories={sessionCategories}
-            passcode={trainerAccess.passcode}
           />
         )}
 

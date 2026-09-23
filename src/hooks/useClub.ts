@@ -5,6 +5,7 @@ export interface Club {
   name: string
   /** Path under `public/`, relative to the app's base URL (no leading slash) — see ClubHeader. */
   logoUrl: string | null
+  tier: 'free' | null
 }
 
 /**
@@ -15,11 +16,12 @@ export interface Club {
  * No sport here — a club can run several sport sections (see the `groups`/`group_templates`
  * tables via useGroups), so sport is a property of the active group, not the club.
  */
-const FALLBACK_CLUB: Club = { name: 'Basketball App', logoUrl: null }
+const FALLBACK_CLUB: Club = { name: 'Basketball App', logoUrl: null, tier: null }
 
 interface ClubRecord {
   name: string
   logo_url: string | null
+  tier: 'free' | null
 }
 
 export function useClub() {
@@ -33,7 +35,7 @@ export function useClub() {
       .then((data) => {
         const first = data[0]
         if (cancelled || !first) return
-        setClub({ name: first.name, logoUrl: first.logo_url })
+        setClub({ name: first.name, logoUrl: first.logo_url, tier: first.tier })
       })
       .catch(() => {
         // keep the fallback club on error

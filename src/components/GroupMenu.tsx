@@ -11,7 +11,7 @@ import {
 /** Top-left dropdown for switching the active group — replaces what used to be a row of chips
  * repeated inline on both the Players and Groups/Training-planner screens. Shown once, globally,
  * in ClubHeader instead. Only relevant once unlocked (see App.tsx) — pre-unlock, LockScreen has
- * its own group picker for a different purpose (choosing which group's passcode to enter).
+ * its own group picker for a different purpose (choosing which group to enter).
  *
  * Built on shadcn/Radix's DropdownMenu (as a RadioGroup, since exactly one group is ever
  * "active") for arrow-key navigation, correct menuitemradio/aria-checked semantics, and

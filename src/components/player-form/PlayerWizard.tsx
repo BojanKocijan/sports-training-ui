@@ -236,7 +236,7 @@ export function PlayerWizard({
               onClick={submit}
               className="flex-1 rounded-full bg-orange-500 px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
             >
-              {saving ? 'Saving…' : 'Add player'}
+              {saving ? 'Saving...' : 'Add player'}
             </button>
           ) : (
             <button
