@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PrivacyPolicyScreen } from './PrivacyPolicyScreen'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { SignInCard } from './SignInCard'
 
@@ -89,6 +90,8 @@ function HeroVideo() {
 /** Public front door: what the app is, who it is for, and the sign-in. Shown whenever nobody is
  * signed in. Sign-in is for trainers; parents get in after a trainer invites their email. */
 export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
+  const [privacyOpen, setPrivacyOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white text-neutral-900 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-950 dark:text-neutral-50">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
@@ -210,7 +213,18 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
 
       <footer className="mx-auto max-w-6xl px-4 py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">
         <p>Trainers, <a href="#sign-in" className="font-semibold text-orange-600 underline">sign in</a> to set up your group and invite parents.</p>
+        <p className="mx-auto mt-4 max-w-xl">
+          Our mascots and the hero video are AI-generated, guided by the experience of an illustrator and a 3D artist.
+        </p>
+        <p className="mt-3">
+          <button type="button" onClick={() => setPrivacyOpen(true)} className="font-semibold underline">
+            Privacy
+          </button>
+          {' · '}
+          <a href="mailto:support@coachcub.app" className="underline">support@coachcub.app</a>
+        </p>
       </footer>
+      {privacyOpen && <PrivacyPolicyScreen onClose={() => setPrivacyOpen(false)} />}
     </div>
   )
 }

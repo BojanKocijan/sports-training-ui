@@ -1,6 +1,6 @@
 # Privacy
 
-Last updated: 2026-09-23
+Last updated: 2026-09-24
 
 CoachCub (coachcub.app) helps volunteer youth-sports trainers run training sessions and share a child's progress with their parent. Here's exactly what data it stores, who processes it, and what it deliberately does not collect.
 
@@ -11,11 +11,11 @@ CoachCub (coachcub.app) helps volunteer youth-sports trainers run training sessi
 | Email address | Club owners, admins, trainers, co-coaches | Supabase Auth | Yes — used only to sign in (a one-time code) and to know who made a change |
 | Player profile — nickname, jersey color, eye color, gender, height, weight, mascot choice | Trainers, about a player in their group | Supabase database | Yes, but not linked to any parent/guardian contact detail |
 | Per-skill training ratings | Trainers, logged after a session | Supabase database | Tied to a player record, not to any adult's identity |
-| Parent access code | Generated per player, given to a parent by the trainer | Supabase database, checked server-side | The code itself isn't personal data; it unlocks a read-only view scoped to one child |
+| Parent email address | Trainers, when they link a parent to a child (the parent then confirms it) | Supabase database and Supabase Auth | Yes — used only to send the invitation and sign-in codes, and to show that parent their own child's progress |
 | Exercise library (drills, steps, cues) | — | Bundled in the app's code | No — static content |
 | "Kids liked it?" ratings, last-picked group, setup checklist | The person using a device | `localStorage`, on that device only | No — device-local, never transmitted |
 
-**Parents do not provide an email address today.** A parent's only credential is a one-time code from their child's trainer, which unlocks a read-only view of that child's own schedule and progress — nothing else, and no way to see other children or edit anything. **This is expected to change**: parent sign-in by email is a planned feature. If and when that ships, this document and the in-app notice will be updated first, before any parent email is collected.
+**Parents now sign in with an email address.** A trainer enters a parent's email on their child's profile; the parent gets an invitation email, confirms it, and then signs in with a one-time code. That unlocks a read-only view of that child's own schedule and progress, and nothing else. The earlier one-time parent codes have been retired. This document was updated after parent email sign-in shipped, not before as we had said it would be; it is corrected here.
 
 ## Who processes this data
 
@@ -32,7 +32,11 @@ Staff sign in with their email address via a one-time sign-in code (no password 
 
 ## Parent access
 
-A trainer generates a code for a specific player and shares it with that child's parent directly (not sent by the app). The code unlocks a read-only view scoped to that one child: their schedule and their own progress. It cannot be used to see any other child, join a trainer account, or change anything.
+A trainer links a parent's email address to a specific player. The parent must confirm the email (via the invitation) and sign in with a one-time code sent to it. Access is read-only and scoped to the children linked to that email: their schedule and their own progress. It cannot be used to see any other child, join a trainer account, or change anything. A trainer can unlink a parent at any time, which ends that access. Trainers and platform admins can see which parent emails are linked to which child.
+
+## Artwork
+
+The mascots and the landing-page video are AI-generated, guided by the experience of an illustrator and a 3D artist.
 
 ## localStorage
 
@@ -47,8 +51,8 @@ All shared data (accounts, player records, ratings) lives in a Supabase (Postgre
 
 ## Your rights
 
-You can ask to access, export, or delete the personal data associated with your account (or, for a parent, ask the trainer to do this on your behalf, since the app doesn't hold a parent contact detail to reach you directly). Email **support@coachcub.app**.
+You can ask to access, export, or delete the personal data associated with your account (for a parent, that includes the email address linked to your child; your trainer can also unlink it). Email **support@coachcub.app**.
 
 ## If this changes
 
-Before the app starts collecting parent email addresses, processing payments, or adding any other new category of personal data, this document will be updated first, along with a proper lawful basis and (once the app is offered commercially at scale) a data processing agreement with each processor and a lawyer-reviewed policy.
+Before the app starts processing payments, or adding any other new category of personal data, this document will be updated first, along with a proper lawful basis and (once the app is offered commercially at scale) a data processing agreement with each processor and a lawyer-reviewed policy.

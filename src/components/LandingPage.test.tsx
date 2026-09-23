@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { LandingPage } from './LandingPage'
@@ -48,7 +49,13 @@ describe('LandingPage', () => {
 
   it('discloses that the characters are AI-generated with illustrator and 3D artist input', () => {
     render(<LandingPage trainerAccess={access} />)
-    expect(screen.getByText(/AI-generated, guided by the experience of an illustrator and a 3D artist/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/AI-generated, guided by the experience of an illustrator and a 3D artist/i).length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('opens the privacy notice from the footer, even when signed out', async () => {
+    render(<LandingPage trainerAccess={access} />)
+    await userEvent.click(screen.getByRole('button', { name: /^privacy$/i }))
+    expect(screen.getByText(/sign in with an email address too/i)).toBeInTheDocument()
   })
 
   it('shows all eight mascots', () => {
