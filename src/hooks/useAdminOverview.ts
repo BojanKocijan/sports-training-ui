@@ -26,6 +26,8 @@ export interface AdminOverview {
     staffCount: number
     ownerCount: number
     primaryGroupId: string | null
+    /** Optional so a slightly older API deploy still renders. */
+    groups?: { id: string; name: string; playerCount: number }[]
   }[]
 
   access: {
@@ -49,6 +51,7 @@ export interface AdminOverview {
     childName: string
     groupId: string | null
     groupName: string | null
+    clubId?: string | null
     status: 'active' | 'invited'
     createdAt: string
     lastSignInAt: string | null
