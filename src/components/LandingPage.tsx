@@ -174,7 +174,6 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
 
       <footer className="mx-auto max-w-6xl px-4 py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">
         <p>Trainers, <a href="#sign-in" className="font-semibold text-orange-600 underline">sign in</a> to set up your group and invite parents.</p>
-        <p className="mt-1">Free accounts for new clubs are coming soon.</p>
       </footer>
     </div>
   )
