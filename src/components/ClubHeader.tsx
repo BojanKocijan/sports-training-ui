@@ -93,7 +93,8 @@ export function ClubHeader({
         )}
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        {!trainerAccess?.isSuperadmin && (
+        {/* List of packages */}
+        {/* {!trainerAccess?.isSuperadmin && (
           <Button
             variant="ghost"
             size="sm"
@@ -102,7 +103,7 @@ export function ClubHeader({
           >
             Packages
           </Button>
-        )}
+        )} */}
 
         {trainerAccess?.isSuperadmin && onAdminHome && (
           <Button
