@@ -11,6 +11,7 @@ import { AddOwnerDialog } from './AddOwnerDialog'
 import { ThemeToggle } from './ThemeToggle'
 import { TrainerAccessMenu } from './TrainerAccessMenu'
 import { Button } from './ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 
 function roleLabel(role: string) {
   if (role === 'club_admin') return 'Club admin'
@@ -301,222 +302,172 @@ export function SuperAdminDashboard({
             <section>
               <div className="mb-3">
                 <h2 className="text-lg font-bold text-foreground">
-                  Account access
+                  People
                 </h2>
 
                 <p className="text-sm text-muted-foreground">
-                  Named staff accounts with access to club workspaces.
+                  Everyone with access: platform admins, trainers and parents.
                 </p>
               </div>
 
-              <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-                <table className="w-full min-w-[900px] text-left text-sm">
-                  <thead className="border-b border-border bg-muted/50">
-                    <tr>
-                      <th className="px-4 py-3 font-semibold">
-                        Email
-                      </th>
-                      <th className="px-4 py-3 font-semibold">
-                        Role
-                      </th>
-                      <th className="px-4 py-3 font-semibold">
-                        Workspace
-                      </th>
-                      <th className="px-4 py-3 font-semibold">
-                        Scope
-                      </th>
-                      <th className="px-4 py-3 font-semibold">
-                        Status
-                      </th>
-                      <th className="px-4 py-3 font-semibold">
-                        Added
-                      </th>
-                      <th className="px-4 py-3 font-semibold">
-                        Last sign in
-                      </th>
-                    </tr>
-                  </thead>
+              <Tabs defaultValue="admins">
+                <TabsList>
+                  <TabsTrigger value="admins">
+                    Admins ({overview.platformAdmins.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="trainers">
+                    Trainers ({overview.access.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="parents">
+                    Parents ({overview.parents.length})
+                  </TabsTrigger>
+                </TabsList>
 
-                  <tbody>
-                    {overview.access.map(
-                      (entry) => (
-                        <tr
-                          key={`${entry.userId}-${entry.clubId}-${entry.groupId ?? 'club'}`}
-                          className="border-b border-border last:border-b-0"
-                        >
-                          <td className="px-4 py-3 font-medium">
-                            {entry.email ||
-                              'Unknown email'}
-                          </td>
-
-                          <td className="px-4 py-3">
-                            {roleLabel(
-                              entry.role,
-                            )}
-                          </td>
-
-                          <td className="px-4 py-3">
-                            {entry.workspace}
-                          </td>
-
-                          <td className="px-4 py-3">
-                            {entry.groupName ??
-                              'All groups'}
-                          </td>
-
-                          <td className="px-4 py-3">
-                            <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">
-                              {statusLabel(
-                                entry.status,
-                              )}
-                            </span>
-                          </td>
-
-                          <td className="px-4 py-3 text-muted-foreground">
-                            {dateLabel(
-                              entry.createdAt,
-                            )}
-                          </td>
-
-                          <td className="px-4 py-3 text-muted-foreground">
-                            {dateLabel(
-                              entry.lastSignInAt,
-                            )}
-                          </td>
+                <TabsContent value="admins">
+                  <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+                    <table className="w-full min-w-[500px] text-left text-sm">
+                      <thead className="border-b border-border bg-muted/50">
+                        <tr>
+                          <th className="px-4 py-3 font-semibold">Email</th>
+                          <th className="px-4 py-3 font-semibold">Access</th>
+                          <th className="px-4 py-3 font-semibold">Added</th>
+                          <th className="px-4 py-3 font-semibold">Last sign in</th>
                         </tr>
-                      ),
-                    )}
+                      </thead>
 
-                    {overview.access.length ===
-                      0 && (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="px-4 py-8 text-center text-muted-foreground"
-                        >
-                          No staff accounts assigned yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+                      <tbody>
+                        {overview.platformAdmins.map((admin) => (
+                          <tr
+                            key={admin.userId}
+                            className="border-b border-border last:border-b-0"
+                          >
+                            <td className="px-4 py-3 font-medium">
+                              {admin.email || 'Unknown email'}
+                            </td>
+                            <td className="px-4 py-3">Platform-wide</td>
+                            <td className="px-4 py-3 text-muted-foreground">
+                              {dateLabel(admin.createdAt)}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">
+                              {dateLabel(admin.lastSignInAt)}
+                            </td>
+                          </tr>
+                        ))}
 
-            <section>
-              <div className="mb-3">
-                <h2 className="text-lg font-bold text-foreground">
-                  Parents
-                </h2>
+                        {overview.platformAdmins.length === 0 && (
+                          <tr>
+                            <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                              No platform admins.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </TabsContent>
 
-                <p className="text-sm text-muted-foreground">
-                  Parent emails and the child each one is linked to.
-                </p>
-              </div>
+                <TabsContent value="trainers">
+                  <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+                    <table className="w-full min-w-[900px] text-left text-sm">
+                      <thead className="border-b border-border bg-muted/50">
+                        <tr>
+                          <th className="px-4 py-3 font-semibold">Email</th>
+                          <th className="px-4 py-3 font-semibold">Role</th>
+                          <th className="px-4 py-3 font-semibold">Workspace</th>
+                          <th className="px-4 py-3 font-semibold">Groups</th>
+                          <th className="px-4 py-3 font-semibold">Status</th>
+                          <th className="px-4 py-3 font-semibold">Added</th>
+                          <th className="px-4 py-3 font-semibold">Last sign in</th>
+                        </tr>
+                      </thead>
 
-              <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-                <table className="w-full min-w-[700px] text-left text-sm">
-                  <thead className="border-b border-border bg-muted/50">
-                    <tr>
-                      <th className="px-4 py-3 font-semibold">Email</th>
-                      <th className="px-4 py-3 font-semibold">Child</th>
-                      <th className="px-4 py-3 font-semibold">Group</th>
-                      <th className="px-4 py-3 font-semibold">Status</th>
-                      <th className="px-4 py-3 font-semibold">Invited</th>
-                      <th className="px-4 py-3 font-semibold">Last sign in</th>
-                    </tr>
-                  </thead>
+                      <tbody>
+                        {overview.access.map((entry) => (
+                          <tr
+                            key={`${entry.userId}-${entry.clubId}-${entry.groupId ?? 'club'}`}
+                            className="border-b border-border last:border-b-0"
+                          >
+                            <td className="px-4 py-3 font-medium">
+                              {entry.email || 'Unknown email'}
+                            </td>
+                            <td className="px-4 py-3">{roleLabel(entry.role)}</td>
+                            <td className="px-4 py-3">{entry.workspace}</td>
+                            <td className="px-4 py-3">{entry.groupName ?? 'All groups'}</td>
+                            <td className="px-4 py-3">
+                              <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">
+                                {statusLabel(entry.status)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">
+                              {dateLabel(entry.createdAt)}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">
+                              {dateLabel(entry.lastSignInAt)}
+                            </td>
+                          </tr>
+                        ))}
 
-                  <tbody>
-                    {overview.parents.map((parent) => (
-                      <tr
-                        key={parent.linkId}
-                        className="border-b border-border last:border-b-0"
-                      >
-                        <td className="px-4 py-3 font-medium">{parent.email}</td>
-                        <td className="px-4 py-3">{parent.childName}</td>
-                        <td className="px-4 py-3">{parent.groupName ?? '—'}</td>
-                        <td className="px-4 py-3">
-                          <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">
-                            {parent.status === 'active' ? 'Confirmed' : 'Invited'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {dateLabel(parent.createdAt)}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {dateLabel(parent.lastSignInAt)}
-                        </td>
-                      </tr>
-                    ))}
+                        {overview.access.length === 0 && (
+                          <tr>
+                            <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                              No staff accounts assigned yet.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </TabsContent>
 
-                    {overview.parents.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="px-4 py-8 text-center text-muted-foreground"
-                        >
-                          No parents linked to a child yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+                <TabsContent value="parents">
+                  <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+                    <table className="w-full min-w-[700px] text-left text-sm">
+                      <thead className="border-b border-border bg-muted/50">
+                        <tr>
+                          <th className="px-4 py-3 font-semibold">Email</th>
+                          <th className="px-4 py-3 font-semibold">Child</th>
+                          <th className="px-4 py-3 font-semibold">Group</th>
+                          <th className="px-4 py-3 font-semibold">Status</th>
+                          <th className="px-4 py-3 font-semibold">Invited</th>
+                          <th className="px-4 py-3 font-semibold">Last sign in</th>
+                        </tr>
+                      </thead>
 
-            <section>
-              <div className="mb-3">
-                <h2 className="text-lg font-bold text-foreground">
-                  Platform admins
-                </h2>
+                      <tbody>
+                        {overview.parents.map((parent) => (
+                          <tr
+                            key={parent.linkId}
+                            className="border-b border-border last:border-b-0"
+                          >
+                            <td className="px-4 py-3 font-medium">{parent.email}</td>
+                            <td className="px-4 py-3">{parent.childName}</td>
+                            <td className="px-4 py-3">{parent.groupName ?? '—'}</td>
+                            <td className="px-4 py-3">
+                              <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">
+                                {parent.status === 'active' ? 'Confirmed' : 'Invited'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">
+                              {dateLabel(parent.createdAt)}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">
+                              {dateLabel(parent.lastSignInAt)}
+                            </td>
+                          </tr>
+                        ))}
 
-                <p className="text-sm text-muted-foreground">
-                  Accounts with platform-wide access.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-border bg-card">
-                {overview.platformAdmins.map(
-                  (admin) => (
-                    <div
-                      key={admin.userId}
-                      className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 last:border-b-0"
-                    >
-                      <div className="flex items-center gap-3">
-                        <ShieldCheck className="h-5 w-5 text-primary" />
-
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {admin.email ||
-                              'Unknown email'}
-                          </p>
-
-                          <p className="text-xs text-muted-foreground">
-                            Platform-wide access
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">
-                          Added{' '}
-                          {dateLabel(
-                            admin.createdAt,
-                          )}
-                        </p>
-
-                        <p className="text-xs text-muted-foreground">
-                          Last sign in{' '}
-                          {dateLabel(
-                            admin.lastSignInAt,
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  ),
-                )}
-              </div>
+                        {overview.parents.length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                              No parents linked to a child yet.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </section>
           </>
         )}
