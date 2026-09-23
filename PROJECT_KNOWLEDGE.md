@@ -233,6 +233,7 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 - [ ] #34 — Add harder U10 exercises beyond warm-ups, align levels across all categories.
 - [ ] #26 — Roster: reassign a player to another group (promotion flow) — touches the same nav area as the descoping work above.
 - [ ] #14 — Session tab: show who's controlling the shared clock when two trainers are both unlocked.
+- [ ] #125 — New mascot animals planned after lion/shark: black panther, tiger, crocodile, dinosaur, goat. Original-size art starting to arrive under `public/images/basketball/u8 u10/<Animal>/Original size/` (panther, tiger in place as of 2026-09-23); still needs the Web-size webp conversion + jersey/eye overlay tracing per animal before any of them are wired into `JerseyGraphic.tsx`'s `FALLBACK_DYNAMIC_AVATAR`.
 
 ---
 
