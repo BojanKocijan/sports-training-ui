@@ -1,8 +1,9 @@
-import { SpotlightPlayerEditor, type PlayerWizardResult } from './player-form/SpotlightPlayerEditor'
+import { CreatePlayerWizard, type PlayerWizardResult } from './player-form/CreatePlayerWizard'
 
-/** Adds a new player to the current group via the spotlight avatar editor (#106) — no group
- * picker, since "add player" is always scoped to the group you're already viewing (see
- * EditPlayerForm for moving an existing player between groups). */
+/** Adds a new player to the current group via the step-by-step wizard (animal -> gender ->
+ * jersey -> eyes -> name, see CreatePlayerWizard) -- no group picker, since "add player" is
+ * always scoped to the group you're already viewing (see SpotlightPlayerEditor for moving an
+ * existing player between groups). */
 export function CreatePlayerForm({
   groupId,
   saving,
@@ -17,7 +18,7 @@ export function CreatePlayerForm({
   onSave: (result: PlayerWizardResult) => void
 }) {
   return (
-    <SpotlightPlayerEditor
+    <CreatePlayerWizard
       groupId={groupId}
       saving={saving}
       saveError={saveError}

@@ -88,7 +88,7 @@ export const MASCOTS_3D: Record<string, Mascot3DConfig> = {
 }
 
 /** Colour multiplied into the masked jersey pixels. Matches the Tailwind swatches the still
- * image's picker shows (JerseyColorPicker). The jersey art is white with black trim, so
+ * image's own jersey-color tiles show. The jersey art is white with black trim, so
  * multiplying recolours the fabric and leaves the trim black. Black is a near-black so the
  * shading does not vanish entirely. */
 export const JERSEY_TINTS: Record<JerseyColor, string> = {
@@ -106,11 +106,11 @@ export const JERSEY_TINTS: Record<JerseyColor, string> = {
  * image (JerseyGraphic's FALLBACK_COLOR). */
 export const DEFAULT_JERSEY_TINT = '#ffffff'
 
-/** Iris colour for each eye choice: the same swatches the still image uses (EyeColorPicker and
- * the leon-baby-eyes-*.svg / shark-baby-eyes-*.svg masks). The still art multiplies them over a
- * grey iris, so "brown" (#FF6F09) multiplied by mid-grey comes out as a rich brown; Mascot3DScene
- * does the same multiply, so the two views match. No eye colour chosen leaves the authored dark
- * eyes. Shared across mascots -- only the per-mascot iris tone table (above) differs. */
+/** Iris colour for each eye choice: the same swatches the still image uses (its own eye-color
+ * tiles and the leon-baby-eyes-*.svg / shark-baby-eyes-*.svg masks). The still art multiplies
+ * them over a grey iris, so "brown" (#FF6F09) multiplied by mid-grey comes out as a rich brown;
+ * Mascot3DScene does the same multiply, so the two views match. No eye colour chosen leaves the
+ * authored dark eyes. Shared across mascots -- only the per-mascot iris tone table (above) differs. */
 export const EYE_TINTS: Record<EyeColor, string> = {
   blue: '#0598ec',
   green: '#3ce566',

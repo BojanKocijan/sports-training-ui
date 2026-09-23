@@ -14,8 +14,8 @@ import { usePlayerProgress, type PlayerCategoryStat } from '../hooks/usePlayerPr
 import type { TrainingPlan } from '../hooks/usePlans'
 import { groupSkillCategories, useSkillCategories } from '../hooks/useSkillCategories'
 import { formatDate, toLocalIso } from '../utils/format'
-import { EditPlayerForm } from './EditPlayerForm'
 import { PlayerPreviewCard } from './player-form/PlayerPreviewCard'
+import { SpotlightPlayerEditor } from './player-form/SpotlightPlayerEditor'
 import { SportLoader } from './SportLoader'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
@@ -58,7 +58,7 @@ export function PlayerDetailScreen({
    * after a successful edit, so this view's own `player` prop (and the "has a code" badge)
    * reflect the change without a manual reopen. */
   onRosterChange: () => void
-  /** Edit now happens in place, right here — Edit switches this view into EditPlayerForm
+  /** Edit now happens in place, right here — Edit switches this view into SpotlightPlayerEditor
    * instead of closing the screen and jumping back to the roster grid (see #68 follow-up:
    * editing used to visibly swap screens, which read as a bug). Remove still lives only here,
    * not on every roster card — one tap on a jersey shouldn't put a delete button in reach by
@@ -300,7 +300,7 @@ export function PlayerDetailScreen({
       <main className="flex-1 overflow-y-auto">
       <div className="animate-in zoom-in-95 slide-in-from-bottom-4 mx-auto w-full max-w-md space-y-4 px-4 py-4 duration-300 md:max-w-lg">
         {editing ? (
-          <EditPlayerForm
+          <SpotlightPlayerEditor
             player={player}
             groups={groups}
             saving={saving}
