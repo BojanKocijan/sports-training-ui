@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { usePlans } from '../hooks/usePlans'
 import { usePlayerProgress } from '../hooks/usePlayerProgress'
@@ -34,6 +35,12 @@ vi.mock('../hooks/useCategories', () => ({
 
 vi.mock('../hooks/usePlans', () => ({
   usePlans: vi.fn(),
+}))
+
+vi.mock('./player-form/PlayerPreviewCard', () => ({
+  PlayerPreviewCard: ({ nickname }: { nickname: string }) => (
+    <div data-testid="mascot">{nickname} mascot</div>
+  ),
 }))
 
 vi.mock('./GroupProgressSummary', () => ({
@@ -128,7 +135,7 @@ describe('ParentView', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('shows read-only progress and upcoming training data', () => {
+  it('shows the mascot first, then stats and trainings on their own tabs', async () => {
     progressMock.mockReturnValue({
       byCategory: [
         {
@@ -177,7 +184,13 @@ describe('ParentView', () => {
       />,
     )
 
-    expect(screen.getByText(/upcoming trainings/i)).toBeInTheDocument()
+    expect(screen.getByTestId('mascot')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('tab', { name: /stats/i }))
+    expect(screen.getByText(/2\.5/)).toBeInTheDocument()
     expect(screen.getByTestId('group-progress')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('tab', { name: /trainings/i }))
+    expect(screen.getByText(/upcoming trainings/i)).toBeInTheDocument()
   })
 })

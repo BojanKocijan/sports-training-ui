@@ -1,9 +1,21 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, apiBaseUrl } from '../lib/apiClient'
 import { currentSession, saveSession, signOut, type AccountSession } from '../lib/accountSession'
+import type { EyeColor, Gender, JerseyColor } from './usePlayers'
 import { clearParentCredential, saveParentCredential } from '../lib/parentSession'
 
-export interface ParentPlayer { id: string; nickname: string }
+/** Appearance fields are optional: parent sessions saved before the API returned them only carry
+ * id + nickname, and the parent view falls back to the default mascot for those. */
+export interface ParentPlayer {
+  id: string
+  nickname: string
+  group_id?: string
+  jersey_number?: number | null
+  jersey_color?: JerseyColor | null
+  eye_color?: EyeColor | null
+  gender?: Gender | null
+  mascot_id?: string | null
+}
 export type AccountRole = 'superadmin' | 'owner' | 'club_admin' | 'trainer' | 'co_coach'
 type AccessKind = 'trainer' | 'parent'
 type ParentAccess = { code: string; player: ParentPlayer }
