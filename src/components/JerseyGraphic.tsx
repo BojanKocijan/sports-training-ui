@@ -111,6 +111,11 @@ const DEFAULT_GENDER: NonNullable<MascotAvatar['gender']> = 'boy'
 const EYE_HIGHLIGHTS_URL = `${ASSET_BASE}/leon-baby-eyes-highlights.svg`
 
 const SHARK_ASSET_BASE = '/images/basketball/u8%20u10/Shark/Web%20size'
+const PANTHER_ASSET_BASE = '/images/basketball/u8%20u10/Panther/Web%20size'
+const TIGER_ASSET_BASE = '/images/basketball/u8%20u10/Tiger/Web%20size'
+const DINOSAUR_ASSET_BASE = '/images/basketball/u8%20u10/Dinosaur/Web%20size'
+const GOAT_ASSET_BASE = '/images/basketball/u8%20u10/Goat/Web%20size'
+const CROCODILE_ASSET_BASE = '/images/basketball/u8%20u10/Crocodile/Web%20size'
 
 type DynamicArt = Pick<
   MascotAvatar,
@@ -156,6 +161,22 @@ function sharkArt(gender: 'boy' | 'girl', eyesLayout: AvatarLayoutBox): DynamicA
   }
 }
 
+// #125: black panther, tiger, dinosaur, goat, crocodile -- same pose-1 template as the lion and
+// shark (identical jersey/shorts/shoes position, confirmed by eye), so only the eye layout
+// varies per animal/gender, same shape as sharkArt. Eye boxes came from
+// scripts/mascot2d/generate_eye_masks.py (a best-effort automated trace, not hand-measured like
+// the lion's/shark's own boxes) -- see that script's own doc comment before touching these.
+function animalArt(assetBase: string, slug: string, gender: 'boy' | 'girl', eyesLayout: AvatarLayoutBox): DynamicArt {
+  return {
+    ...POSE_1_LAYOUT,
+    image_url: `${assetBase}/${slug}-baby-${gender}.webp`,
+    jersey_mask_url: `${assetBase}/${slug}-baby-jersey-{color}.svg`,
+    eyes_mask_url: `${assetBase}/${slug}-baby-eyes-${gender}-{color}.svg`,
+    eyes_highlights_url: `${assetBase}/${slug}-baby-eyes-${gender}-highlights.svg`,
+    eyes_layout: eyesLayout,
+  }
+}
+
 // Mirrors the mascot_avatars 'baby' stage seed exactly -- used only when no groupId/apiMatch is
 // available (e.g. the live preview in CreatePlayerForm/EditPlayerForm), so that path never
 // depends on the retired per-color leon-{color}.webp files. Keyed by mascot id so choosing the
@@ -168,6 +189,29 @@ const FALLBACK_DYNAMIC_AVATAR: Record<string, Record<NonNullable<MascotAvatar['g
     // The girl's eyes sit lower (left eye ~19px, right ~8px) than the boy's, so she needs her own
     // box and a mask with the right eye re-offset -- measured from her highlight positions.
     girl: sharkArt('girl', { left: 0.36096, top: 0.24893, width: 0.29768, height: 0.10841 }),
+  },
+  panther: {
+    boy: animalArt(PANTHER_ASSET_BASE, 'panther', 'boy', { left: 0.28877, top: 0.15175, width: 0.46346, height: 0.2179 }),
+    girl: animalArt(PANTHER_ASSET_BASE, 'panther', 'girl', { left: 0.28574, top: 0.17521, width: 0.45882, height: 0.21234 }),
+  },
+  tiger: {
+    boy: animalArt(TIGER_ASSET_BASE, 'tiger', 'boy', { left: 0.29055, top: 0.15175, width: 0.46346, height: 0.2179 }),
+    girl: animalArt(TIGER_ASSET_BASE, 'tiger', 'girl', { left: 0.22099, top: 0.15934, width: 0.56426, height: 0.2077 }),
+  },
+  dinosaur: {
+    boy: animalArt(DINOSAUR_ASSET_BASE, 'dino', 'boy', { left: 0.18329, top: 0.18559, width: 0.58975, height: 0.19658 }),
+    girl: animalArt(DINOSAUR_ASSET_BASE, 'dino', 'girl', { left: 0.28396, top: 0.15278, width: 0.45882, height: 0.21512 }),
+  },
+  goat: {
+    boy: animalArt(GOAT_ASSET_BASE, 'goat', 'boy', { left: 0.29813, top: 0.18666, width: 0.4287, height: 0.16876 }),
+    girl: animalArt(GOAT_ASSET_BASE, 'goat', 'girl', { left: 0.2832, top: 0.19711, width: 0.45766, height: 0.1771 }),
+  },
+  crocodile: {
+    // Her head sits higher/tilted differently than every other mascot's shared framing --
+    // generate_eye_masks.py needed a custom --search-box for this one gender, unlike any other
+    // animal/gender pair so far.
+    boy: animalArt(CROCODILE_ASSET_BASE, 'crocodile', 'boy', { left: 0.318, top: 0.05378, width: 0.47273, height: 0.22625 }),
+    girl: animalArt(CROCODILE_ASSET_BASE, 'crocodile', 'girl', { left: 0.32286, top: 0.10235, width: 0.46925, height: 0.21327 }),
   },
 }
 
