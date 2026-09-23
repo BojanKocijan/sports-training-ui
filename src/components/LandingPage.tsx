@@ -49,9 +49,8 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white text-neutral-900 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-950 dark:text-neutral-50">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-        <a href="#top" className="flex items-center gap-2 text-xl font-extrabold tracking-tight">
-          <span aria-hidden className="grid h-8 w-8 place-items-center rounded-full bg-orange-500 text-base">🏀</span>
-          CoachCub
+        <a href="#top" aria-label="CoachCub home" className="rounded-xl dark:bg-white dark:px-2 dark:py-1">
+          <img src="/logos/coachcub-logo.webp" alt="CoachCub" width={1844} height={403} className="h-9 w-auto md:h-11" />
         </a>
         <a href="#sign-in" className="rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600">
           Trainer sign in
@@ -174,7 +173,6 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
 
       <footer className="mx-auto max-w-6xl px-4 py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">
         <p>Trainers, <a href="#sign-in" className="font-semibold text-orange-600 underline">sign in</a> to set up your group and invite parents.</p>
-        <p className="mt-1">Free accounts for new clubs are coming soon.</p>
       </footer>
     </div>
   )
