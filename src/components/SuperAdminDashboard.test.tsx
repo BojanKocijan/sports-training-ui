@@ -56,6 +56,20 @@ vi.mock('../hooks/useAdminOverview', () => ({
         },
       ],
 
+      parents: [
+        {
+          linkId: 'link-1',
+          email: 'mum@example.com',
+          childId: 'player-1',
+          childName: 'Lion',
+          groupId: 'u8',
+          groupName: 'U8',
+          status: 'active',
+          createdAt: '2026-09-23T07:00:00.000Z',
+          lastSignInAt: '2026-09-23T09:00:00.000Z',
+        },
+      ],
+
       platformAdmins: [
         {
           userId: 'admin-1',
@@ -97,6 +111,10 @@ describe('SuperAdminDashboard', () => {
     expect(
       screen.getByText('superadmin@example.com'),
     ).toBeInTheDocument()
+
+    expect(screen.getByText('mum@example.com')).toBeInTheDocument()
+    expect(screen.getByText('Lion')).toBeInTheDocument()
+    expect(screen.getByText('Confirmed')).toBeInTheDocument()
 
     // Free is the workspace tier here, not the Superadmin tier.
     expect(

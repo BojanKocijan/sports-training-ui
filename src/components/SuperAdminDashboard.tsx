@@ -406,6 +406,68 @@ export function SuperAdminDashboard({
             <section>
               <div className="mb-3">
                 <h2 className="text-lg font-bold text-foreground">
+                  Parents
+                </h2>
+
+                <p className="text-sm text-muted-foreground">
+                  Parent emails and the child each one is linked to.
+                </p>
+              </div>
+
+              <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+                <table className="w-full min-w-[700px] text-left text-sm">
+                  <thead className="border-b border-border bg-muted/50">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Email</th>
+                      <th className="px-4 py-3 font-semibold">Child</th>
+                      <th className="px-4 py-3 font-semibold">Group</th>
+                      <th className="px-4 py-3 font-semibold">Status</th>
+                      <th className="px-4 py-3 font-semibold">Invited</th>
+                      <th className="px-4 py-3 font-semibold">Last sign in</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {overview.parents.map((parent) => (
+                      <tr
+                        key={parent.linkId}
+                        className="border-b border-border last:border-b-0"
+                      >
+                        <td className="px-4 py-3 font-medium">{parent.email}</td>
+                        <td className="px-4 py-3">{parent.childName}</td>
+                        <td className="px-4 py-3">{parent.groupName ?? '—'}</td>
+                        <td className="px-4 py-3">
+                          <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">
+                            {parent.status === 'active' ? 'Confirmed' : 'Invited'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {dateLabel(parent.createdAt)}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {dateLabel(parent.lastSignInAt)}
+                        </td>
+                      </tr>
+                    ))}
+
+                    {overview.parents.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-4 py-8 text-center text-muted-foreground"
+                        >
+                          No parents linked to a child yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section>
+              <div className="mb-3">
+                <h2 className="text-lg font-bold text-foreground">
                   Platform admins
                 </h2>
 
