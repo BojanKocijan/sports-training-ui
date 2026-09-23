@@ -27,6 +27,7 @@ export function PlayerPreviewCard({
   jerseyNumber,
   groupId,
   mascotId,
+  hideMeta = false,
 }: {
   nickname: string
   jerseyColor: JerseyColor | null
@@ -37,11 +38,16 @@ export function PlayerPreviewCard({
    * comment on why that falls back to the shared stopgap art instead of erroring. */
   groupId?: string
   mascotId?: string | null
+  /** Hides the still/3D toggle, ball/backdrop controls, and the name caption -- for callers that
+   * scale this card up and/or already show the name elsewhere (SpotlightPlayerEditor's stage),
+   * where that chrome would either duplicate what's on screen or visually overflow its own
+   * bounding box. Still image only while hidden -- #106 follow-up to bring 3D into the stage. */
+  hideMeta?: boolean
 }) {
   const [view, setView] = useState<PreviewView>('still')
   const [showBall, setShowBall] = useState(true)
   const [backdrop, setBackdrop] = useState<BackdropId>(DEFAULT_BACKDROP)
-  const has3d = (mascotId ?? DEFAULT_MASCOT_ID) in MASCOTS_3D
+  const has3d = !hideMeta && (mascotId ?? DEFAULT_MASCOT_ID) in MASCOTS_3D
   const activeView: PreviewView = has3d ? view : 'still'
 
   const still = (
@@ -127,9 +133,11 @@ export function PlayerPreviewCard({
       ) : (
         still
       )}
-      <p className="max-w-full truncate text-xs font-semibold text-neutral-500 dark:text-neutral-400">
-        {nickname.trim() || 'New player'}
-      </p>
+      {!hideMeta && (
+        <p className="max-w-full truncate text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+          {nickname.trim() || 'New player'}
+        </p>
+      )}
     </div>
   )
 }
