@@ -179,6 +179,9 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
         <section className="mx-auto max-w-6xl px-4 py-10">
           <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">Meet the team</h2>
           <p className="mt-1 text-neutral-600 dark:text-neutral-300">Every child picks the mascot that feels like them.</p>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            Our mascots and the hero video are AI-generated, guided by the experience of an illustrator and a 3D artist.
+          </p>
           <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {MASCOTS.map((m) => (
               <li key={m.name} className={`flex flex-col items-center rounded-3xl p-3 ${m.tint}`}>

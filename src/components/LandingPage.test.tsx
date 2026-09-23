@@ -46,6 +46,11 @@ describe('LandingPage', () => {
     vi.unstubAllGlobals()
   })
 
+  it('discloses that the characters are AI-generated with illustrator and 3D artist input', () => {
+    render(<LandingPage trainerAccess={access} />)
+    expect(screen.getByText(/AI-generated, guided by the experience of an illustrator and a 3D artist/i)).toBeInTheDocument()
+  })
+
   it('shows all eight mascots', () => {
     render(<LandingPage trainerAccess={access} />)
     expect(screen.getAllByAltText(/the mascot$/i)).toHaveLength(8)
