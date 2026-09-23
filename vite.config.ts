@@ -12,4 +12,15 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      // poc-3d.html: throwaway WebGL/mascot POC (sports-training-api#68), not linked from the
+      // app's nav — kept as a second Vite entry so it still builds/serves like a real page
+      // instead of living entirely outside the toolchain.
+      input: {
+        main: path.resolve(import.meta.dirname, 'index.html'),
+        poc3d: path.resolve(import.meta.dirname, 'poc-3d.html'),
+      },
+    },
+  },
 })
