@@ -42,6 +42,18 @@ export interface AdminOverview {
     lastSignInAt: string | null
   }[]
 
+  parents: {
+    linkId: string
+    email: string
+    childId: string | null
+    childName: string
+    groupId: string | null
+    groupName: string | null
+    status: 'active' | 'invited'
+    createdAt: string
+    lastSignInAt: string | null
+  }[]
+
   platformAdmins: {
     userId: string
     email: string
