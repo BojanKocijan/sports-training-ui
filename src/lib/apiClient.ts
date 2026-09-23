@@ -1,5 +1,4 @@
 import { validSession } from './accountSession'
-import { parentCredentialForRead } from './parentSession'
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.trim().replace(/\/+$/, '')
 
 /** True once VITE_API_URL is set (see .env.example) — points at a sports-training-api deployment. */
@@ -10,16 +9,13 @@ export class ApiRequestError extends Error {}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!API_URL) throw new ApiRequestError('API is not configured')
-  const publicAuth = ['/auth/request-code', '/auth/verify-code', '/auth/refresh', '/auth/verify-parent-code'].includes(path)
+  const publicAuth = ['/auth/request-code', '/auth/verify-code', '/auth/refresh'].includes(path)
   const session = publicAuth ? null : await validSession(API_URL)
-  const parent = !init?.method || init.method === 'GET' ? parentCredentialForRead(path) : null
-  const useParent = Boolean(parent && !session?.groupIds.includes(parent.groupId))
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
     headers: {
       ...(init?.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-      ...(session && !useParent ? { Authorization: `Bearer ${session.accessToken}` } : {}),
-      ...(useParent && parent ? { 'X-Parent-Code': parent.code } : {}),
+      ...(session ? { Authorization: `Bearer ${session.accessToken}` } : {}),
       ...init?.headers,
     },
   })

@@ -1,34 +1,35 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, apiBaseUrl } from '../lib/apiClient'
 import { currentSession, saveSession, signOut, type AccountSession } from '../lib/accountSession'
-import { clearParentCredential, saveParentCredential } from '../lib/parentSession'
+import type { EyeColor, Gender, JerseyColor } from './usePlayers'
 
-export interface ParentPlayer { id: string; nickname: string }
+/** A child shown in the parent view. Appearance fields are optional so the view can also render
+ * from just id + nickname, falling back to the default mascot. */
+export interface ParentPlayer {
+  id: string
+  nickname: string
+  group_id?: string
+  jersey_number?: number | null
+  jersey_color?: JerseyColor | null
+  eye_color?: EyeColor | null
+  gender?: Gender | null
+  mascot_id?: string | null
+}
 export type AccountRole = 'superadmin' | 'owner' | 'club_admin' | 'trainer' | 'co_coach'
 type AccessKind = 'trainer' | 'parent'
-type ParentAccess = { code: string; player: ParentPlayer }
 
-const parentKey = (groupId: string) => `sports-training-parent-${groupId}`
-function storedParent(groupId: string): ParentAccess | null {
-  try {
-    return JSON.parse(localStorage.getItem(parentKey(groupId)) ?? 'null') as ParentAccess | null
-  } catch {
-    return null
-  }
-}
-
-// Old group trainer codes are no longer credentials. Clear saved values from upgraded devices.
+// Old trainer passcodes and parent codes are no longer credentials. Clear saved values from
+// upgraded devices.
 function clearLegacyCodes() {
   try {
     for (const key of Object.keys(localStorage)) {
-      if (key.startsWith('u8-trainer-')) localStorage.removeItem(key)
+      if (key.startsWith('u8-trainer-') || key.startsWith('sports-training-parent-')) localStorage.removeItem(key)
     }
   } catch { /* Storage may be disabled. */ }
 }
 
 export function useTrainerAccess(groupId: string) {
   const [account, setAccount] = useState<AccountSession | null>(() => currentSession())
-  const [parentOverrides, setParentOverrides] = useState<Record<string, ParentAccess | null>>({})
   const [checking, setChecking] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -44,8 +45,8 @@ export function useTrainerAccess(groupId: string) {
       void fetch(`${apiBaseUrl}/auth/me`, { headers: { Authorization: `Bearer ${invitedAccess}` } })
         .then(async (response) => {
           if (!response.ok) throw new Error('Invitation session is not authorized')
-          const me = await response.json() as { user: AccountSession['user']; groupIds: string[]; memberships: AccountSession['memberships'] }
-          if (!me.user.superadmin && me.groupIds.length === 0) throw new Error('No trainer group was assigned')
+          const me = await response.json() as { user: AccountSession['user']; groupIds: string[]; memberships: AccountSession['memberships']; children?: AccountSession['children'] }
+          if (!me.user.superadmin && me.groupIds.length === 0 && !me.children?.length) throw new Error('This email is not linked to a group or a child')
           saveSession({
             accessToken: invitedAccess, refreshToken: invitedRefresh,
             expiresAt: Number(fragment.get('expires_at')) || Math.floor(Date.now() / 1000) + Number(fragment.get('expires_in') || 3600),
@@ -57,8 +58,8 @@ export function useTrainerAccess(groupId: string) {
     const onChange = () => setAccount(currentSession())
     window.addEventListener('trainer-session-changed', onChange)
     if (currentSession()) {
-      api.get<{ groupIds: string[]; memberships: AccountSession['memberships'] }>('/auth/me')
-        .then(({ groupIds, memberships }) => setAccount((prev) => prev ? { ...prev, groupIds, memberships } : null))
+      api.get<{ groupIds: string[]; memberships: AccountSession['memberships']; children?: AccountSession['children'] }>('/auth/me')
+        .then(({ groupIds, memberships, children }) => setAccount((prev) => prev ? { ...prev, groupIds, memberships, children } : null))
         .catch(() => saveSession(null))
     }
     return () => window.removeEventListener('trainer-session-changed', onChange)
@@ -66,33 +67,16 @@ export function useTrainerAccess(groupId: string) {
 
   useEffect(() => { setError(null) }, [groupId])
 
-  const parent = parentOverrides[groupId] === undefined ? storedParent(groupId) : parentOverrides[groupId]
   const trainer = Boolean(account?.groupIds.includes(groupId))
+  // A parent's account has no group access of its own: it is linked to specific children, who may
+  // sit in different groups, so parent access is not tied to the selected group.
+  const linkedChildren = account?.children ?? []
+  const isParent = Boolean(account && !account.user.superadmin && account.groupIds.length === 0 && linkedChildren.length > 0)
   const state = trainer
-    ? { unlocked: true, kind: 'trainer' as AccessKind, parentPlayer: null }
-    : parent
-      ? { unlocked: true, kind: 'parent' as AccessKind, parentPlayer: parent.player }
-      : { unlocked: false, kind: null, parentPlayer: null }
-
-  const tryUnlock = useCallback(async (code: string, remember: boolean) => {
-    setChecking(true)
-    setError(null)
-    try {
-      const result = await api.post<{ valid: boolean; player?: ParentPlayer }>('/auth/verify-parent-code', { groupId, code })
-      if (!result.valid || !result.player) {
-        setError('Wrong parent code, try again.')
-        return false
-      }
-      const access = { code, player: result.player }
-      saveParentCredential({ groupId, playerId: result.player.id, code }, remember)
-      if (remember) localStorage.setItem(parentKey(groupId), JSON.stringify(access))
-      setParentOverrides((prev) => ({ ...prev, [groupId]: access }))
-      return true
-    } catch {
-      setError('Could not check the parent code.')
-      return false
-    } finally { setChecking(false) }
-  }, [groupId])
+    ? { unlocked: true, kind: 'trainer' as AccessKind }
+    : isParent
+      ? { unlocked: true, kind: 'parent' as AccessKind }
+      : { unlocked: false, kind: null }
 
   const requestLoginCode = useCallback(async (email: string) => {
     setChecking(true)
@@ -124,11 +108,8 @@ export function useTrainerAccess(groupId: string) {
     if (account) {
       setAccount(null)
       void signOut(apiBaseUrl)
-    } else {
-      try { clearParentCredential(groupId) } catch { /* ignore */ }
-      setParentOverrides((prev) => ({ ...prev, [groupId]: null }))
     }
-  }, [account, groupId])
+  }, [account])
 
   const inviteTrainer = useCallback(async (email: string) => {
     await api.post('/auth/invite', { email, groupId, role: 'trainer' })
@@ -168,9 +149,10 @@ export function useTrainerAccess(groupId: string) {
   )))
 
   return {
-    ...state, checking, error, tryUnlock, requestLoginCode, verifyLoginCode,
+    ...state, checking, error, requestLoginCode, verifyLoginCode,
     lock, inviteTrainer, inviteOwner, inviteOwnerForGroup,
     canInvite, isSuperadmin, accountRole,
     groupIds: account?.groupIds ?? [],
+    children: linkedChildren,
   }
 }

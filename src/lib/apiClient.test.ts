@@ -33,21 +33,21 @@ describe('API browser requests', () => {
   })
 
 
-  it('sends a parent code only as a header for the selected child, never in the URL', async () => {
+  it('sends the signed-in account as a bearer header, never in the URL', async () => {
     const fetchMock = vi.fn().mockImplementation(async () => new Response(JSON.stringify([])))
     vi.stubGlobal('fetch', fetchMock)
-    const { saveParentCredential } = await import('./parentSession')
+    const { saveSession } = await import('./accountSession')
     const { api } = await import('./apiClient')
-    saveParentCredential({ groupId: 'u8', playerId: 'child', code: 'ABC234' }, false)
+    saveSession({
+      accessToken: 'jwt', refreshToken: 'refresh', expiresAt: 9999999999,
+      user: { id: 'parent-1', email: 'mum@example.com', superadmin: false },
+      groupIds: [], memberships: [], children: [],
+    })
     await api.get('/players/child/progress')
     expect(fetchMock).toHaveBeenCalledWith('http://localhost:3002/players/child/progress', {
-      headers: { 'X-Parent-Code': 'ABC234' },
+      headers: { Authorization: 'Bearer jwt' },
     })
-    expect(fetchMock.mock.calls[0][0]).not.toContain('ABC234')
-    await api.get('/plans?groupId=u8')
-    expect(fetchMock.mock.calls[1][1].headers).toEqual({ 'X-Parent-Code': 'ABC234' })
-    await api.get('/players/other/progress')
-    expect(fetchMock.mock.calls[2][1].headers).not.toHaveProperty('X-Parent-Code')
+    expect(fetchMock.mock.calls[0][0]).not.toContain('jwt')
   })
 
   it('rejects an empty URL before issuing a request', async () => {

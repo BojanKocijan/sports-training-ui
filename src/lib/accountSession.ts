@@ -1,3 +1,17 @@
+/** A child this account is linked to as a parent (matched on its confirmed email). */
+import type { EyeColor, Gender, JerseyColor } from '../hooks/usePlayers'
+
+export interface LinkedChild {
+  id: string
+  nickname: string
+  group_id: string
+  jersey_number: number | null
+  jersey_color: JerseyColor | null
+  eye_color: EyeColor | null
+  gender: Gender | null
+  mascot_id: string | null
+}
+
 export interface AccountSession {
   accessToken: string
   refreshToken: string
@@ -5,6 +19,8 @@ export interface AccountSession {
   user: { id: string; email: string; superadmin: boolean }
   groupIds: string[]
   memberships: { club_id: string; group_id: string | null; role: string; active: boolean }[]
+  /** Absent on sessions saved before parents could sign in with an email. */
+  children?: LinkedChild[]
 }
 
 const STORAGE_KEY = 'sports-training-account-session'

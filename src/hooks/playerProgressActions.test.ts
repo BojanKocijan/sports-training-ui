@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { api } from '../lib/apiClient'
 import {
-  fetchParentCode,
-  issueParentCode,
+  addParentLink,
+  fetchParentLinks,
   ratePlayerProgress,
-  revokeParentCode,
+  removeParentLink,
 } from './usePlayers'
 
 vi.mock('../lib/apiClient', () => ({
@@ -43,47 +43,27 @@ describe('player progress actions', () => {
     })
   })
 
-  it('fetches the current parent code using trainer credentials', async () => {
-    postMock.mockResolvedValueOnce({
-      parentCode: 'PARENT-123',
-    })
+  it('lists the parent emails linked to a player', async () => {
+    const links = [{ id: 'l1', email: 'mum@example.com', confirmed_at: null, created_at: '2026-09-23T10:00:00Z' }]
+    vi.mocked(api.get).mockResolvedValueOnce(links)
 
-    const code = await fetchParentCode('player-1')
-
-    expect(code).toBe('PARENT-123')
-    expect(postMock).toHaveBeenCalledWith('/players/player-1/parent-code/read', {
-    })
-    expect(api.get).not.toHaveBeenCalled()
-    expect(postMock.mock.calls.some(([path]) => path.includes('passcode='))).toBe(false)
+    expect(await fetchParentLinks('player-1')).toEqual(links)
+    expect(api.get).toHaveBeenCalledWith('/players/player-1/parents')
   })
 
-  it('returns null when the player has no parent code', async () => {
-    postMock.mockResolvedValueOnce({
-      parentCode: null,
-    })
+  it('links a parent email and returns the new link', async () => {
+    const link = { id: 'l1', email: 'mum@example.com', confirmed_at: null, created_at: '2026-09-23T10:00:00Z' }
+    postMock.mockResolvedValueOnce({ link, invited: true })
 
-    await expect(
-      fetchParentCode('player-1'),
-    ).resolves.toBeNull()
+    expect(await addParentLink('player-1', 'mum@example.com')).toEqual(link)
+    expect(postMock).toHaveBeenCalledWith('/players/player-1/parents', { email: 'mum@example.com' })
   })
 
-  it('issues a fresh parent code', async () => {
-    postMock.mockResolvedValueOnce({
-      parentCode: 'PARENT-456',
-    })
-
-    const code = await issueParentCode('player-1')
-
-    expect(code).toBe('PARENT-456')
-    expect(postMock).toHaveBeenCalledWith('/players/player-1/parent-code', {
-    })
-  })
-
-  it('revokes a parent code', async () => {
+  it('unlinks a parent email', async () => {
     deleteMock.mockResolvedValueOnce(undefined)
 
-    await revokeParentCode('player-1')
+    await removeParentLink('player-1', 'l1')
 
-    expect(deleteMock).toHaveBeenCalledWith('/players/player-1/parent-code')
+    expect(deleteMock).toHaveBeenCalledWith('/players/player-1/parents/l1')
   })
 })

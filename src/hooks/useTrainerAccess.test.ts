@@ -46,23 +46,29 @@ describe('useTrainerAccess', () => {
     expect(result.current.error).toBe('Invalid or expired sign-in code')
   })
 
-  it('keeps a parent code separate and scoped to one child/group', async () => {
-    postMock.mockResolvedValueOnce({ valid: true, kind: 'parent', player: { id: 'child', nickname: 'Lion' } })
+  it('signs a parent in by email and unlocks only their linked children, in any group', async () => {
+    const child = { id: 'child', nickname: 'Lion', group_id: 'u10', jersey_number: null, jersey_color: null, eye_color: null, gender: null, mascot_id: 'lion' }
+    const parent: AccountSession = {
+      ...session, user: { ...session.user, email: 'mum@example.com' },
+      groupIds: [], memberships: [], children: [child],
+    }
+    postMock.mockResolvedValueOnce({}).mockResolvedValueOnce(parent)
     const { result, rerender } = renderHook(({ groupId }) => useTrainerAccess(groupId), { initialProps: { groupId: 'u8' } })
-    await act(async () => { expect(await result.current.tryUnlock('ABC234', true)).toBe(true) })
-    expect(postMock).toHaveBeenCalledWith('/auth/verify-parent-code', { groupId: 'u8', code: 'ABC234' })
+    await act(async () => {
+      expect(await result.current.requestLoginCode('mum@example.com')).toBe(true)
+      expect(await result.current.verifyLoginCode('mum@example.com', '123456')).toBe(true)
+    })
+    expect(result.current.unlocked).toBe(true)
     expect(result.current.kind).toBe('parent')
-    expect(result.current.parentPlayer).toEqual({ id: 'child', nickname: 'Lion' })
-    expect(localStorage.getItem('sports-training-parent-u8')).toContain('ABC234')
+    expect(result.current.children).toEqual([child])
     rerender({ groupId: 'u10' })
-    expect(result.current.unlocked).toBe(false)
+    expect(result.current.kind).toBe('parent')
   })
 
-  it('rejects an invalid parent code', async () => {
-    postMock.mockResolvedValueOnce({ valid: false })
-    const { result } = renderHook(() => useTrainerAccess('u8'))
-    await act(async () => { expect(await result.current.tryUnlock('wrong', false)).toBe(false) })
-    expect(result.current.error).toBe('Wrong parent code, try again.')
+  it('clears parent codes left on the device by the old flow', async () => {
+    localStorage.setItem('sports-training-parent-u8', '{"code":"ABC234"}')
+    renderHook(() => useTrainerAccess('u8'))
+    await waitFor(() => expect(localStorage.getItem('sports-training-parent-u8')).toBeNull())
   })
 
   it('removes old saved trainer passcodes from upgraded devices', async () => {
