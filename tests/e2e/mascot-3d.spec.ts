@@ -70,4 +70,48 @@ test.describe('3D mascot preview', () => {
       console.log(`Screenshot saved: ${path}`)
     })
   }
+
+  // #117 -- PlayerDetailScreen now renders PlayerPreviewCard directly (hideCaption, but the
+  // toggle/ball/backdrop controls stay) so a trainer can flip to 3D without entering Edit, and
+  // the 3D view stays look-only: no jersey/eye/gender inputs, just the Edit/Remove/Close header
+  // buttons that were already there in still mode.
+  test('detail screen: 3D toggle is available without entering Edit and stays view-only', async ({ page }) => {
+    await page.route(`${API_URL}/players?groupId=${GROUP_ID}`, (route) =>
+      route.fulfill({
+        json: [
+          {
+            id: 'test-player',
+            group_id: GROUP_ID,
+            nickname: 'Test Player',
+            jersey_number: 7,
+            jersey_color: 'orange',
+            eye_color: 'blue',
+            gender: 'boy',
+            height_cm: null,
+            weight_kg: null,
+            mascot_id: 'lion',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ],
+      }),
+    )
+
+    await unlock(page)
+    await page.getByRole('button', { name: /players/i }).click()
+    await page.getByRole('button', { name: /view test player.?s details/i }).click()
+
+    await page.getByRole('button', { name: '3D model' }).click()
+
+    const canvas = page.locator('[data-testid="mascot-3d"] canvas')
+    await expect(canvas).toBeVisible()
+    await expect(page.getByText('Loading 3D model')).not.toBeVisible({ timeout: 15_000 })
+
+    // No jersey/eye/gender edit inputs leak into the 3D view -- only the ball toggle and backdrop
+    // swatches (which don't change the player's saved data) plus the header's own Edit button.
+    await expect(page.getByRole('group', { name: 'Backdrop' })).toBeVisible()
+    await expect(page.getByLabel('Ball')).toBeVisible()
+    await expect(page.getByRole('textbox')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Edit' })).toBeVisible()
+  })
 })
