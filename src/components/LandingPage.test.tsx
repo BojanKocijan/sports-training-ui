@@ -24,6 +24,11 @@ describe('LandingPage', () => {
     expect(screen.getByText(/more coming soon/i)).toBeInTheDocument()
   })
 
+  it('shows the CoachCub logo', () => {
+    render(<LandingPage trainerAccess={access} />)
+    expect(screen.getByRole('img', { name: 'CoachCub' })).toBeInTheDocument()
+  })
+
   it('shows all eight mascots', () => {
     render(<LandingPage trainerAccess={access} />)
     expect(screen.getAllByAltText(/the mascot$/i)).toHaveLength(8)
