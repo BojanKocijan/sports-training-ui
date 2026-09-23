@@ -3,7 +3,7 @@ import { BottomNav, type Tab } from './components/BottomNav'
 import { ClubHeader } from './components/ClubHeader'
 import { ExercisesScreen } from './components/ExercisesScreen'
 import { GroupsScreen } from './components/GroupsScreen'
-import { LockScreen } from './components/LockScreen'
+import { LandingPage } from './components/LandingPage'
 import { ParentHome } from './components/ParentHome'
 import { PlayerDetailScreen } from './components/PlayerDetailScreen'
 import { PlayersScreen } from './components/PlayersScreen'
@@ -158,10 +158,7 @@ function App() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
       {!trainerAccess.unlocked ? (
-        <>
-          <ClubHeader />
-          <LockScreen groupId={groupId} onSelectGroup={setGroupId} trainerAccess={trainerAccess} />
-        </>
+        <LandingPage trainerAccess={trainerAccess} />
       ) : trainerAccess.kind === 'parent' ? (
         <>
           <ClubHeader trainerAccess={{ kind: 'parent', lock: trainerAccess.lock }} />
