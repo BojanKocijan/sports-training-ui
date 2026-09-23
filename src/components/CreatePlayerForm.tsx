@@ -1,5 +1,4 @@
-import type { PlayerWizardResult } from './player-form/PlayerWizard'
-import { SpotlightPlayerEditor } from './player-form/SpotlightPlayerEditor'
+import { SpotlightPlayerEditor, type PlayerWizardResult } from './player-form/SpotlightPlayerEditor'
 
 /** Adds a new player to the current group via the spotlight avatar editor (#106) — no group
  * picker, since "add player" is always scoped to the group you're already viewing (see

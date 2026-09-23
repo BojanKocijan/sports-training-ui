@@ -10,10 +10,21 @@ import {
 } from '../../hooks/usePlayers'
 import { useMascots } from '../../hooks/useMascots'
 import { toIntOrNull } from './parseNumber'
-import type { PlayerWizardResult } from './PlayerWizard'
 import { PlayerPreviewCard } from './PlayerPreviewCard'
 import { CustomizationDial } from './CustomizationDial'
 import { TileOption } from './TileOption'
+
+export interface PlayerWizardResult {
+  nickname: string
+  jerseyNumber: number | null
+  jerseyColor: JerseyColor | null
+  heightCm: number | null
+  weightKg: number | null
+  mascotId: string
+  eyeColor: EyeColor | null
+  gender: Gender | null
+  groupId: string
+}
 
 // Duplicated from JerseyColorPicker.tsx / EyeColorPicker.tsx (module-private there) so this
 // prototype doesn't touch those files -- extract to a shared module if this ships for real.
@@ -47,13 +58,12 @@ const CATEGORIES: { id: Category; label: string; icon: string }[] = [
 const inputClass =
   'w-full rounded-xl border border-black/10 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-orange-500 dark:border-white/10 dark:bg-neutral-800 dark:text-neutral-50'
 
-/** #106 -- the create-player flow (CreatePlayerForm). Replaces PlayerWizard's linear
+/** #106 -- the create-player flow (CreatePlayerForm). Replaces the old PlayerWizard's linear
  * nickname -> animal -> gender -> jersey -> eyes -> details steps with one screen: the avatar on
  * a "spotlight" stage, an inline-editable name, and a bottom category dial that swaps a big-tile
  * option grid below it -- the pattern from #106's references, in the app's own light/friendly
  * palette rather than their dark game-UI look. Background and ball stay inside PlayerPreviewCard
- * (they're 3D-only and already live there, #100/#110) rather than duplicated into this dial.
- * PlayerWizard.tsx is kept around unused for now, in case this needs to be reverted. */
+ * (they're 3D-only and already live there, #100/#110) rather than duplicated into this dial. */
 export function SpotlightPlayerEditor({
   groupId,
   saving,
