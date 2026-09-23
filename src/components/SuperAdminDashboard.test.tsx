@@ -83,7 +83,7 @@ vi.mock('../hooks/useAdminOverview', () => ({
 }))
 
 describe('SuperAdminDashboard', () => {
-  it('shows platform data and account access', () => {
+  it('shows platform data and account access', async () => {
     render(
       <SuperAdminDashboard
         onOpenTrainingApp={vi.fn()}
@@ -104,14 +104,14 @@ describe('SuperAdminDashboard', () => {
       }),
     ).toBeInTheDocument()
 
-    expect(
-      screen.getByText('owner@example.com'),
-    ).toBeInTheDocument()
+    // People tabs: Admins first, then Trainers, then Parents.
+    expect(screen.getByText('superadmin@example.com')).toBeInTheDocument()
 
-    expect(
-      screen.getByText('superadmin@example.com'),
-    ).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('tab', { name: /trainers/i }))
+    expect(screen.getByText('owner@example.com')).toBeInTheDocument()
+    expect(screen.getByText('All groups')).toBeInTheDocument()
 
+    await userEvent.click(screen.getByRole('tab', { name: /parents/i }))
     expect(screen.getByText('mum@example.com')).toBeInTheDocument()
     expect(screen.getByText('Lion')).toBeInTheDocument()
     expect(screen.getByText('Confirmed')).toBeInTheDocument()
