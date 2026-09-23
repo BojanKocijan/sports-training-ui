@@ -1,4 +1,6 @@
+import { IconBallBasketball, IconClipboardList, IconHeartHandshake, type Icon } from '@tabler/icons-react'
 import { useState } from 'react'
+import { CategoryIcon } from './CategoryIcon'
 import { PrivacyPolicyScreen } from './PrivacyPolicyScreen'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { SignInCard } from './SignInCard'
@@ -17,30 +19,30 @@ const MASCOTS = [
   { name: 'Lioness', src: `${MASCOT_BASE}/Leon/Web%20size/leon-baby-girl.webp`, tint: 'bg-yellow-100 dark:bg-yellow-500/15' },
 ]
 
-const AUDIENCES = [
+const AUDIENCES: { title: string; icon: Icon; text: string }[] = [
   {
     title: 'For kids',
-    emoji: '🏀',
+    icon: IconBallBasketball,
     text: 'Pick your own mascot, give it your jersey colour and number, and watch it grow as your skills do. Every practice earns you something.',
   },
   {
     title: 'For parents',
-    emoji: '👨‍👩‍👧',
+    icon: IconHeartHandshake,
     text: 'See how your child is doing at a glance: their mascot, skill by skill progress and the next trainings. Your trainer invites you by email.',
   },
   {
     title: 'For trainers',
-    emoji: '📋',
+    icon: IconClipboardList,
     text: 'Plan trainings, rate skills in two taps, keep every player’s history, and invite parents to follow along. No spreadsheets.',
   },
 ]
 
 // Fictional demo data only: an example of what a parent sees, not a real player.
 const DEMO_SKILLS = [
-  { label: 'Dribbling', emoji: '⚡', value: 2.6 },
-  { label: 'Shooting', emoji: '🎯', value: 2.1 },
-  { label: 'Passing', emoji: '🤝', value: 2.9 },
-  { label: 'Defense', emoji: '🛡️', value: 1.8 },
+  { id: 'dribbling', label: 'Dribbling', value: 2.6 },
+  { id: 'shooting', label: 'Shooting', value: 2.1 },
+  { id: 'passing', label: 'Passing', value: 2.9 },
+  { id: 'defense', label: 'Defense', value: 1.8 },
 ]
 
 const UPCOMING_SPORTS = ['Football', 'Volleyball', 'Handball']
@@ -137,7 +139,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {AUDIENCES.map((a) => (
               <article key={a.title} className="rounded-3xl border border-black/5 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-neutral-900">
-                <p className="text-3xl" aria-hidden>{a.emoji}</p>
+                <a.icon aria-hidden className="h-9 w-9 text-orange-500" stroke={1.75} />
                 <h3 className="mt-2 text-lg font-bold">{a.title}</h3>
                 <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300">{a.text}</p>
               </article>
@@ -168,7 +170,8 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
                 {DEMO_SKILLS.map((s) => (
                   <div key={s.label} className="flex items-center gap-3">
                     <span className="w-28 shrink-0 text-xs font-semibold text-neutral-600 dark:text-neutral-300">
-                      {s.emoji} {s.label}
+                      <CategoryIcon id={s.id} className="mr-1 h-3.5 w-3.5 align-[-2px]" />
+                      {s.label}
                     </span>
                     <div className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
                       <div className="h-full rounded-full bg-orange-500" style={{ width: `${(s.value / 3) * 100}%` }} />

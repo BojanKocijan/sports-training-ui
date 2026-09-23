@@ -1,5 +1,6 @@
 import { categoryInfo, type CategoryId, useCategories } from '../hooks/useCategories'
 import { Button } from './ui/button'
+import { CategoryIcon } from './CategoryIcon'
 
 /** Big Airbnb-style category tile — icon over label, used for the wizard's "Focus" step. A
  * toggle button, not a `Card` (which renders a plain div) — styled with the same border/shadow
@@ -25,7 +26,7 @@ export function CategoryCard({
           : 'border-border bg-card dark:bg-neutral-900'
       }`}
     >
-      <span className="text-3xl leading-none">{cat.emoji}</span>
+      <CategoryIcon id={cat.id} fallback={cat.emoji} className="h-9 w-9 text-orange-500" />
       <span
         className={`text-sm font-semibold ${
           active ? 'text-orange-700 dark:text-orange-300' : 'text-neutral-700 dark:text-neutral-200'
