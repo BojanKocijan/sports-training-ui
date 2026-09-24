@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
@@ -12,14 +12,12 @@ const access = {
 } as unknown as ReturnType<typeof useTrainerAccess>
 
 describe('LandingPage', () => {
-  it('offers a trainer sign-in and explains how parents get in', () => {
+  it('asks whether the visitor is a trainer or a parent, then shows the email form', () => {
     render(<LandingPage trainerAccess={access} />)
-    expect(screen.getByRole('heading', { name: /^sign in$/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /i'm a trainer/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /i'm a parent/i }))
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument()
-    expect(screen.getByText(/trainers & invited parents/i)).toBeInTheDocument()
-    expect(screen.getByText(/are you a parent\?/i)).toBeInTheDocument()
-    expect(screen.getByText(/parents can't create an account on their own/i)).toBeInTheDocument()
-    expect(screen.getByText(/there is no sign-up here/i)).toBeInTheDocument()
+    expect(screen.getByText(/if it isn't linked yet, we'll help you ask the trainer/i)).toBeInTheDocument()
   })
 
   it('shows basketball as available and more sports as coming soon', () => {

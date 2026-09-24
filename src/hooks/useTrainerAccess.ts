@@ -46,7 +46,8 @@ export function useTrainerAccess(groupId: string) {
         .then(async (response) => {
           if (!response.ok) throw new Error('Invitation session is not authorized')
           const me = await response.json() as { user: AccountSession['user']; groupIds: string[]; memberships: AccountSession['memberships']; children?: AccountSession['children'] }
-          if (!me.user.superadmin && me.groupIds.length === 0 && !me.children?.length) throw new Error('This email is not linked to a group or a child')
+          // No group or child yet is fine: a brand-new sign-up names its workspace next
+          // (see needsWorkspace / createWorkspace).
           saveSession({
             accessToken: invitedAccess, refreshToken: invitedRefresh,
             expiresAt: Number(fragment.get('expires_at')) || Math.floor(Date.now() / 1000) + Number(fragment.get('expires_in') || 3600),
@@ -73,6 +74,10 @@ export function useTrainerAccess(groupId: string) {
   const linkedChildren = account?.children ?? []
   // Independent of trainer access: an account can be both a trainer and a parent.
   const isParent = Boolean(account && !account.user.superadmin && linkedChildren.length > 0)
+  // Signed in (e.g. via the emailed "Sign in instantly" link) but not yet in any workspace.
+  const needsWorkspace = Boolean(
+    account && !account.user.superadmin && account.groupIds.length === 0 && linkedChildren.length === 0,
+  )
   const state = trainer
     ? { unlocked: true, kind: 'trainer' as AccessKind }
     : isParent
@@ -101,6 +106,68 @@ export function useTrainerAccess(groupId: string) {
       return true
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Invalid email code')
+      return false
+    } finally { setChecking(false) }
+  }, [])
+
+  const requestSignupCode = useCallback(async (email: string) => {
+    setChecking(true)
+    setError(null)
+    try {
+      await api.post('/auth/signup/request', { email })
+      return true
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not send sign-up code')
+      return false
+    } finally { setChecking(false) }
+  }, [])
+
+  const verifySignupCode = useCallback(async (email: string, code: string) => {
+    setChecking(true)
+    setError(null)
+    try {
+      const next = await api.post<AccountSession>('/auth/signup/verify', { email, code })
+      saveSession(next)
+      setAccount(next)
+      return true
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Invalid sign-up code')
+      return false
+    } finally { setChecking(false) }
+  }, [])
+
+  // Re-read access, e.g. a parent checking whether their trainer has linked their child yet.
+  const refreshAccount = useCallback(async () => {
+    setChecking(true)
+    setError(null)
+    try {
+      const me = await api.get<Pick<AccountSession, 'groupIds' | 'memberships' | 'children'>>('/auth/me')
+      const current = currentSession()
+      if (current) {
+        const next = { ...current, ...me }
+        saveSession(next)
+        setAccount(next)
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not check your access')
+    } finally { setChecking(false) }
+  }, [])
+
+  const createWorkspace = useCallback(async (workspaceName: string) => {
+    setChecking(true)
+    setError(null)
+    try {
+      await api.post('/auth/workspace', { workspaceName })
+      const me = await api.get<Pick<AccountSession, 'groupIds' | 'memberships' | 'children'>>('/auth/me')
+      const current = currentSession()
+      if (current) {
+        const next = { ...current, ...me }
+        saveSession(next)
+        setAccount(next)
+      }
+      return true
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not create the workspace')
       return false
     } finally { setChecking(false) }
   }, [])
@@ -152,6 +219,8 @@ export function useTrainerAccess(groupId: string) {
 
   return {
     ...state, checking, error, requestLoginCode, verifyLoginCode,
+    needsWorkspace, requestSignupCode, verifySignupCode, createWorkspace, refreshAccount,
+    signedInEmail: account?.user.email ?? '',
     lock, inviteTrainer, inviteOwner, inviteOwnerForGroup,
     canInvite, isSuperadmin, accountRole,
     groupIds: account?.groupIds ?? [],

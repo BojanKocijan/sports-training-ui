@@ -4,6 +4,9 @@ import { CategoryIcon } from './CategoryIcon'
 import { PrivacyPolicyScreen } from './PrivacyPolicyScreen'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { SignInCard } from './SignInCard'
+import { WorkspaceOnboardingCard } from './WorkspaceOnboardingCard'
+import { ParentNoChildCard } from './ParentNoChildCard'
+import { getSignInIntent, setSignInIntent } from '../lib/signInIntent'
 
 const MASCOT_BASE = '/images/basketball/u8%20u10'
 
@@ -91,6 +94,17 @@ function HeroVideo() {
 
 /** Public front door: what the app is, who it is for, and the sign-in. Shown whenever nobody is
  * signed in. Sign-in is for trainers; parents get in after a trainer invites their email. */
+/** Sign-in, or, for a signed-in account with no access yet, the next step for the way they said
+ * they were coming in (trainer: name a workspace; parent: ask the trainer to link their child). */
+function AccessCard({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
+  const [intent, setIntent] = useState(getSignInIntent)
+  if (!trainerAccess.needsWorkspace) return <SignInCard trainerAccess={trainerAccess} />
+  if (intent === 'parent') {
+    return <ParentNoChildCard trainerAccess={trainerAccess} onNotParent={() => { setSignInIntent('trainer'); setIntent('trainer') }} />
+  }
+  return <WorkspaceOnboardingCard trainerAccess={trainerAccess} onNotTrainer={() => { setSignInIntent('parent'); setIntent('parent') }} />
+}
+
 export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
   const [privacyOpen, setPrivacyOpen] = useState(false)
 
@@ -122,7 +136,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
           </div>
 
           <div id="sign-in" className="mx-auto w-full max-w-md scroll-mt-6">
-            <SignInCard trainerAccess={trainerAccess} />
+            <AccessCard trainerAccess={trainerAccess} />
             <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-neutral-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-neutral-200">
               <p className="font-bold text-neutral-900 dark:text-neutral-50">Are you a parent?</p>
               <p className="mt-1">
