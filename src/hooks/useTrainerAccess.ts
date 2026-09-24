@@ -111,8 +111,9 @@ export function useTrainerAccess(groupId: string) {
     }
   }, [account])
 
-  const inviteTrainer = useCallback(async (email: string) => {
-    await api.post('/auth/invite', { email, groupId, role: 'trainer' })
+  const inviteTrainer = useCallback(async (email: string, groupIds?: string[]) => {
+    const body = groupIds && groupIds.length > 0 ? { groupIds } : { groupId }
+    await api.post('/auth/invite', { email, ...body, role: 'trainer' })
   }, [groupId])
 
   const inviteOwnerForGroup = useCallback(async (

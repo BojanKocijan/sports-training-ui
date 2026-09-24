@@ -40,7 +40,7 @@ export function ClubHeader({
     kind: "trainer" | "parent";
     lock: () => void;
     canInvite?: boolean;
-    inviteTrainer?: (email: string) => Promise<void>;
+    inviteTrainer?: (email: string, groupIds?: string[]) => Promise<void>;
     isSuperadmin?: boolean;
     inviteOwner?: (email: string) => Promise<void>;
     accountRole?: AccountRole | null;
@@ -159,6 +159,8 @@ export function ClubHeader({
           open={inviteOpen}
           onOpenChange={setInviteOpen}
           onInvite={trainerAccess.inviteTrainer}
+          groups={groupSwitcher?.groups ?? []}
+          defaultGroupId={groupSwitcher?.groupId}
         />
       )}
       {privacyOpen && (
