@@ -22,7 +22,13 @@ import { formatDate } from './utils/format'
 function App() {
   const [tab, setTab] = useState<Tab>('groups')
   // A trainer whose email is also linked to a child can flip to that child's parent view.
-  const [asParent, setAsParent] = useState(false)
+  const [asParent, setAsParentState] = useState(() => {
+    try { return sessionStorage.getItem('view-as-parent') === '1' } catch { return false }
+  })
+  const setAsParent = (value: boolean) => {
+    setAsParentState(value)
+    try { sessionStorage.setItem('view-as-parent', value ? '1' : '0') } catch { /* Storage may be disabled. */ }
+  }
   const [superadminView, setSuperadminView] =
     useState<'dashboard' | 'training'>('dashboard')
   const activePlan = useActivePlan()
