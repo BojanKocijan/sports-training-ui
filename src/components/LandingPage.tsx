@@ -127,7 +127,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
         <section className="mx-auto grid max-w-6xl items-center gap-8 px-4 pb-12 pt-6 md:grid-cols-2 md:pt-12">
           <div>
             <p className="inline-block rounded-full bg-orange-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
-              For youth basketball trainers
+              For youth sports trainers · Basketball available now
             </p>
             <h1 className="mt-4 text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
               Every practice is a step towards a bigger cub.

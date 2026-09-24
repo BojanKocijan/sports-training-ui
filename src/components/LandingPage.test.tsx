@@ -26,6 +26,11 @@ describe('LandingPage', () => {
     expect(screen.getByText(/one account is both trainer and parent/i)).toBeInTheDocument()
   })
 
+  it('says the audience is youth sports trainers and that only basketball is available now', () => {
+    render(<LandingPage trainerAccess={access} />)
+    expect(screen.getByText('For youth sports trainers · Basketball available now')).toBeInTheDocument()
+  })
+
   it('shows basketball as available and more sports as coming soon', () => {
     render(<LandingPage trainerAccess={access} />)
     expect(screen.getByText(/basketball · available now/i)).toBeInTheDocument()
