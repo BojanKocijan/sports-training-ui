@@ -39,14 +39,14 @@ describe('LandingPage', () => {
     expect(video).not.toBeNull()
     expect(video).toHaveProperty('muted', true)
     expect(video).toHaveProperty('loop', true)
-    expect(video?.getAttribute('poster')).toBe('/videos/mascot-dribble-poster.webp')
+    expect(video?.getAttribute('poster')).toBe('/videos/sports-montage-poster.webp')
   })
 
   it('shows only the poster when the visitor prefers reduced motion', () => {
     vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('reduce'), media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
     const { container } = render(<LandingPage trainerAccess={access} />)
     expect(container.querySelector('video')).toBeNull()
-    expect(screen.getByAltText(/panther mascot dribbling/i)).toBeInTheDocument()
+    expect(screen.getByAltText(/tiger mascot in a sports montage/i)).toBeInTheDocument()
     vi.unstubAllGlobals()
   })
 
