@@ -32,7 +32,7 @@ export function PlayersScreen({
         </p>
         {club.tier === 'free' && (
           <p className="mt-2 text-sm text-muted-foreground">
-            FREE supports 6 players across the club. Existing players stay; adding more is blocked while above the limit.
+            FREE supports {club.playerLimit} players across the club. Existing players stay; adding more is blocked while above the limit.
           </p>
         )}
       </header>

@@ -218,7 +218,7 @@ export function SpotlightPlayerEditor({
 
         <div className="mt-3 flex-1">
           {category === 'animal' && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               {(mascots.length > 0 ? mascots : [{ id: DEFAULT_MASCOT_ID, name: 'Lion' }]).map((m) => (
                 <AnimalCard key={m.id} name={m.name} mascotId={m.id} selected={mascotId === m.id} onClick={() => setMascotId(m.id)} />
               ))}
@@ -226,7 +226,7 @@ export function SpotlightPlayerEditor({
           )}
 
           {category === 'gender' && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               {GENDERS.map((g) => (
                 <TileOption
                   key={g}
@@ -240,7 +240,7 @@ export function SpotlightPlayerEditor({
           )}
 
           {category === 'jersey' && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               {JERSEY_COLORS.map((c) => (
                 <TileOption
                   key={c}
@@ -254,7 +254,7 @@ export function SpotlightPlayerEditor({
           )}
 
           {category === 'eyes' && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               {EYE_COLORS.map((c) => (
                 <TileOption
                   key={c}

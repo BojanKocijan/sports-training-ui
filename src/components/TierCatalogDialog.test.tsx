@@ -13,7 +13,7 @@ describe('planned tier catalog', () => {
       {
         id: 'free', label: 'FREE', priceLabel: '€0', additionalGroupLabel: null,
         monthlyPriceLabel: null, monthlyAdditionalGroupLabel: null, seasonMonths: null,
-        items: ['1 sport', '1 group', '6 players', '1 trainer', 'Full core feature set', 'No expiry'],
+        items: ['1 sport', '1 group', '15 players', '1 trainer', 'Full core feature set', 'No expiry'],
         status: 'available',
       },
       {
@@ -32,7 +32,7 @@ describe('planned tier catalog', () => {
     expect(screen.getByText('€50 / additional group')).toBeInTheDocument()
     expect(screen.getByText('€5.99 / month first group')).toBeInTheDocument()
     expect(screen.getByText('€4.99 / month additional group')).toBeInTheDocument()
-    expect(screen.getByText('6 players')).toBeInTheDocument()
+    expect(screen.getByText('15 players')).toBeInTheDocument()
     expect(screen.getByText(/Paid packages and billing are planned/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /buy|activate|subscribe/i })).not.toBeInTheDocument()
   })

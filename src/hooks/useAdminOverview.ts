@@ -21,6 +21,8 @@ export interface AdminOverview {
     slug: string
     name: string
     tier: string | null
+    /** Player capacity while the workspace is on FREE. */
+    playerLimit?: number
     groupCount: number
     playerCount: number
     staffCount: number
