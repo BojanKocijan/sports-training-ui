@@ -3,6 +3,8 @@ import { Button } from './ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -41,6 +43,11 @@ export function GroupMenu({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" className="min-w-[var(--radix-dropdown-menu-trigger-width)]">
+        {/* Basketball is the only sport available today; other sports are coming later. */}
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+          🏀 Basketball · the only sport for now
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
         <DropdownMenuRadioGroup value={groupId} onValueChange={setGroupId}>
           {groups.map((g) => {
             const comingSoon = g.status === 'coming_soon'
