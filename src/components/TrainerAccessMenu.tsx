@@ -1,4 +1,4 @@
-import { ArrowLeftRight, LogOut } from 'lucide-react'
+import { ArrowLeftRight, LayoutDashboard, LogOut, Shield, UserPlus, UserRound } from 'lucide-react'
 import type { AccountRole } from '../hooks/useTrainerAccess'
 import { Button } from './ui/button'
 import {
@@ -31,6 +31,9 @@ export function TrainerAccessMenu({
   onLock,
   onOpenParentView,
   onSwitchToTrainer,
+  onAdminHome,
+  onInviteTrainer,
+  onOpenPrivacy,
 }: {
   kind: 'trainer' | 'parent'
   accountRole?: AccountRole | null
@@ -39,6 +42,11 @@ export function TrainerAccessMenu({
   onOpenParentView?: () => void
   /** Only in the parent view of an account that is also a trainer. */
   onSwitchToTrainer?: () => void
+  /** Superadmin only: back to the platform admin dashboard. */
+  onAdminHome?: () => void
+  /** Only for accounts allowed to invite trainers. */
+  onInviteTrainer?: () => void
+  onOpenPrivacy?: () => void
 }) {
   const { emoji, label } =
     kind === 'parent'
@@ -52,12 +60,11 @@ export function TrainerAccessMenu({
       <DropdownMenuTrigger asChild>
         <Button
           variant="secondary"
-          size="icon-sm"
+          size="icon"
           shape="pill"
           aria-label={`${label} account menu`}
-          className="text-base"
         >
-          {emoji}
+          <UserRound className="size-5" />
         </Button>
       </DropdownMenuTrigger>
 
@@ -66,6 +73,18 @@ export function TrainerAccessMenu({
           {emoji} {label}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {onAdminHome && (
+          <DropdownMenuItem onClick={onAdminHome}>
+            <LayoutDashboard />
+            Admin dashboard
+          </DropdownMenuItem>
+        )}
+        {onInviteTrainer && (
+          <DropdownMenuItem onClick={onInviteTrainer}>
+            <UserPlus />
+            Invite trainer
+          </DropdownMenuItem>
+        )}
         {onOpenParentView && (
           <DropdownMenuItem onClick={onOpenParentView}>
             <ArrowLeftRight />
@@ -78,6 +97,13 @@ export function TrainerAccessMenu({
             Back to trainer view
           </DropdownMenuItem>
         )}
+        {onOpenPrivacy && (
+          <DropdownMenuItem onClick={onOpenPrivacy}>
+            <Shield />
+            Privacy
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={onLock}>
           <LogOut />
           Log out
