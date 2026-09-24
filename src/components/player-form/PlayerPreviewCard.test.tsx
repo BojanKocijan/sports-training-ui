@@ -48,6 +48,13 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+// The 3D mascot is switched off in the app for now (MASCOT_3D_ENABLED); these tests keep the 3D
+// wiring healthy by turning it on. The default-off behaviour is in PlayerPreviewCard.no3d.test.tsx.
+vi.mock('../../lib/mascot3d', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../lib/mascot3d')>()),
+  MASCOT_3D_ENABLED: true,
+}))
+
 describe('PlayerPreviewCard', () => {
   it('shows the still image by default, with a still/3D toggle for the lion', () => {
     render(<PlayerPreviewCard {...baseProps} mascotId="lion" />)

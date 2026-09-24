@@ -4,6 +4,12 @@ import type { EyeColor, JerseyColor } from '../hooks/usePlayers'
 // need %20, same as JerseyGraphic's ASSET_BASE.
 const BASE = '/images/basketball/u8%20u10/Leon/Original%20size'
 
+/** Master switch for the 3D mascot in the app (the Still image | 3D model toggle, ball and
+ * backdrop controls). Off for now: the 3D work (real background, stance picker, #114) is parked and
+ * comes back later, so players only see the still mascot. Flip to true to bring it all back;
+ * nothing else needs to change (the 3D code and the hidden /poc-3d.html page are untouched). */
+export const MASCOT_3D_ENABLED = false
+
 /** Everything Mascot3DScene needs to render one mascot: its assets, where the ball attaches, and
  * the histogram-matched iris tone table for its own eye texture (see docs/3d-mascot.md §5, §6).
  * Bone transforms, ball offset/scale, camera distance and the iris table are all measured per

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import { DEFAULT_MASCOT_ID, type EyeColor, type Gender, type JerseyColor } from '../../hooks/usePlayers'
-import { BACKDROPS, DEFAULT_BACKDROP, MASCOTS_3D, type BackdropId } from '../../lib/mascot3d'
+import { BACKDROPS, DEFAULT_BACKDROP, MASCOT_3D_ENABLED, MASCOTS_3D, type BackdropId } from '../../lib/mascot3d'
 import { ErrorBoundary } from '../ErrorBoundary'
 import { JerseyGraphic } from '../JerseyGraphic'
 import { Skeleton } from '../ui/skeleton'
@@ -55,7 +55,7 @@ export function PlayerPreviewCard({
   const [view, setView] = useState<PreviewView>('still')
   const [showBall, setShowBall] = useState(true)
   const [backdrop, setBackdrop] = useState<BackdropId>(DEFAULT_BACKDROP)
-  const has3d = !hideMeta && (mascotId ?? DEFAULT_MASCOT_ID) in MASCOTS_3D
+  const has3d = MASCOT_3D_ENABLED && !hideMeta && (mascotId ?? DEFAULT_MASCOT_ID) in MASCOTS_3D
   const activeView: PreviewView = has3d ? view : 'still'
 
   const still = (

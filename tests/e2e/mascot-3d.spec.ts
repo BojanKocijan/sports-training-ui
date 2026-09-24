@@ -10,7 +10,9 @@ import { API_URL, GROUP_ID, mockGate, unlock } from './support/mockApi'
  * `testInfo.outputPath` so `npx playwright test mascot-3d` prints exactly where to find it. Not
  * a golden-image diff (three.js output is not pixel-stable across GPUs/drivers), so this only
  * asserts the canvas rendered — read the screenshot yourself. */
-test.describe('3D mascot preview', () => {
+// Skipped while the 3D mascot is switched off in the app (MASCOT_3D_ENABLED in lib/mascot3d.ts, #114
+// parked). Re-enable together with the flag.
+test.describe.skip('3D mascot preview', () => {
   test.beforeEach(async ({ page }) => {
     await mockGate(page)
     await page.route(`${API_URL}/mascots`, (route) =>
