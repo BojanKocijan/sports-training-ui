@@ -55,8 +55,14 @@ describe('player progress actions', () => {
     const link = { id: 'l1', email: 'mum@example.com', confirmed_at: null, created_at: '2026-09-23T10:00:00Z' }
     postMock.mockResolvedValueOnce({ link, invited: true })
 
-    expect(await addParentLink('player-1', 'mum@example.com')).toEqual(link)
+    expect(await addParentLink('player-1', 'mum@example.com')).toEqual({ link, emailed: true })
     expect(postMock).toHaveBeenCalledWith('/players/player-1/parents', { email: 'mum@example.com' })
+  })
+
+  it('reports when the link was saved but no email could be sent', async () => {
+    const link = { id: 'l1', email: 'mum@example.com', confirmed_at: null, created_at: '2026-09-23T10:00:00Z' }
+    postMock.mockResolvedValueOnce({ link, invited: false })
+    expect(await addParentLink('player-1', 'mum@example.com')).toEqual({ link, emailed: false })
   })
 
   it('unlinks a parent email', async () => {

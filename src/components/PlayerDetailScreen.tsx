@@ -103,6 +103,7 @@ export function PlayerDetailScreen({
   const [parentLinks, setParentLinks] = useState<ParentLink[]>([])
   const [parentLinksLoading, setParentLinksLoading] = useState(true)
   const [parentPending, setParentPending] = useState(false)
+  const [parentNotice, setParentNotice] = useState<string | null>(null)
   const [parentError, setParentError] = useState<string | null>(null)
   const [parentEmail, setParentEmail] = useState('')
 
@@ -129,10 +130,17 @@ export function PlayerDetailScreen({
     event.preventDefault()
     setParentPending(true)
     setParentError(null)
+    setParentNotice(null)
     try {
-      const link = await addParentLink(player.id, parentEmail.trim())
+      const address = parentEmail.trim()
+      const { link, emailed } = await addParentLink(player.id, address)
       if (link) setParentLinks((prev) => (prev.some((l) => l.id === link.id) ? prev : [...prev, link]))
       setParentEmail('')
+      setParentNotice(
+        emailed
+          ? `Email sent to ${address}. They sign in with that email to see ${player.nickname}'s progress.`
+          : `Linked ${address}, but no email could be sent. Ask them to sign in with that email at the CoachCub page (I'm a parent).`,
+      )
     } catch (e) {
       setParentError(e instanceof Error ? e.message : 'Could not link this email')
     } finally {
@@ -504,8 +512,8 @@ export function PlayerDetailScreen({
                 <SportLoader />
               ) : parentLinks.length === 0 ? (
                 <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                  No parent linked yet. Add an email and {player.nickname}'s parent gets an invite to
-                  confirm, then can sign in to see their progress.
+                  No parent linked yet. Add an email and {player.nickname}'s parent gets an email, then can
+                  sign in with it to see their progress.
                 </p>
               ) : (
                 <ul className="mt-1 space-y-1.5">
@@ -514,7 +522,7 @@ export function PlayerDetailScreen({
                       <span className="min-w-0 truncate text-neutral-800 dark:text-neutral-100">{link.email}</span>
                       <span className="flex shrink-0 items-center gap-2">
                         <span className={`text-xs font-semibold ${link.confirmed_at ? 'text-green-600' : 'text-neutral-400'}`}>
-                          {link.confirmed_at ? 'Confirmed' : 'Invite sent'}
+                          {link.confirmed_at ? 'Confirmed' : 'Waiting to sign in'}
                         </span>
                         <Button variant="destructive" size="sm" disabled={parentPending}
                           onClick={() => handleRemoveParent(link.id)}>
@@ -526,6 +534,7 @@ export function PlayerDetailScreen({
                 </ul>
               )}
               {parentError && <p className="mt-1 text-xs font-semibold text-red-600">{parentError}</p>}
+              {parentNotice && <p role="status" className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-300">{parentNotice}</p>}
               <form className="mt-2 flex gap-2" onSubmit={handleAddParent}>
                 <input
                   type="email"
