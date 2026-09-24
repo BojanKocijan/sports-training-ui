@@ -95,9 +95,9 @@ export function ParentView({
                   const cat = categoryInfo(categories, c.categoryId)
                   const isSub = parentOf(c.categoryId) !== null
                   return (
-                    <div key={c.categoryId} className={isSub ? 'pl-4' : ''}>
+                    <div key={c.categoryId}>
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className={`min-w-0 truncate text-neutral-700 dark:text-neutral-200 ${isSub ? 'text-xs font-medium' : 'text-sm font-semibold'}`}>
+                        <span className={`min-w-0 truncate ${isSub ? 'text-xs font-medium text-neutral-500 dark:text-neutral-400' : 'text-sm font-semibold text-neutral-800 dark:text-neutral-100'}`}>
                           <CategoryIcon id={c.categoryId} fallback={cat.emoji} className="mr-1 h-3.5 w-3.5 align-[-2px]" />
                           {labelFor(c.categoryId)}
                         </span>
