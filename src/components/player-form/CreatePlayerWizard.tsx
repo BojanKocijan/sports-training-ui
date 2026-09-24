@@ -107,7 +107,7 @@ export function CreatePlayerWizard({
   const [mascotId, setMascotId] = useState(DEFAULT_MASCOT_ID)
   const [gender, setGender] = useState<Gender | null>(null)
   const [jerseyColor, setJerseyColor] = useState<JerseyColor | null>(null)
-  const [jerseyNumber, setJerseyNumber] = useState('')
+  const [jerseyNumber, setJerseyNumber] = useState('0')
   const [eyeColor, setEyeColor] = useState<EyeColor | null>(null)
   const [nickname, setNickname] = useState('')
   const { mascots } = useMascots()
@@ -123,7 +123,7 @@ export function CreatePlayerWizard({
       if (!canSave) return
       onSave({
         nickname: trimmedNickname,
-        jerseyNumber: toIntOrNull(jerseyNumber),
+        jerseyNumber: toIntOrNull(jerseyNumber) ?? 0,
         jerseyColor,
         heightCm: null,
         weightKg: null,

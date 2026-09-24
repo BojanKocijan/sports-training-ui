@@ -125,7 +125,7 @@ export function SpotlightPlayerEditor({
     if (!canSave) return
     onSave(
       trimmedNickname,
-      toIntOrNull(jerseyNumber),
+      toIntOrNull(jerseyNumber) ?? 0,
       jerseyColor,
       toIntOrNull(heightCm),
       toIntOrNull(weightKg),
