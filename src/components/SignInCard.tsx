@@ -1,38 +1,22 @@
 import { useState } from 'react'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
-import { setSignInIntent, type SignInIntent } from '../lib/signInIntent'
+import type { SignInIntent } from '../lib/signInIntent'
 import { Card } from './ui/card'
 
 const inputClass = 'mt-1 w-full rounded-xl border border-black/10 px-3 py-2 dark:border-white/10 dark:bg-neutral-800'
 
-/** First pick trainer or parent, then email + one-time code (or the instant sign-in link).
+/** Email + one-time code (or the instant sign-in link) for the role chosen on the landing page.
  * Everyone can request a code; what they can do afterwards depends on their access: trainers
  * without a workspace name one, parents without a linked child ask their trainer. */
-export function SignInCard({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
+export function SignInCard({ trainerAccess, role, onSwitchRole }: {
+  trainerAccess: ReturnType<typeof useTrainerAccess>
+  role: SignInIntent
+  onSwitchRole: (next: SignInIntent) => void
+}) {
   const { checking, error, requestSignupCode, verifySignupCode } = trainerAccess
-  const [role, setRole] = useState<SignInIntent | null>(null)
   const [email, setEmail] = useState('')
   const [emailCode, setEmailCode] = useState('')
   const [codeSent, setCodeSent] = useState(false)
-
-  if (!role) {
-    return (
-      <Card className="w-full rounded-3xl p-5 shadow-lg">
-        <h2 className="text-lg font-bold dark:text-white">Sign in to CoachCub</h2>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">How are you coming in?</p>
-        <div className="mt-4 grid gap-3">
-          <button type="button" onClick={() => { setRole('trainer'); setSignInIntent('trainer') }}
-            className="rounded-xl bg-orange-500 py-3 text-sm font-bold text-white">
-            I'm a trainer
-          </button>
-          <button type="button" onClick={() => { setRole('parent'); setSignInIntent('parent') }}
-            className="rounded-xl border border-orange-500 py-3 text-sm font-bold text-orange-600 dark:text-orange-300">
-            I'm a parent
-          </button>
-        </div>
-      </Card>
-    )
-  }
 
   return (
     <Card className="w-full rounded-3xl p-5 shadow-lg">
@@ -81,7 +65,7 @@ export function SignInCard({ trainerAccess }: { trainerAccess: ReturnType<typeof
           </button>
         )}
         <button type="button" className="mt-3 block text-sm text-neutral-500 underline"
-          onClick={() => { setRole(null); setCodeSent(false); setEmailCode('') }}>
+          onClick={() => { setCodeSent(false); setEmailCode(''); onSwitchRole(role === 'trainer' ? 'parent' : 'trainer') }}>
           {role === 'trainer' ? "I'm a parent instead" : "I'm a trainer instead"}
         </button>
       </form>

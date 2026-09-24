@@ -4,6 +4,9 @@ import { CategoryIcon } from './CategoryIcon'
 import { PrivacyPolicyScreen } from './PrivacyPolicyScreen'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { SignInCard } from './SignInCard'
+import { Card } from './ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog'
+import type { SignInIntent } from '../lib/signInIntent'
 import { ThemeToggle } from './ThemeToggle'
 import { WorkspaceOnboardingCard } from './WorkspaceOnboardingCard'
 import { ParentNoChildCard } from './ParentNoChildCard'
@@ -66,7 +69,7 @@ function prefersStill() {
  * rounded card tinted like its own backdrop; the poster paints instantly while it loads. */
 function HeroVideo() {
   const [still] = useState(prefersStill)
-  const frame = 'mt-6 aspect-video w-full max-w-xl overflow-hidden rounded-3xl bg-[#f1e4cc] shadow-md'
+  const frame = 'aspect-video w-full overflow-hidden rounded-3xl bg-[#f1e4cc] shadow-lg'
 
   if (still) {
     return (
@@ -100,19 +103,66 @@ function HeroVideo() {
 
 /** Public front door: what the app is, who it is for, and the sign-in. Shown whenever nobody is
  * signed in. Sign-in is for trainers; parents get in after a trainer invites their email. */
-/** Sign-in, or, for a signed-in account with no access yet, the next step for the way they said
- * they were coming in (trainer: name a workspace; parent: ask the trainer to link their child). */
-function AccessCard({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
+/** What the sign-in dialog shows: for a signed-in account with no access yet, the next step for the
+ * way they said they were coming in (trainer: name a workspace; parent: ask the trainer to link
+ * their child). Otherwise the sign-in form for the chosen role, with the parent information first
+ * for parents. */
+function AccessCard({ trainerAccess, flow, onSwitchRole }: {
+  trainerAccess: ReturnType<typeof useTrainerAccess>
+  flow: SignInIntent | 'choose' | null
+  onSwitchRole: (next: SignInIntent) => void
+}) {
   const [intent, setIntent] = useState(getSignInIntent)
-  if (!trainerAccess.needsWorkspace) return <SignInCard trainerAccess={trainerAccess} />
-  if (intent === 'parent') {
-    return <ParentNoChildCard trainerAccess={trainerAccess} onNotParent={() => { setSignInIntent('trainer'); setIntent('trainer') }} />
+  if (trainerAccess.needsWorkspace) {
+    if (intent === 'parent') {
+      return <ParentNoChildCard trainerAccess={trainerAccess} onNotParent={() => { setSignInIntent('trainer'); setIntent('trainer') }} />
+    }
+    return <WorkspaceOnboardingCard trainerAccess={trainerAccess} onNotTrainer={() => { setSignInIntent('parent'); setIntent('parent') }} />
   }
-  return <WorkspaceOnboardingCard trainerAccess={trainerAccess} onNotTrainer={() => { setSignInIntent('parent'); setIntent('parent') }} />
+  if (flow === 'choose') {
+    return (
+      <Card className="w-full rounded-3xl p-5 shadow-lg">
+        <h2 className="text-lg font-bold dark:text-white">Sign in to CoachCub</h2>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">How are you coming in?</p>
+        <div className="mt-4 grid gap-3">
+          <button type="button" onClick={() => onSwitchRole('trainer')} className="rounded-xl bg-orange-500 py-3 text-sm font-bold text-white">
+            I'm a trainer
+          </button>
+          <button type="button" onClick={() => onSwitchRole('parent')}
+            className="rounded-xl border border-orange-500 py-3 text-sm font-bold text-orange-600 dark:text-orange-300">
+            I'm a parent
+          </button>
+        </div>
+      </Card>
+    )
+  }
+  const role = flow ?? 'trainer'
+  return (
+    <>
+      {role === 'parent' && (
+        <div className="mb-3 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-neutral-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-neutral-200">
+          <p className="font-bold text-neutral-900 dark:text-neutral-50">Following your child?</p>
+          <p className="mt-1">
+            You need to be invited by their trainer: they add your email to your child's profile. Once
+            you're added, sign in with that email to see your child's progress. If you also coach, one
+            account is both trainer and parent, and you can switch between the two views from the
+            account menu.
+          </p>
+        </div>
+      )}
+      <SignInCard trainerAccess={trainerAccess} role={role} onSwitchRole={onSwitchRole} />
+    </>
+  )
 }
 
 export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
   const [privacyOpen, setPrivacyOpen] = useState(false)
+  // Which role's sign-in dialog is open. A signed-in account that still needs a workspace (or a
+  // child link) opens it automatically, since that is the next step for them.
+  const [flow, setFlow] = useState<SignInIntent | 'choose' | null>(null)
+  const [dismissed, setDismissed] = useState(false)
+  const open = flow !== null || (trainerAccess.needsWorkspace && !dismissed)
+  const choose = (role: SignInIntent) => { setSignInIntent(role); setFlow(role); setDismissed(false) }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white text-neutral-900 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-950 dark:text-neutral-50">
@@ -122,17 +172,18 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
         </a>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <a href="#sign-in" className="rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600">
+          <button type="button" onClick={() => { setFlow('choose'); setDismissed(false) }}
+            className="whitespace-nowrap rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600">
             Sign in
-          </a>
+          </button>
         </div>
       </header>
 
       <main id="top">
-        <section className="mx-auto grid max-w-6xl items-start gap-8 px-4 pb-12 pt-6 md:grid-cols-2 md:pt-12">
+        <section className="mx-auto grid max-w-6xl items-center gap-8 px-4 pb-12 pt-6 md:grid-cols-[5fr_7fr] md:pt-12">
           <div>
             <p className="inline-block rounded-full bg-orange-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
-              For youth sports trainers · Basketball available now
+              For youth basketball trainers
             </p>
             <h1 className="mt-4 text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
               Every practice is a step towards a bigger cub.
@@ -141,27 +192,29 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
               CoachCub is built for trainers: plan trainings, rate skills in two taps and invite parents.
               Kids pick a mascot that grows with their skills, and invited parents follow the progress.
             </p>
-            <div id="sign-in" className="mt-6 w-full max-w-md scroll-mt-6">
-              <AccessCard trainerAccess={trainerAccess} />
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button type="button" onClick={() => choose('trainer')}
+                className="rounded-full bg-orange-500 px-6 py-3 text-base font-bold text-white hover:bg-orange-600">
+                I'm a trainer
+              </button>
+              <button type="button" onClick={() => choose('parent')}
+                className="rounded-full border-2 border-orange-500 px-6 py-3 text-base font-bold text-orange-600 hover:bg-orange-50 dark:text-orange-300 dark:hover:bg-orange-500/10">
+                I'm a parent
+              </button>
             </div>
           </div>
 
-          <div className="w-full">
-            <HeroVideo />
-            <div className="mt-4 max-w-xl rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-neutral-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-neutral-200">
-              <p className="font-bold text-neutral-900 dark:text-neutral-50">Are you a parent?</p>
-              <p className="mt-1">
-                To follow your child you need to be invited by their trainer: they add your email to your
-                child's profile. Once you're added, choose "I'm a parent" and sign in with that email to see
-                your child's progress. If you also coach, one account is both trainer and parent, and you can
-                switch between the two views from the account menu.
-              </p>
-            </div>
-          </div>
+          <HeroVideo />
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-10">
-          <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">One app, three happy teams</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">One app, three happy teams</h2>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
+              <IconBallBasketball aria-hidden className="h-4 w-4" stroke={2} />
+              Basketball available now
+            </span>
+          </div>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {AUDIENCES.map((a) => (
               <article key={a.title} className="rounded-3xl border border-black/5 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-neutral-900">
@@ -246,7 +299,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">
-        <p>Trainers, <a href="#sign-in" className="font-semibold text-orange-600 underline">sign in</a> to set up your group and invite parents.</p>
+        <p>Trainers, <button type="button" onClick={() => choose('trainer')} className="font-semibold text-orange-600 underline">sign in</button> to set up your group and invite parents.</p>
         <p className="mx-auto mt-4 max-w-xl">
           Our mascots and the hero video are AI-generated, guided by the experience of an illustrator and a 3D artist.
         </p>
@@ -258,6 +311,14 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
           <a href="mailto:support@coachcub.app" className="underline">support@coachcub.app</a>
         </p>
       </footer>
+
+      <Dialog open={open} onOpenChange={(next) => { if (!next) { setFlow(null); setDismissed(true) } }}>
+        <DialogContent className="max-w-md border-0 bg-transparent p-0 shadow-none ring-0">
+          <DialogTitle className="sr-only">Sign in to CoachCub</DialogTitle>
+          <DialogDescription className="sr-only">Choose how you are coming in and sign in with your email.</DialogDescription>
+          <AccessCard trainerAccess={trainerAccess} flow={flow} onSwitchRole={choose} />
+        </DialogContent>
+      </Dialog>
       {privacyOpen && <PrivacyPolicyScreen onClose={() => setPrivacyOpen(false)} />}
     </div>
   )
