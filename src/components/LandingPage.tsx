@@ -124,7 +124,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
       </header>
 
       <main id="top">
-        <section className="mx-auto grid max-w-6xl items-center gap-8 px-4 pb-12 pt-6 md:grid-cols-2 md:pt-12">
+        <section className="mx-auto grid max-w-6xl items-start gap-8 px-4 pb-12 pt-6 md:grid-cols-2 md:pt-12">
           <div>
             <p className="inline-block rounded-full bg-orange-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
               For youth sports trainers · Basketball available now
@@ -136,12 +136,14 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
               CoachCub is built for trainers: plan trainings, rate skills in two taps and invite parents.
               Kids pick a mascot that grows with their skills, and invited parents follow the progress.
             </p>
-            <HeroVideo />
+            <div id="sign-in" className="mt-6 w-full max-w-md scroll-mt-6">
+              <AccessCard trainerAccess={trainerAccess} />
+            </div>
           </div>
 
-          <div id="sign-in" className="mx-auto w-full max-w-md scroll-mt-6">
-            <AccessCard trainerAccess={trainerAccess} />
-            <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-neutral-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-neutral-200">
+          <div className="w-full">
+            <HeroVideo />
+            <div className="mt-4 max-w-xl rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-neutral-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-neutral-200">
               <p className="font-bold text-neutral-900 dark:text-neutral-50">Are you a parent?</p>
               <p className="mt-1">
                 To follow your child you need to be invited by their trainer: they add your email to your
