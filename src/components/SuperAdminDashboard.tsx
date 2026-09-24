@@ -9,6 +9,7 @@ import { useState } from 'react'
 import { useAdminOverview, type AdminOverview } from '../hooks/useAdminOverview'
 import { AddOwnerDialog } from './AddOwnerDialog'
 import { ThemeToggle } from './ThemeToggle'
+import { WorkspacePlanEditor } from './WorkspacePlanEditor'
 import { TrainerAccessMenu } from './TrainerAccessMenu'
 import { Button } from './ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
@@ -372,6 +373,8 @@ export function SuperAdminDashboard({
                   </Button>
                 )}
               </div>
+
+              <WorkspacePlanEditor key={workspace.id + workspace.tier + workspace.playerLimit} workspace={workspace} onSaved={() => void refresh()} />
 
               <section className="grid grid-cols-3 gap-3">
                 <StatTile label="Groups" value={workspace.groupCount} />
