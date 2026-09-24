@@ -1,14 +1,15 @@
+import { Monitor, Moon, Sun, type LucideIcon } from 'lucide-react'
 import { useTheme, type ThemePreference } from '../hooks/useTheme'
 import { Button } from './ui/button'
 
-const OPTIONS: { id: ThemePreference; label: string; emoji: string }[] = [
-  { id: 'light', label: 'Light', emoji: '☀️' },
-  { id: 'dark', label: 'Dark', emoji: '🌙' },
-  { id: 'system', label: 'System', emoji: '🖥️' },
+const OPTIONS: { id: ThemePreference; label: string; Icon: LucideIcon }[] = [
+  { id: 'light', label: 'Light', Icon: Sun },
+  { id: 'dark', label: 'Dark', Icon: Moon },
+  { id: 'system', label: 'System', Icon: Monitor },
 ]
 
 /** Three-way Light/Dark/System switch — see useTheme.ts for how the choice is applied and
- * persisted. Icon-only by default; each button carries its label for screen readers/tooltip. */
+ * persisted. Icon-only (outlined, filled when selected); each button carries its label for screen readers/tooltip. */
 export function ThemeToggle() {
   const { preference, setPreference } = useTheme()
 
@@ -33,9 +34,10 @@ export function ThemeToggle() {
             onClick={() => setPreference(opt.id)}
             // Deliberately not the `active` variant (that's the orange-brand "selected"
             // look) — this is a neutral raised-chip toggle, a different visual language.
-            className={isActive ? 'bg-card shadow-sm hover:bg-card' : 'opacity-50 hover:opacity-80'}
+            className={isActive ? 'bg-card text-primary shadow-sm hover:bg-card' : 'text-muted-foreground opacity-70 hover:opacity-100'}
           >
-            {opt.emoji}
+            {/* Outlined when off, filled when it is the current choice. */}
+            <opt.Icon className="size-4" fill={isActive ? 'currentColor' : 'none'} aria-hidden="true" />
           </Button>
         )
       })}
