@@ -117,4 +117,15 @@ describe('useTrainerAccess', () => {
     await act(async () => { await result.current.inviteTrainer('colleague@example.com') })
     expect(postMock).toHaveBeenCalledWith('/auth/invite', { email: 'colleague@example.com', groupId: 'u8', role: 'trainer' })
   })
+
+  it('invites a trainer to several groups in one call', async () => {
+    const owner = { ...session, memberships: [{ club_id: 'club-1', group_id: null, role: 'owner', active: true }] }
+    saveSession(owner)
+    getMock.mockResolvedValue({ groupIds: ['u8', 'u10'], memberships: owner.memberships })
+    postMock.mockResolvedValueOnce({ invited: true })
+    const { result } = renderHook(() => useTrainerAccess('u8'))
+    await waitFor(() => expect(result.current.canInvite).toBe(true))
+    await act(async () => { await result.current.inviteTrainer('colleague@example.com', ['u8', 'u10']) })
+    expect(postMock).toHaveBeenCalledWith('/auth/invite', { email: 'colleague@example.com', groupIds: ['u8', 'u10'], role: 'trainer' })
+  })
 })
