@@ -1,6 +1,6 @@
 import { useProgress } from '@react-three/drei'
 import { DEFAULT_MASCOT_ID, type EyeColor, type JerseyColor } from '../hooks/usePlayers'
-import { BACKDROPS, DEFAULT_BACKDROP, MASCOTS_3D, type BackdropId } from '../lib/mascot3d'
+import { BACKDROPS, DEFAULT_BACKDROP, DEFAULT_POSE, MASCOTS_3D, type BackdropId, type PoseId } from '../lib/mascot3d'
 import { Mascot3DScene } from './Mascot3DScene'
 
 /** A mascot's "spotlight" 3D preview (#106, #109) sized to sit in the same slot as the still
@@ -18,12 +18,14 @@ export default function Mascot3DPreview({
   eyeColor,
   showBall,
   backdrop = DEFAULT_BACKDROP,
+  pose = DEFAULT_POSE,
 }: {
   mascotId?: string | null
   jerseyColor: JerseyColor | null
   eyeColor: EyeColor | null
   showBall: boolean
   backdrop?: BackdropId
+  pose?: PoseId
 }) {
   // drei's loading store is global, so it works outside the Canvas: `active` is true while the
   // model, ball and mask are downloading/decoding.
@@ -40,6 +42,7 @@ export default function Mascot3DPreview({
         jerseyColor={jerseyColor}
         eyeColor={eyeColor}
         showBall={showBall}
+        pose={pose}
         cameraPosition={config.previewCamera}
         enableZoom={false}
         enableTilt={false}

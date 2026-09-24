@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BACKDROPS, DEFAULT_BACKDROP, MASCOTS_3D } from './mascot3d'
+import { BACKDROPS, DEFAULT_BACKDROP, DEFAULT_POSE, MASCOTS_3D, POSE_IDS, POSES, poseArmDegrees } from './mascot3d'
 
 // The config-driven toggle (PlayerPreviewCard) trusts every entry here to be well-formed --
 // these are the invariants Mascot3DScene relies on without checking itself.
@@ -35,5 +35,19 @@ describe('BACKDROPS', () => {
       expect(backdrop.className.length).toBeGreaterThan(0)
     }
     expect(BACKDROPS[DEFAULT_BACKDROP]).toBeDefined()
+  })
+})
+
+describe('poses (#114)', () => {
+  it('bends a posable mascot\'s arms per pose (negative = raised) and leaves an unposable one alone', () => {
+    expect(poseArmDegrees({ armDownDegrees: 55 }, 'rest')).toBe(55)
+    expect(poseArmDegrees({ armDownDegrees: 55 }, 'cheer')).toBeLessThan(0)
+    expect(poseArmDegrees({ armDownDegrees: 55 }, 'ready')).toBe(27.5)
+    expect(poseArmDegrees({}, 'cheer')).toBeUndefined()
+  })
+  it('defaults to the relaxed pose and lists every pose once', () => {
+    expect(DEFAULT_POSE).toBe('rest')
+    expect(new Set(POSE_IDS).size).toBe(POSE_IDS.length)
+    expect(POSE_IDS.every((id) => POSES[id].label)).toBe(true)
   })
 })

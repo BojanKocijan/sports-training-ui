@@ -136,3 +136,24 @@ export const BACKDROPS: Record<BackdropId, { label: string; className: string }>
 }
 
 export const DEFAULT_BACKDROP: BackdropId = 'neutral'
+
+/** Stances for the 3D preview (#114). Code-driven (bone/whole-body rotations), so no extra Tripo
+ * export per pose. `armsDown` is degrees below a T-pose (negative = raised) and only applies to a
+ * mascot with real skin weights (one with `armDownDegrees`, i.e. the shark); `lean` tips the whole
+ * body forward (degrees) and `lift` raises it (world units), which is all the lion's useless
+ * skin weights allow. Not saved, same as the still/3D toggle and the backdrop. */
+export type PoseId = 'rest' | 'cheer' | 'ready'
+
+export const POSE_IDS: PoseId[] = ['rest', 'cheer', 'ready']
+export const DEFAULT_POSE: PoseId = 'rest'
+
+export const POSES: Record<PoseId, { label: string; emoji: string; armsDown: (restDegrees: number) => number; lean: number; lift: number }> = {
+  rest: { label: 'Relaxed', emoji: '😌', armsDown: (rest) => rest, lean: 0, lift: 0 },
+  cheer: { label: 'Cheer', emoji: '🙌', armsDown: () => -50, lean: -4, lift: 0.05 },
+  ready: { label: 'Ready', emoji: '💪', armsDown: (rest) => rest * 0.5, lean: 9, lift: 0 },
+}
+
+/** Arm angle for a pose, or undefined when this mascot's skeleton cannot be posed by bones. */
+export function poseArmDegrees(config: Pick<Mascot3DConfig, 'armDownDegrees'>, pose: PoseId): number | undefined {
+  return config.armDownDegrees === undefined ? undefined : POSES[pose].armsDown(config.armDownDegrees)
+}

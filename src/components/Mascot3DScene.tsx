@@ -1,10 +1,10 @@
-import { Center, OrbitControls, useGLTF, useTexture } from '@react-three/drei'
+import { Center, ContactShadows, OrbitControls, useGLTF, useTexture } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { Suspense, useEffect, useMemo, useRef } from 'react'
 import { Color, MathUtils, Quaternion, Spherical, Vector3, Vector4 } from 'three'
 import type { Group, Mesh, MeshStandardMaterial, Object3D, Texture } from 'three'
 import type { EyeColor, JerseyColor } from '../hooks/usePlayers'
-import { DEFAULT_JERSEY_TINT, EYE_TINTS, JERSEY_TINTS } from '../lib/mascot3d'
+import { DEFAULT_JERSEY_TINT, DEFAULT_POSE, EYE_TINTS, JERSEY_TINTS, POSES, type PoseId } from '../lib/mascot3d'
 
 type PbrOriginals = {
   normalMap: Texture | null
@@ -256,6 +256,7 @@ export function Mascot3DScene({
   eyeColor,
   showBall,
   matte = true,
+  pose = DEFAULT_POSE,
   cameraPosition,
   enableZoom = true,
   enableTilt = true,
@@ -273,6 +274,8 @@ export function Mascot3DScene({
   eyeColor: EyeColor | null
   showBall: boolean
   matte?: boolean
+  /** Stance (#114). Arms only move for a mascot with `armDownDegrees` (real skin weights). */
+  pose?: PoseId
   cameraPosition: [number, number, number]
   enableZoom?: boolean
   /** true (default): free orbit, for the dev POC page where seeing the model from any angle
@@ -296,6 +299,7 @@ export function Mascot3DScene({
       <ambientLight intensity={1.8} />
       <directionalLight position={[3, 5, 2]} intensity={1.2} />
       <Suspense fallback={null}>
+        <group rotation-x={MathUtils.degToRad(POSES[pose].lean)} position-y={POSES[pose].lift}>
         <Center>
           <MascotModel
             modelUrl={modelUrl}
@@ -306,13 +310,16 @@ export function Mascot3DScene({
             ballOffset={ballOffset}
             irisToneX={irisToneX}
             irisToneY={irisToneY}
-            armDownDegrees={armDownDegrees}
+            armDownDegrees={armDownDegrees === undefined ? undefined : POSES[pose].armsDown(armDownDegrees)}
             jerseyColor={jerseyColor}
             eyeColor={eyeColor}
             showBall={showBall}
             matte={matte}
           />
         </Center>
+        </group>
+        {/* A soft contact shadow so the mascot stands on something, whatever the backdrop is. */}
+        <ContactShadows position={[0, -0.5, 0]} opacity={0.45} scale={2.4} blur={2.6} far={1.2} resolution={256} />
       </Suspense>
       <OrbitControls
         enablePan={false}

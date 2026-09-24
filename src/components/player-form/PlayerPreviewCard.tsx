@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import { DEFAULT_MASCOT_ID, type EyeColor, type Gender, type JerseyColor } from '../../hooks/usePlayers'
-import { BACKDROPS, DEFAULT_BACKDROP, MASCOTS_3D, type BackdropId } from '../../lib/mascot3d'
+import { BACKDROPS, DEFAULT_BACKDROP, DEFAULT_POSE, MASCOTS_3D, POSES, POSE_IDS, type BackdropId, type PoseId } from '../../lib/mascot3d'
 import { ErrorBoundary } from '../ErrorBoundary'
 import { JerseyGraphic } from '../JerseyGraphic'
 import { Skeleton } from '../ui/skeleton'
@@ -55,6 +55,7 @@ export function PlayerPreviewCard({
   const [view, setView] = useState<PreviewView>('still')
   const [showBall, setShowBall] = useState(true)
   const [backdrop, setBackdrop] = useState<BackdropId>(DEFAULT_BACKDROP)
+  const [pose, setPose] = useState<PoseId>(DEFAULT_POSE)
   const has3d = !hideMeta && (mascotId ?? DEFAULT_MASCOT_ID) in MASCOTS_3D
   const activeView: PreviewView = has3d ? view : 'still'
 
@@ -126,6 +127,25 @@ export function PlayerPreviewCard({
           ))}
         </div>
       )}
+      {activeView === '3d' && (
+        <div role="group" aria-label="Stance" className="inline-flex rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
+          {POSE_IDS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={pose === id}
+              onClick={() => setPose(id)}
+              className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+                pose === id
+                  ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-neutral-50'
+                  : 'text-neutral-500 dark:text-neutral-400'
+              }`}
+            >
+              {POSES[id].emoji} {POSES[id].label}
+            </button>
+          ))}
+        </div>
+      )}
       {activeView === '3d' ? (
         <ErrorBoundary fallback={still}>
           <Suspense fallback={<Skeleton className="h-72 aspect-[4/5]" />}>
@@ -135,6 +155,7 @@ export function PlayerPreviewCard({
               eyeColor={eyeColor ?? null}
               showBall={showBall}
               backdrop={backdrop}
+              pose={pose}
             />
           </Suspense>
         </ErrorBoundary>
