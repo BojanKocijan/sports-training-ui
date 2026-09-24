@@ -33,6 +33,22 @@ const playerU8: Player = {
   updated_at: '2026-09-01T10:00:00.000Z',
 }
 
+const playerU10: Player = {
+  ...playerU8,
+  id: 'player-10',
+  group_id: 'u10',
+  nickname: 'Nikola',
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise
+  })
+
+  return { promise, resolve }
+}
+
 describe('usePlayers', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -51,6 +67,88 @@ describe('usePlayers', () => {
     expect(getMock).toHaveBeenCalledTimes(1)
     expect(getMock).toHaveBeenCalledWith('/players?groupId=u8')
     expect(result.current.error).toBeNull()
+  })
+
+  it('hides the previous group roster immediately while loading the new group', async () => {
+    const u10Response = deferred<Player[]>()
+    getMock.mockResolvedValueOnce([playerU8]).mockReturnValueOnce(u10Response.promise)
+
+    const { result, rerender } = renderHook(
+      ({ groupId }) => usePlayers(groupId),
+      { initialProps: { groupId: 'u8' } },
+    )
+
+    await waitFor(() => {
+      expect(result.current.players).toEqual([playerU8])
+      expect(result.current.loading).toBe(false)
+    })
+
+    rerender({ groupId: 'u10' })
+
+    expect(result.current.players).toEqual([])
+    expect(result.current.loading).toBe(true)
+
+    await act(async () => {
+      u10Response.resolve([playerU10])
+    })
+
+    expect(result.current.players).toEqual([playerU10])
+    expect(result.current.loading).toBe(false)
+  })
+
+  it('ignores an older group response that finishes after the new group response', async () => {
+    const u8Response = deferred<Player[]>()
+    const u10Response = deferred<Player[]>()
+    getMock.mockReturnValueOnce(u8Response.promise).mockReturnValueOnce(u10Response.promise)
+
+    const { result, rerender } = renderHook(
+      ({ groupId }) => usePlayers(groupId),
+      { initialProps: { groupId: 'u8' } },
+    )
+
+    await waitFor(() => expect(getMock).toHaveBeenCalledTimes(1))
+    rerender({ groupId: 'u10' })
+    await waitFor(() => expect(getMock).toHaveBeenCalledTimes(2))
+
+    await act(async () => {
+      u10Response.resolve([playerU10])
+    })
+    await act(async () => {
+      u8Response.resolve([playerU8])
+    })
+
+    expect(result.current.players).toEqual([playerU10])
+    expect(result.current.loading).toBe(false)
+    expect(result.current.error).toBeNull()
+  })
+
+  it('keeps loading while the new group request is pending if the old request finishes', async () => {
+    const u8Response = deferred<Player[]>()
+    const u10Response = deferred<Player[]>()
+    getMock.mockReturnValueOnce(u8Response.promise).mockReturnValueOnce(u10Response.promise)
+
+    const { result, rerender } = renderHook(
+      ({ groupId }) => usePlayers(groupId),
+      { initialProps: { groupId: 'u8' } },
+    )
+
+    await waitFor(() => expect(getMock).toHaveBeenCalledTimes(1))
+    rerender({ groupId: 'u10' })
+    await waitFor(() => expect(getMock).toHaveBeenCalledTimes(2))
+
+    await act(async () => {
+      u8Response.resolve([playerU8])
+    })
+
+    expect(result.current.players).toEqual([])
+    expect(result.current.loading).toBe(true)
+
+    await act(async () => {
+      u10Response.resolve([playerU10])
+    })
+
+    expect(result.current.players).toEqual([playerU10])
+    expect(result.current.loading).toBe(false)
   })
 
   it('creates a player in the current group and refreshes the roster', async () => {

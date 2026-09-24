@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { api, isApiConfigured } from '../lib/apiClient'
 
 export const JERSEY_COLORS = [
@@ -46,29 +46,78 @@ export interface Player {
   updated_at: string
 }
 
+interface PlayersState {
+  groupId: string
+  players: Player[]
+  loading: boolean
+  error: string | null
+}
+
 /** A group's roster — kids are tracked only by a self-chosen nickname (see the GDPR note in
  * supabase/schema.sql), synced through sports-training-api so every trainer sees the same list. */
 export function usePlayers(groupId: string) {
-  const [players, setPlayers] = useState<Player[]>([])
-  const [loading, setLoading] = useState(isApiConfigured)
-  const [error, setError] = useState<string | null>(null)
+  const [state, setState] = useState<PlayersState>(() => ({
+    groupId,
+    players: [],
+    loading: isApiConfigured,
+    error: null,
+  }))
+  const activeGroupId = useRef(groupId)
+  const requestGeneration = useRef(0)
+
+  useLayoutEffect(() => {
+    activeGroupId.current = groupId
+  }, [groupId])
 
   const refresh = useCallback(async () => {
+    // Mutations started for a previous group can finish after the user has switched groups.
+    if (activeGroupId.current !== groupId) return
+
+    const generation = ++requestGeneration.current
+
     if (!isApiConfigured) {
-      setLoading(false)
+      setState((current) => ({
+        groupId,
+        players: current.groupId === groupId ? current.players : [],
+        loading: false,
+        error: current.groupId === groupId ? current.error : null,
+      }))
       return
     }
-    setLoading(true)
+
+    setState((current) => ({
+      groupId,
+      players: current.groupId === groupId ? current.players : [],
+      loading: true,
+      error: current.groupId === groupId ? current.error : null,
+    }))
+
     try {
       const data = await api.get<Player[]>(
         `/players?groupId=${encodeURIComponent(groupId)}`,
       )
-      setError(null)
-      setPlayers(data)
+      if (
+        generation !== requestGeneration.current ||
+        activeGroupId.current !== groupId
+      ) {
+        return
+      }
+
+      setState({ groupId, players: data, loading: false, error: null })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load players')
-    } finally {
-      setLoading(false)
+      if (
+        generation !== requestGeneration.current ||
+        activeGroupId.current !== groupId
+      ) {
+        return
+      }
+
+      setState((current) => ({
+        groupId,
+        players: current.groupId === groupId ? current.players : [],
+        loading: false,
+        error: err instanceof Error ? err.message : 'Failed to load players',
+      }))
     }
   }, [groupId])
 
@@ -135,9 +184,9 @@ export function usePlayers(groupId: string) {
   }
 
   return {
-    players,
-    loading,
-    error,
+    players: state.groupId === groupId ? state.players : [],
+    loading: state.groupId === groupId ? state.loading : isApiConfigured,
+    error: state.groupId === groupId ? state.error : null,
     refresh,
     createPlayer,
     updatePlayer,

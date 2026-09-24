@@ -15,8 +15,8 @@ export function BottomNav({
   onChange: (tab: Tab) => void
 }) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] backdrop-blur lg:hidden">
-      <div className="mx-auto flex max-w-md px-2 md:max-w-3xl md:px-3">
+    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] backdrop-blur lg:hidden">
+      <div className="mx-auto flex max-w-md px-2 pt-1 md:max-w-3xl md:px-3">
         {TABS.map((tab) => {
           const isActive = tab.id === active
           return (
@@ -30,7 +30,7 @@ export function BottomNav({
               // Button's `cn()` (clsx + tailwind-merge) resolves same-property conflicts by
               // which class comes last, so this text color reliably wins over ghost's own
               // without needing Tailwind's `!important` modifier.
-              className={`flex-1 shrink flex-col gap-0.5 rounded-none py-2.5 text-[11px] font-medium ${
+              className={`flex-1 shrink flex-col gap-0.5 rounded-none py-3 text-[11px] font-medium ${
                 isActive ? 'text-primary' : ''
               }`}
               onClick={() => onChange(tab.id)}
