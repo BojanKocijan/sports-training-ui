@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog'
 
-export function InviteTrainerDialog({ open, onOpenChange, onInvite, groups = [], defaultGroupId }: {
+export function InviteTrainerDialog({ open, onOpenChange, onInvite, groups = [], defaultGroupId, tier = null }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   onInvite: (email: string, groupIds?: string[]) => Promise<void>
   groups?: { id: string; name: string; status: 'available' | 'coming_soon' }[]
   defaultGroupId?: string
+  /** Free workspaces include a single trainer seat, so inviting another is not possible. */
+  tier?: 'free' | null
 }) {
   const [email, setEmail] = useState('')
   const [selected, setSelected] = useState<string[]>([])
@@ -45,9 +47,12 @@ export function InviteTrainerDialog({ open, onOpenChange, onInvite, groups = [],
     <DialogContent>
       <DialogHeader>
         <DialogTitle>Invite trainer</DialogTitle>
-        <DialogDescription>An email invitation grants access to the groups you select. Free includes one trainer seat.</DialogDescription>
+        <DialogDescription>An email invitation grants access to the groups you select. {tier === 'free' && 'This workspace is on the Free plan.'}</DialogDescription>
       </DialogHeader>
-      {sent ? <p role="status">Invitation sent. The trainer can sign in with their email.</p> : <form onSubmit={submit}>
+      {tier === 'free' ? <div role="status" className="space-y-2 text-sm">
+        <p className="font-medium">You can't invite another trainer on the Free plan.</p>
+        <p className="text-muted-foreground">Free includes one trainer seat, and it is already used by this workspace's owner. Ask a platform admin to upgrade the workspace to add more trainers.</p>
+      </div> : sent ? <p role="status">Invitation sent. The trainer can sign in with their email.</p> : <form onSubmit={submit}>
         <label htmlFor="invite-email" className="block text-sm font-medium">Trainer email</label>
         <input id="invite-email" type="email" autoComplete="email" required value={email}
           onChange={(event) => setEmail(event.target.value)}

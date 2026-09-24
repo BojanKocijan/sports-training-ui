@@ -133,10 +133,7 @@ export function ClubHeader({
           <Shield className="size-4 sm:hidden" />
           <span className="hidden sm:inline">Privacy</span>
         </Button>
-        {club.tier !== "free" &&
-          !trainerAccess?.isSuperadmin &&
-          trainerAccess?.canInvite &&
-          trainerAccess.inviteTrainer && (
+        {trainerAccess?.canInvite && trainerAccess.inviteTrainer && (
           <Button variant="ghost" size="icon-sm" aria-label="Invite trainer" onClick={() => setInviteOpen(true)} className="sm:w-auto sm:px-3">
             <span className="sm:hidden">＋</span>
             <span className="hidden sm:inline">Invite trainer</span>
@@ -154,8 +151,9 @@ export function ClubHeader({
         )}
       </div>
       <TierCatalogDialog open={tiersOpen} onOpenChange={setTiersOpen} />
-      {club.tier !== "free" && trainerAccess?.inviteTrainer && (
+      {trainerAccess?.inviteTrainer && (
         <InviteTrainerDialog
+          tier={club.tier}
           open={inviteOpen}
           onOpenChange={setInviteOpen}
           onInvite={trainerAccess.inviteTrainer}
