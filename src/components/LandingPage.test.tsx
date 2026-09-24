@@ -19,7 +19,7 @@ describe('LandingPage', () => {
     expect(screen.getByText(/trainers & invited parents/i)).toBeInTheDocument()
     expect(screen.getByText(/are you a parent\?/i)).toBeInTheDocument()
     expect(screen.getByText(/parents can't create an account on their own/i)).toBeInTheDocument()
-    expect(screen.getByText(/there is no sign-up here/i)).toBeInTheDocument()
+    expect(screen.getByText(/new here\? create a workspace/i)).toBeInTheDocument()
   })
 
   it('shows basketball as available and more sports as coming soon', () => {

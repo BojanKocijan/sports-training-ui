@@ -4,6 +4,7 @@ import { CategoryIcon } from './CategoryIcon'
 import { PrivacyPolicyScreen } from './PrivacyPolicyScreen'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { SignInCard } from './SignInCard'
+import { WorkspaceOnboardingCard } from './WorkspaceOnboardingCard'
 
 const MASCOT_BASE = '/images/basketball/u8%20u10'
 
@@ -122,7 +123,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
           </div>
 
           <div id="sign-in" className="mx-auto w-full max-w-md scroll-mt-6">
-            <SignInCard trainerAccess={trainerAccess} />
+            {trainerAccess.needsWorkspace ? <WorkspaceOnboardingCard trainerAccess={trainerAccess} /> : <SignInCard trainerAccess={trainerAccess} />}
             <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-neutral-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-neutral-200">
               <p className="font-bold text-neutral-900 dark:text-neutral-50">Are you a parent?</p>
               <p className="mt-1">
