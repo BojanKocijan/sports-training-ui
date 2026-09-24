@@ -201,7 +201,7 @@ export function CreatePlayerWizard({
 
         <div className="flex-1">
           {step === 'animal' && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               {(mascots.length > 0 ? mascots : [{ id: DEFAULT_MASCOT_ID, name: 'Lion' }]).map((m) => (
                 <AnimalCard key={m.id} name={m.name} mascotId={m.id} selected={mascotId === m.id} onClick={() => setMascotId(m.id)} />
               ))}
@@ -209,7 +209,7 @@ export function CreatePlayerWizard({
           )}
 
           {step === 'gender' && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               {GENDERS.map((g) => (
                 <TileOption
                   key={g}
@@ -224,7 +224,7 @@ export function CreatePlayerWizard({
 
           {step === 'jersey' && (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-3">
                 {JERSEY_COLORS.map((c) => (
                   <TileOption
                     key={c}
@@ -252,7 +252,7 @@ export function CreatePlayerWizard({
           )}
 
           {step === 'eyes' && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3">
               {EYE_COLORS.map((c) => (
                 <TileOption
                   key={c}
