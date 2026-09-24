@@ -116,7 +116,7 @@ export function ClubHeader({
             size="sm"
             onClick={onAdminHome}
             aria-label="Admin dashboard"
-            className="size-8 px-1 sm:size-auto sm:gap-2 sm:px-3"
+            className="size-11 px-1 sm:size-auto sm:gap-2 sm:px-3"
           >
             <LayoutDashboard className="size-4 sm:hidden" />
             <span className="hidden sm:inline">Admin dashboard</span>
@@ -128,7 +128,7 @@ export function ClubHeader({
           onClick={() => setPrivacyOpen(true)}
           aria-label="Privacy"
           title="Privacy"
-          className="size-8 text-muted-foreground sm:size-auto sm:px-0 sm:py-0 sm:text-[11px] sm:underline-offset-2 sm:hover:bg-transparent sm:hover:underline"
+          className="size-11 text-muted-foreground sm:size-auto sm:px-0 sm:py-0 sm:text-[11px] sm:underline-offset-2 sm:hover:bg-transparent sm:hover:underline"
         >
           <Shield className="size-4 sm:hidden" />
           <span className="hidden sm:inline">Privacy</span>

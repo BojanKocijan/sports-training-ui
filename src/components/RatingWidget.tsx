@@ -19,7 +19,7 @@ export function RatingWidget({
   return (
     <Card className="flex items-center justify-between gap-2 rounded-xl border-0 bg-muted px-3 py-2 shadow-none hover:shadow-none [--card-spacing:0]">
       <span className="text-xs font-semibold text-muted-foreground">Kids liked it?</span>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         {SCALE.map((s) => (
           <Button
             key={s.value}

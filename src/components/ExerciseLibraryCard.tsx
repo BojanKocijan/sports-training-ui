@@ -27,7 +27,7 @@ export function ExerciseLibraryCard({
       <Button
         variant="ghost"
         onClick={() => setExpanded((v) => !v)}
-        className="h-auto w-full items-start justify-start p-0 text-left hover:bg-transparent"
+        className="h-auto min-h-11 w-full items-start justify-start py-3 px-0 text-left hover:bg-transparent"
       >
         <div className="w-full">
           <div className="flex items-center justify-between gap-2">

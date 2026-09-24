@@ -21,7 +21,7 @@ export function TileOption({
       type="button"
       aria-pressed={selected}
       onClick={onClick}
-      className={`relative flex flex-col items-center gap-1.5 rounded-2xl border-2 p-3 transition-colors ${
+      className={`relative flex min-h-[4.5rem] flex-col items-center justify-center gap-1.5 rounded-2xl border-2 p-3 transition-colors ${
         selected
           ? 'border-orange-500 bg-orange-50 dark:bg-orange-500/10'
           : 'border-transparent bg-neutral-100 dark:bg-neutral-800'
