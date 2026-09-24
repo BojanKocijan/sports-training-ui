@@ -20,9 +20,13 @@ export function usePlayerBadges(byCategory: PlayerCategoryStat[]): PlayerBadge[]
     skillCategories.length > 0
       ? groupSkillCategories(skillCategories).length
       : categories.filter((c) => c.id !== 'warmup').length
-  const categoriesTried = byCategory.length
-  const totalRatings = byCategory.reduce((sum, c) => sum + c.count, 0)
-  const avgRating = totalRatings > 0 ? byCategory.reduce((sum, c) => sum + c.average * c.count, 0) / totalRatings : 0
+  // Only real skills count: "enjoyment" is the exercise mood rating, and a sub-skill counts as
+  // its top-level category, so "Tried it all" means every top-level skill was rated.
+  const skills = byCategory.filter((c) => c.categoryId !== 'enjoyment')
+  const parentOf = (id: string) => skillCategories.find((c) => c.id === id)?.parentId ?? id
+  const categoriesTried = new Set(skills.map((c) => parentOf(c.categoryId))).size
+  const totalRatings = skills.reduce((sum, c) => sum + c.count, 0)
+  const avgRating = totalRatings > 0 ? skills.reduce((sum, c) => sum + c.average * c.count, 0) / totalRatings : 0
 
   return [
     { id: 'tried-it-all', emoji: '🎯', label: 'Tried it all', earned: totalCategories > 0 && categoriesTried >= totalCategories },

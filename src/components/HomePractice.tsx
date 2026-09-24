@@ -1,4 +1,3 @@
-import { categoryInfo, type Category } from '../hooks/useCategories'
 import type { Exercise } from '../hooks/useExercises'
 import type { PlayerCategoryStat } from '../hooks/usePlayerProgress'
 import { homeExercisesFor, practiceCategories } from '../utils/parentGuidance'
@@ -7,10 +6,10 @@ import { Card } from './ui/card'
 /** "Practise together" (#131): for categories the child's ratings are low in, a couple of
  * exercises a parent and child can try at home. Encouraging framing only (#106). Renders nothing
  * when there is nothing to suggest. */
-export function HomePractice({ stats, exercises, categories, groupTemplateId }: {
+export function HomePractice({ stats, exercises, labelFor, groupTemplateId }: {
   stats: PlayerCategoryStat[]
   exercises: Exercise[]
-  categories: Category[]
+  labelFor: (categoryId: string) => string
   groupTemplateId?: string
 }) {
   const sections = practiceCategories(stats)
@@ -28,7 +27,7 @@ export function HomePractice({ stats, exercises, categories, groupTemplateId }: 
         {sections.map(({ stat, list }) => (
           <div key={stat.categoryId}>
             <p className="mb-1 text-sm font-bold text-neutral-900 dark:text-neutral-50">
-              💡 {categoryInfo(categories, stat.categoryId).label}
+              💡 {labelFor(stat.categoryId)}
             </p>
             <div className="space-y-2">
               {list.map((e) => (

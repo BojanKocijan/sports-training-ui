@@ -33,6 +33,18 @@ vi.mock('../hooks/useCategories', () => ({
     },
 }))
 
+vi.mock('../hooks/useSkillCategories', () => ({
+  useSkillCategories: () => ({
+    skillCategories: [
+      { id: 'dribbling', label: 'Dribbling', emoji: '🏀', parentId: null },
+      { id: 'dribbling_strong', label: 'Strong hand dribbling', emoji: '🏀', parentId: 'dribbling' },
+    ],
+    loading: false,
+    error: null,
+  }),
+  groupSkillCategories: (cats: Array<{ parentId: string | null }>) => cats.filter((c) => c.parentId === null).map((parent) => ({ parent, children: [] })),
+}))
+
 vi.mock('../hooks/useExercises', () => ({
   useExercises: () => ({
     exercises: [{ id: 'ex1', emoji: '🏀', title: 'Cone dribble', categories: ['dribbling'], durationMinutes: 5, goal: 'Keep the ball close', steps: ['Set two cones'] }],
@@ -253,5 +265,23 @@ describe('ParentView', () => {
     expect(badges).toHaveTextContent('Consistent')
     expect(screen.getByLabelText('Consistent')).toBeInTheDocument()
     expect(screen.getByLabelText('Rising star (not earned yet)')).toBeInTheDocument()
+  })
+
+  it('shows each stat name above its bar, with real sub-skill labels, and no enjoyment row', async () => {
+    progressMock.mockReturnValue({
+      byCategory: [
+        { categoryId: 'dribbling', average: 2, count: 1, lastRatedAt: '2026-09-20' },
+        { categoryId: 'dribbling_strong', average: 1, count: 1, lastRatedAt: '2026-09-20' },
+        { categoryId: 'enjoyment', average: 3, count: 1, lastRatedAt: '2026-09-20' },
+      ],
+      loading: false,
+      error: null,
+      refresh: vi.fn(),
+    })
+    render(<ParentView groupId="u8" player={{ id: 'player-1', nickname: 'Mila' }} />)
+    await userEvent.click(screen.getByRole('tab', { name: /stats/i }))
+    expect(screen.getByText('Strong hand dribbling')).toBeInTheDocument()
+    expect(screen.queryByText('dribbling_strong')).not.toBeInTheDocument()
+    expect(screen.queryByText(/^enjoyment$/i)).not.toBeInTheDocument()
   })
 })

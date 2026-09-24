@@ -3,6 +3,8 @@ import { categoryInfo, useCategories } from '../hooks/useCategories'
 import { useExercises } from '../hooks/useExercises'
 import { useGroups } from '../hooks/useGroups'
 import { usePlayerProgress } from '../hooks/usePlayerProgress'
+import { useSkillCategories } from '../hooks/useSkillCategories'
+import { rollUpToTopLevel } from '../utils/parentGuidance'
 import { usePlans } from '../hooks/usePlans'
 import { formatDate } from '../utils/format'
 import { HomePractice } from './HomePractice'
@@ -28,6 +30,14 @@ export function ParentView({
 }) {
   const { byCategory, loading, error } = usePlayerProgress(player.id)
   const { categories } = useCategories()
+  const { skillCategories } = useSkillCategories()
+  // Sub-skills (dribbling_strong_hand...) have their own labels in /skill-categories; /categories
+  // only knows the top-level ones and would fall back to the raw id.
+  const labelFor = (id: string) => skillCategories.find((c) => c.id === id)?.label ?? categoryInfo(categories, id).label
+  const parentOf = (id: string) => skillCategories.find((c) => c.id === id)?.parentId ?? null
+  // "enjoyment" is the exercise-level 'Kids liked it?' mood rating, not a skill.
+  const skillStats = byCategory.filter((c) => c.categoryId !== 'enjoyment')
+  const topLevelStats = rollUpToTopLevel(skillStats, parentOf)
   const { upcoming, loading: plansLoading } = usePlans(groupId)
   const badges = usePlayerBadges(byCategory)
   const { exercises } = useExercises()
@@ -65,7 +75,7 @@ export function ParentView({
             size="xl"
           />
           {!loading && <div className="mt-4"><PlayerBadges badges={badges} /></div>}
-          {!loading && <MascotCoach nickname={player.nickname} stats={byCategory} categories={categories} />}
+          {!loading && <MascotCoach nickname={player.nickname} stats={topLevelStats} labelFor={labelFor} />}
         </TabsContent>
 
         <TabsContent value="stats" className="space-y-5 pt-3">
@@ -77,27 +87,30 @@ export function ParentView({
             )}
             {loading ? (
               <SportLoader />
-            ) : byCategory.length === 0 ? (
+            ) : skillStats.length === 0 ? (
               <p className="text-sm text-neutral-400">No ratings logged yet.</p>
             ) : (
-              <Card size="sm" className="space-y-2 px-3">
-                {byCategory.map((c) => {
+              <Card size="sm" className="space-y-3 px-3">
+                {skillStats.map((c) => {
                   const cat = categoryInfo(categories, c.categoryId)
+                  const isSub = parentOf(c.categoryId) !== null
                   return (
-                    <div key={c.categoryId} className="flex items-center gap-3">
-                      <span className="w-28 shrink-0 truncate text-xs font-semibold text-neutral-600 dark:text-neutral-300">
-                        <CategoryIcon id={c.categoryId} fallback={cat.emoji} className="mr-1 h-3.5 w-3.5 align-[-2px]" />
-                    {cat.label}
-                      </span>
-                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
+                    <div key={c.categoryId}>
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className={`min-w-0 truncate ${isSub ? 'text-xs font-medium text-neutral-500 dark:text-neutral-400' : 'text-sm font-semibold text-neutral-800 dark:text-neutral-100'}`}>
+                          <CategoryIcon id={c.categoryId} fallback={cat.emoji} className="mr-1 h-3.5 w-3.5 align-[-2px]" />
+                          {labelFor(c.categoryId)}
+                        </span>
+                        <span className="shrink-0 text-xs font-medium text-neutral-400">
+                          {c.average.toFixed(1)} · {c.count}×
+                        </span>
+                      </div>
+                      <div className="mt-1 h-2 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
                         <div
                           className="h-full rounded-full bg-orange-500"
                           style={{ width: `${(c.average / 3) * 100}%` }}
                         />
                       </div>
-                      <span className="w-16 shrink-0 text-right text-xs font-medium text-neutral-400">
-                        {c.average.toFixed(1)} · {c.count}×
-                      </span>
                     </div>
                   )
                 })}
@@ -105,7 +118,7 @@ export function ParentView({
             )}
           </section>
 
-          <HomePractice stats={byCategory} exercises={exercises} categories={categories} groupTemplateId={groupTemplateId} />
+          <HomePractice stats={topLevelStats} exercises={exercises} labelFor={labelFor} groupTemplateId={groupTemplateId} />
         </TabsContent>
 
         <TabsContent value="training" className="pt-3">

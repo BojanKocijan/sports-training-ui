@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Exercise } from '../hooks/useExercises'
 import type { PlayerCategoryStat } from '../hooks/usePlayerProgress'
-import { homeExercisesFor, mascotMessages, practiceCategories } from './parentGuidance'
+import { homeExercisesFor, mascotMessages, practiceCategories, rollUpToTopLevel } from './parentGuidance'
 
 const stat = (categoryId: string, average: number, count = 3): PlayerCategoryStat => ({ categoryId, average, count, lastRatedAt: '2026-09-20' })
 const ex = (id: string, categories: string[], durationMinutes: number, extra: Partial<Exercise> = {}): Exercise =>
@@ -34,5 +34,14 @@ describe('mascotMessages', () => {
     expect(messages.join('|')).toContain('9 skills rated')
     expect(messages.join('|')).toContain('More time to practise DEFENSE together')
     expect(messages.join('|').toLowerCase()).not.toMatch(/fail|bad|weak|sad/)
+  })
+})
+
+describe('rollUpToTopLevel', () => {
+  it('merges sub-skills into their top-level category with a count-weighted average', () => {
+    const parentOf = (id: string) => (id.startsWith('dribbling_') ? 'dribbling' : null)
+    const result = rollUpToTopLevel([stat('dribbling', 2, 1), stat('dribbling_strong', 1, 3), stat('passing', 3, 2)], parentOf)
+    expect(result.find((r) => r.categoryId === 'dribbling')).toMatchObject({ count: 4, average: 1.25 })
+    expect(result.find((r) => r.categoryId === 'passing')).toMatchObject({ count: 2, average: 3 })
   })
 })
