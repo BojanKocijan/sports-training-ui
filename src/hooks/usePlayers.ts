@@ -223,13 +223,14 @@ export async function fetchParentLinks(playerId: string): Promise<ParentLink[]> 
   return api.get<ParentLink[]>(`/players/${playerId}/parents`)
 }
 
-/** Links a parent's email to a player and sends them the confirmation invite. */
-export async function addParentLink(playerId: string, email: string): Promise<ParentLink | null> {
-  const { link } = await api.post<{ link: ParentLink | null; invited: boolean }>(
+/** Links a parent's email to a player and emails them (an invite, or a sign-in code if they
+ * already have an account). `emailed` is false when the link was saved but no email could be sent. */
+export async function addParentLink(playerId: string, email: string): Promise<{ link: ParentLink | null; emailed: boolean }> {
+  const { link, invited } = await api.post<{ link: ParentLink | null; invited: boolean }>(
     `/players/${playerId}/parents`,
     { email },
   )
-  return link
+  return { link, emailed: invited }
 }
 
 /** Unlinks a parent's email from a player; they lose access on their next request. */
