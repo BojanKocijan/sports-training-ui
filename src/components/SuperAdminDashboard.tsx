@@ -9,17 +9,18 @@ import { useState } from 'react'
 import { useAdminOverview, type AdminOverview } from '../hooks/useAdminOverview'
 import { AddOwnerDialog } from './AddOwnerDialog'
 import { ThemeToggle } from './ThemeToggle'
+import { INITIAL_TABLE_STATE, WorkspacesTable, type TableState } from './WorkspacesTable'
 import { WorkspacePlanEditor } from './WorkspacePlanEditor'
 import { TrainerAccessMenu } from './TrainerAccessMenu'
 import { Button } from './ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 
-type Workspace = AdminOverview['workspaces'][number]
 type Access = AdminOverview['access'][number]
 type Parent = AdminOverview['parents'][number]
 
-/** Sidebar selection: the platform-wide overview, or one workspace by id. */
+/** Navigation: the platform-wide overview, the workspaces table, or one workspace by id. */
 const PLATFORM = 'platform'
+const WORKSPACES = 'workspaces'
 
 function roleLabel(role: string) {
   if (role === 'club_admin') return 'Club admin'
@@ -169,32 +170,26 @@ function ParentsTable({ parents }: { parents: Parent[] }) {
   )
 }
 
-function WorkspaceCard({
-  workspace,
-  onOpen,
-}: {
-  workspace: Workspace
-  onOpen: () => void
-}) {
+/** One card for all workspaces: the total, split into Free and Paid (any plan other than Free),
+ * opening the Workspaces table. */
+function WorkspacesCard({ workspaces, onOpen }: { workspaces: AdminOverview['workspaces']; onOpen: () => void }) {
+  const free = workspaces.filter((w) => w.tier === 'free').length
+  const paid = workspaces.length - free
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition-colors hover:border-primary/50"
+      aria-label={`Workspaces: ${workspaces.length} total, ${free} free, ${paid} paid. Open the workspaces table`}
+      className="w-full rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition-colors hover:border-primary/50"
     >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="font-bold text-foreground">{workspace.name}</h3>
-          <p className="mt-1 text-xs text-muted-foreground">{workspace.slug}</p>
-        </div>
-        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold uppercase text-primary">
-          {workspace.tier ?? 'No tier'}
-        </span>
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-foreground">Workspaces</span>
+        <Building2 className="h-4 w-4 text-primary" />
       </div>
-      <div className="mt-5 grid grid-cols-3 gap-3">
-        <StatTile label="Groups" value={workspace.groupCount} />
-        <StatTile label="Players" value={workspace.playerCount} />
-        <StatTile label="Staff" value={workspace.staffCount} />
+      <p className="mt-2 text-4xl font-bold text-foreground">{workspaces.length}</p>
+      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+        <span><span className="font-semibold text-foreground">{free}</span> <span className="text-muted-foreground">Free</span></span>
+        <span><span className="font-semibold text-foreground">{paid}</span> <span className="text-muted-foreground">Paid</span></span>
       </div>
     </button>
   )
@@ -211,6 +206,7 @@ export function SuperAdminDashboard({
 }) {
   const { overview, loading, error, refresh } = useAdminOverview()
   const [selected, setSelected] = useState<string>(PLATFORM)
+  const [tableState, setTableState] = useState<TableState>(INITIAL_TABLE_STATE)
   const [ownerWorkspaceId, setOwnerWorkspaceId] = useState<string | null>(null)
 
   const workspace = overview?.workspaces.find((w) => w.id === selected) ?? null
@@ -218,7 +214,6 @@ export function SuperAdminDashboard({
 
   const stats = overview
     ? [
-        { label: 'Workspaces', value: overview.stats.workspaces, icon: Building2 },
         { label: 'Staff accounts', value: overview.stats.staffAccounts, icon: Users },
         { label: 'Platform admins', value: overview.stats.platformAdmins, icon: ShieldCheck },
         { label: 'Groups', value: overview.stats.groups, icon: Layers3 },
@@ -255,7 +250,7 @@ export function SuperAdminDashboard({
       </header>
 
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 md:flex-row">
-        <nav aria-label="Workspaces" className="shrink-0 md:w-60">
+        <nav aria-label="Admin sections" className="shrink-0 md:w-60">
           <button
             type="button"
             aria-current={selected === PLATFORM ? 'page' : undefined}
@@ -265,29 +260,15 @@ export function SuperAdminDashboard({
             <span>Platform overview</span>
           </button>
 
-          <p className="mb-1 mt-4 px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Workspaces
-          </p>
-          <ul className="space-y-1">
-            {overview?.workspaces.map((w) => (
-              <li key={w.id}>
-                <button
-                  type="button"
-                  aria-current={selected === w.id ? 'page' : undefined}
-                  onClick={() => setSelected(w.id)}
-                  className={navItem(selected === w.id)}
-                >
-                  <span className="truncate">{w.name}</span>
-                  <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
-                    {w.tier ?? '—'}
-                  </span>
-                </button>
-              </li>
-            ))}
-            {overview && overview.workspaces.length === 0 && (
-              <li className="px-3 py-2 text-sm text-muted-foreground">No workspaces yet.</li>
-            )}
-          </ul>
+          <button
+            type="button"
+            aria-current={selected === WORKSPACES || workspace ? 'page' : undefined}
+            onClick={() => setSelected(WORKSPACES)}
+            className={`${navItem(selected === WORKSPACES || Boolean(workspace))} mt-1`}
+          >
+            <span>Workspaces</span>
+            {overview && <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">{overview.workspaces.length}</span>}
+          </button>
         </nav>
 
         <main className="min-w-0 flex-1 space-y-8">
@@ -306,16 +287,18 @@ export function SuperAdminDashboard({
             </div>
           )}
 
-          {overview && !workspace && (
+          {overview && selected === PLATFORM && (
             <>
               <div>
                 <h2 className="text-2xl font-bold text-foreground">Platform overview</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Workspaces and current platform usage. Pick a workspace on the left for its details.
+                  Current platform usage. Open Workspaces for the full list.
                 </p>
               </div>
 
-              <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <WorkspacesCard workspaces={overview.workspaces} onOpen={() => setSelected(WORKSPACES)} />
+
+              <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {stats.map(({ label, value, icon: Icon }) => (
                   <div key={label} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                     <div className="flex items-center justify-between">
@@ -329,20 +312,6 @@ export function SuperAdminDashboard({
 
               <section>
                 <div className="mb-3">
-                  <h2 className="text-lg font-bold text-foreground">Workspaces</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Subscription and usage belong to each workspace.
-                  </p>
-                </div>
-                <div className="grid gap-4 lg:grid-cols-2">
-                  {overview.workspaces.map((w) => (
-                    <WorkspaceCard key={w.id} workspace={w} onOpen={() => setSelected(w.id)} />
-                  ))}
-                </div>
-              </section>
-
-              <section>
-                <div className="mb-3">
                   <h2 className="text-lg font-bold text-foreground">Platform admins</h2>
                   <p className="text-sm text-muted-foreground">Accounts with platform-wide access.</p>
                 </div>
@@ -351,8 +320,21 @@ export function SuperAdminDashboard({
             </>
           )}
 
+          {overview && selected === WORKSPACES && (
+            <>
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Workspaces</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Open a workspace for its plan, groups and people.</p>
+              </div>
+              <WorkspacesTable overview={overview} state={tableState} onState={setTableState} onOpen={setSelected} />
+            </>
+          )}
+
           {overview && workspace && (
             <>
+              <button type="button" onClick={() => setSelected(WORKSPACES)} className="text-sm text-muted-foreground hover:underline">
+                ← Workspaces
+              </button>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">{workspace.name}</h2>

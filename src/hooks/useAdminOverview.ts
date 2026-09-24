@@ -23,6 +23,8 @@ export interface AdminOverview {
     tier: string | null
     /** Player capacity while the workspace is on FREE. */
     playerLimit?: number
+    /** Optional so a slightly older API deploy still renders. */
+    createdAt?: string
     groupCount: number
     playerCount: number
     staffCount: number
