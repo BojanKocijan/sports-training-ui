@@ -1,9 +1,13 @@
 import type { ParentPlayer } from '../hooks/useTrainerAccess'
 import { categoryInfo, useCategories } from '../hooks/useCategories'
+import { useExercises } from '../hooks/useExercises'
+import { useGroups } from '../hooks/useGroups'
 import { usePlayerProgress } from '../hooks/usePlayerProgress'
 import { usePlans } from '../hooks/usePlans'
 import { formatDate } from '../utils/format'
 import { GroupProgressSummary } from './GroupProgressSummary'
+import { HomePractice } from './HomePractice'
+import { MascotCoach } from './MascotCoach'
 import { SportLoader } from './SportLoader'
 import { PlayerPreviewCard } from './player-form/PlayerPreviewCard'
 import { Card } from './ui/card'
@@ -24,6 +28,9 @@ export function ParentView({
   const { byCategory, loading, error } = usePlayerProgress(player.id)
   const { categories } = useCategories()
   const { upcoming, loading: plansLoading } = usePlans(groupId)
+  const { exercises } = useExercises()
+  const { groups } = useGroups()
+  const groupTemplateId = groups.find((g) => g.id === (player.group_id ?? groupId))?.templateId
 
   return (
     <div className="mx-auto max-w-md space-y-5 px-4 pb-24 pt-4 md:max-w-2xl">
@@ -54,6 +61,7 @@ export function ParentView({
             mascotId={player.mascot_id}
             hideCaption
           />
+          {!loading && <MascotCoach nickname={player.nickname} stats={byCategory} categories={categories} />}
         </TabsContent>
 
         <TabsContent value="stats" className="space-y-5 pt-3">
@@ -92,6 +100,8 @@ export function ParentView({
               </Card>
             )}
           </section>
+
+          <HomePractice stats={byCategory} exercises={exercises} categories={categories} groupTemplateId={groupTemplateId} />
 
           <GroupProgressSummary groupId={groupId} />
         </TabsContent>

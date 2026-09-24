@@ -33,6 +33,18 @@ vi.mock('../hooks/useCategories', () => ({
     },
 }))
 
+vi.mock('../hooks/useExercises', () => ({
+  useExercises: () => ({
+    exercises: [{ id: 'ex1', emoji: '🏀', title: 'Cone dribble', categories: ['dribbling'], durationMinutes: 5, goal: 'Keep the ball close', steps: ['Set two cones'] }],
+    loading: false,
+    error: null,
+  }),
+}))
+
+vi.mock('../hooks/useGroups', () => ({
+  useGroups: () => ({ groups: [], loading: false, error: null }),
+}))
+
 vi.mock('../hooks/usePlans', () => ({
   usePlans: vi.fn(),
 }))
@@ -192,5 +204,40 @@ describe('ParentView', () => {
 
     await userEvent.click(screen.getByRole('tab', { name: /trainings/i }))
     expect(screen.getByText(/upcoming trainings/i)).toBeInTheDocument()
+  })
+
+  it('shows an encouraging mascot message and home-practice suggestions for a low category', async () => {
+    progressMock.mockReturnValue({
+      byCategory: [{ categoryId: 'dribbling', average: 1.2, count: 4, lastRatedAt: '2026-09-20' }],
+      loading: false,
+      error: null,
+      refresh: vi.fn(),
+    })
+    render(<ParentView groupId="u8" player={{ id: 'player-1', nickname: 'Mila' }} />)
+
+    // Mascot tab (default): a message built from the ratings, framed as practising together.
+    const coach = screen.getByRole('button', { name: /another message from your mascot/i })
+    expect(coach).toHaveTextContent(/skills rated so far/i)
+    await userEvent.click(coach)
+    expect(coach).toHaveTextContent(/you keep working on Dribbling/i)
+    await userEvent.click(coach)
+    expect(coach).toHaveTextContent(/more time to practise Dribbling together/i)
+
+    // Stats tab: a couple of exercises to try at home.
+    await userEvent.click(screen.getByRole('tab', { name: /stats/i }))
+    expect(screen.getByText(/practise together at home/i)).toBeInTheDocument()
+    expect(screen.getByText(/Cone dribble/)).toBeInTheDocument()
+  })
+
+  it('shows no home-practice section when no category is low', async () => {
+    progressMock.mockReturnValue({
+      byCategory: [{ categoryId: 'dribbling', average: 2.7, count: 4, lastRatedAt: '2026-09-20' }],
+      loading: false,
+      error: null,
+      refresh: vi.fn(),
+    })
+    render(<ParentView groupId="u8" player={{ id: 'player-1', nickname: 'Mila' }} />)
+    await userEvent.click(screen.getByRole('tab', { name: /stats/i }))
+    expect(screen.queryByText(/practise together at home/i)).not.toBeInTheDocument()
   })
 })
