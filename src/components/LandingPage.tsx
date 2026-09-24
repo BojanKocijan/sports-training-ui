@@ -58,7 +58,7 @@ function prefersStill() {
   }
 }
 
-/** The panther dribbling towards the camera. The clip has no transparency, so it sits in a
+/** The sports-montage mascot clip. The clip has no transparency, so it sits in a
  * rounded card tinted like its own backdrop; the poster paints instantly while it loads. */
 function HeroVideo() {
   const [still] = useState(prefersStill)
@@ -67,7 +67,7 @@ function HeroVideo() {
   if (still) {
     return (
       <div className={frame}>
-        <img src="/videos/mascot-dribble-poster.webp" alt="A panther mascot dribbling a basketball" className="h-full w-full object-cover" />
+        <img src="/videos/sports-montage-poster.webp" alt="A playful tiger mascot in a sports montage" className="h-full w-full object-cover" />
       </div>
     )
   }
@@ -80,10 +80,10 @@ function HeroVideo() {
         loop
         playsInline
         preload="metadata"
-        poster="/videos/mascot-dribble-poster.webp"
-        aria-label="A panther mascot dribbling a basketball"
+        poster="/videos/sports-montage-poster.webp"
+        aria-label="A playful tiger mascot in a sports montage"
       >
-        <source src="/videos/mascot-dribble.mp4" type="video/mp4" />
+        <source src="/videos/sports-montage.mp4" type="video/mp4" />
       </video>
     </div>
   )
