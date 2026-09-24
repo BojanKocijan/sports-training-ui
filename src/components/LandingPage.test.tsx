@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
@@ -12,18 +12,14 @@ const access = {
 } as unknown as ReturnType<typeof useTrainerAccess>
 
 describe('LandingPage', () => {
-  it('asks whether the visitor is a trainer or a parent, then shows the email form', () => {
+  it('offers I\'m a trainer and I\'m a parent in the header and opens the matching sign-in', () => {
     render(<LandingPage trainerAccess={access} />)
-    expect(screen.getByRole('button', { name: /i'm a trainer/i })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /i'm a parent/i }))
-    expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument()
-    expect(screen.getByText(/if it isn't linked yet, we'll help you ask the trainer/i)).toBeInTheDocument()
-  })
-
-  it('explains that a parent must be invited by the trainer and can also be a trainer', () => {
-    render(<LandingPage trainerAccess={access} />)
+    const header = screen.getByRole('banner')
+    expect(within(header).getByRole('button', { name: /i'm a trainer/i })).toBeInTheDocument()
+    fireEvent.click(within(header).getByRole('button', { name: /i'm a parent/i }))
     expect(screen.getByText(/you need to be invited by their trainer/i)).toBeInTheDocument()
     expect(screen.getByText(/one account is both trainer and parent/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument()
   })
 
   it('says the audience is youth sports trainers and that only basketball is available now', () => {

@@ -100,8 +100,8 @@ export async function mockGate(page: Page) {
 /** Signs in through the account email OTP flow on the already-loaded LockScreen,
  * leaving the application navigation visible. */
 export async function login(page: Page) {
-  // The card first asks how the visitor is coming in.
-  await page.getByRole('button', { name: "I'm a trainer" }).click()
+  // The header offers I'm a trainer / I'm a parent; the trainer choice opens the sign-in dialog.
+  await page.getByRole('banner').getByRole('button', { name: "I'm a trainer" }).click()
 
   await page.getByLabel('Email').fill(EMAIL)
 

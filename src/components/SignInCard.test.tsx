@@ -1,7 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
-import { getSignInIntent } from '../lib/signInIntent'
 import { ParentNoChildCard } from './ParentNoChildCard'
 import { SignInCard } from './SignInCard'
 
@@ -14,17 +13,18 @@ function access(overrides = {}) {
 }
 
 describe('SignInCard', () => {
-  it('remembers the chosen role, then requests and verifies a code', async () => {
+  it('requests and verifies a code, and can switch role', async () => {
     const a = access()
-    render(<SignInCard trainerAccess={a} />)
-    fireEvent.click(screen.getByRole('button', { name: /i'm a trainer/i }))
-    expect(getSignInIntent()).toBe('trainer')
+    const onSwitchRole = vi.fn()
+    render(<SignInCard trainerAccess={a} role="trainer" onSwitchRole={onSwitchRole} />)
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'coach@example.com' } })
     fireEvent.click(screen.getByRole('button', { name: 'Send sign-in code' }))
     await waitFor(() => expect(a.requestSignupCode).toHaveBeenCalledWith('coach@example.com'))
     fireEvent.change(await screen.findByLabelText('Sign-in code'), { target: { value: '12345678' } })
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
     await waitFor(() => expect(a.verifySignupCode).toHaveBeenCalledWith('coach@example.com', '12345678'))
+    fireEvent.click(screen.getByRole('button', { name: /i'm a parent instead/i }))
+    expect(onSwitchRole).toHaveBeenCalledWith('parent')
   })
 })
 
