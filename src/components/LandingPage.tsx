@@ -4,6 +4,7 @@ import { CategoryIcon } from './CategoryIcon'
 import { PrivacyPolicyScreen } from './PrivacyPolicyScreen'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { SignInCard } from './SignInCard'
+import { ThemeToggle } from './ThemeToggle'
 import { WorkspaceOnboardingCard } from './WorkspaceOnboardingCard'
 import { ParentNoChildCard } from './ParentNoChildCard'
 import { getSignInIntent, setSignInIntent } from '../lib/signInIntent'
@@ -114,9 +115,12 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
         <a href="#top" aria-label="CoachCub home" className="rounded-xl dark:bg-white dark:px-2 dark:py-1">
           <img src="/logos/coachcub-logo.webp" alt="CoachCub" width={1844} height={403} className="h-9 w-auto md:h-11" />
         </a>
-        <a href="#sign-in" className="rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600">
-          Sign in
-        </a>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <a href="#sign-in" className="rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600">
+            Sign in
+          </a>
+        </div>
       </header>
 
       <main id="top">
