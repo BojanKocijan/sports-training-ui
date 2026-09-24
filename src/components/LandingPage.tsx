@@ -4,6 +4,7 @@ import { CategoryIcon } from './CategoryIcon'
 import { PrivacyPolicyScreen } from './PrivacyPolicyScreen'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { SignInCard } from './SignInCard'
+import { Card } from './ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog'
 import type { SignInIntent } from '../lib/signInIntent'
 import { ThemeToggle } from './ThemeToggle'
@@ -108,7 +109,7 @@ function HeroVideo() {
  * for parents. */
 function AccessCard({ trainerAccess, flow, onSwitchRole }: {
   trainerAccess: ReturnType<typeof useTrainerAccess>
-  flow: SignInIntent | null
+  flow: SignInIntent | 'choose' | null
   onSwitchRole: (next: SignInIntent) => void
 }) {
   const [intent, setIntent] = useState(getSignInIntent)
@@ -117,6 +118,23 @@ function AccessCard({ trainerAccess, flow, onSwitchRole }: {
       return <ParentNoChildCard trainerAccess={trainerAccess} onNotParent={() => { setSignInIntent('trainer'); setIntent('trainer') }} />
     }
     return <WorkspaceOnboardingCard trainerAccess={trainerAccess} onNotTrainer={() => { setSignInIntent('parent'); setIntent('parent') }} />
+  }
+  if (flow === 'choose') {
+    return (
+      <Card className="w-full rounded-3xl p-5 shadow-lg">
+        <h2 className="text-lg font-bold dark:text-white">Sign in to CoachCub</h2>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">How are you coming in?</p>
+        <div className="mt-4 grid gap-3">
+          <button type="button" onClick={() => onSwitchRole('trainer')} className="rounded-xl bg-orange-500 py-3 text-sm font-bold text-white">
+            I'm a trainer
+          </button>
+          <button type="button" onClick={() => onSwitchRole('parent')}
+            className="rounded-xl border border-orange-500 py-3 text-sm font-bold text-orange-600 dark:text-orange-300">
+            I'm a parent
+          </button>
+        </div>
+      </Card>
+    )
   }
   const role = flow ?? 'trainer'
   return (
@@ -141,7 +159,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
   const [privacyOpen, setPrivacyOpen] = useState(false)
   // Which role's sign-in dialog is open. A signed-in account that still needs a workspace (or a
   // child link) opens it automatically, since that is the next step for them.
-  const [flow, setFlow] = useState<SignInIntent | null>(null)
+  const [flow, setFlow] = useState<SignInIntent | 'choose' | null>(null)
   const [dismissed, setDismissed] = useState(false)
   const open = flow !== null || (trainerAccess.needsWorkspace && !dismissed)
   const choose = (role: SignInIntent) => { setSignInIntent(role); setFlow(role); setDismissed(false) }
@@ -154,13 +172,9 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
         </a>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <button type="button" onClick={() => choose('parent')}
-            className="hidden whitespace-nowrap rounded-full border border-orange-500 px-4 py-2 sm:block text-sm font-bold text-orange-600 hover:bg-orange-50 dark:text-orange-300 dark:hover:bg-orange-500/10">
-            I'm a parent
-          </button>
-          <button type="button" onClick={() => choose('trainer')}
-            className="hidden whitespace-nowrap rounded-full bg-orange-500 px-4 py-2 text-sm sm:block font-bold text-white hover:bg-orange-600">
-            I'm a trainer
+          <button type="button" onClick={() => { setFlow('choose'); setDismissed(false) }}
+            className="whitespace-nowrap rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600">
+            Sign in
           </button>
         </div>
       </header>
@@ -169,7 +183,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
         <section className="mx-auto grid max-w-6xl items-center gap-8 px-4 pb-12 pt-6 md:grid-cols-[5fr_7fr] md:pt-12">
           <div>
             <p className="inline-block rounded-full bg-orange-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
-              For youth sports trainers · Basketball available now
+              For youth basketball trainers
             </p>
             <h1 className="mt-4 text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
               Every practice is a step towards a bigger cub.
@@ -194,7 +208,13 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-10">
-          <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">One app, three happy teams</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">One app, three happy teams</h2>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
+              <IconBallBasketball aria-hidden className="h-4 w-4" stroke={2} />
+              Basketball available now
+            </span>
+          </div>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {AUDIENCES.map((a) => (
               <article key={a.title} className="rounded-3xl border border-black/5 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-neutral-900">
