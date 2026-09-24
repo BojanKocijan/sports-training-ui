@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { categoryInfo, type Category } from '../hooks/useCategories'
 import type { PlayerCategoryStat } from '../hooks/usePlayerProgress'
 import { mascotMessages } from '../utils/parentGuidance'
 
 /** The mascot "talks" to the parent and child from the child's real ratings (#113): tap for the next
  * message. It only ever encourages: strengths, effort, and "more time to practise this together"
  * for a low category, never a failure state (#106). */
-export function MascotCoach({ nickname, stats, categories }: {
+export function MascotCoach({ nickname, stats, labelFor }: {
   nickname: string
   stats: PlayerCategoryStat[]
-  categories: Category[]
+  labelFor: (categoryId: string) => string
 }) {
-  const messages = mascotMessages(nickname, stats, (id) => categoryInfo(categories, id).label)
+  const messages = mascotMessages(nickname, stats, labelFor)
   const [index, setIndex] = useState(0)
   const [cheering, setCheering] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)

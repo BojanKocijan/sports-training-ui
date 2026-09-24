@@ -46,3 +46,19 @@ export function mascotMessages(nickname: string, stats: PlayerCategoryStat[], la
   }
   return messages
 }
+
+/** Roll finer sub-skill stats (e.g. dribbling_strong_hand) up to their top-level category, with a
+ * rating-count-weighted average, so suggestions and mascot messages talk about "Dribbling" and can
+ * find matching exercises (exercises are tagged with top-level categories). */
+export function rollUpToTopLevel(stats: PlayerCategoryStat[], parentOf: (categoryId: string) => string | null): PlayerCategoryStat[] {
+  const byTop = new Map<string, { sum: number; count: number; lastRatedAt: string }>()
+  for (const s of stats) {
+    const top = parentOf(s.categoryId) ?? s.categoryId
+    const entry = byTop.get(top) ?? { sum: 0, count: 0, lastRatedAt: s.lastRatedAt }
+    entry.sum += s.average * s.count
+    entry.count += s.count
+    if (s.lastRatedAt > entry.lastRatedAt) entry.lastRatedAt = s.lastRatedAt
+    byTop.set(top, entry)
+  }
+  return [...byTop.entries()].map(([categoryId, e]) => ({ categoryId, average: e.count > 0 ? e.sum / e.count : 0, count: e.count, lastRatedAt: e.lastRatedAt }))
+}
