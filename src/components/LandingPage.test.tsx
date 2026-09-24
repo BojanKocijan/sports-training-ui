@@ -55,7 +55,7 @@ describe('LandingPage', () => {
     vi.stubGlobal('matchMedia', (query: string) => ({ matches: query.includes('reduce'), media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
     const { container } = render(<LandingPage trainerAccess={access} />)
     expect(container.querySelector('video')).toBeNull()
-    expect(screen.getByAltText(/tiger mascot in a sports montage/i)).toBeInTheDocument()
+    expect(screen.getByAltText(/animal mascots playing different sports/i)).toBeInTheDocument()
     vi.unstubAllGlobals()
   })
 
