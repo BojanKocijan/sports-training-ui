@@ -122,17 +122,34 @@ export function useTrainerAccess(groupId: string) {
     } finally { setChecking(false) }
   }, [])
 
-  const verifySignupCode = useCallback(async (email: string, code: string, workspaceName: string) => {
+  const verifySignupCode = useCallback(async (email: string, code: string) => {
     setChecking(true)
     setError(null)
     try {
-      const next = await api.post<AccountSession>('/auth/signup/verify', { email, code, workspaceName })
+      const next = await api.post<AccountSession>('/auth/signup/verify', { email, code })
       saveSession(next)
       setAccount(next)
       return true
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Invalid sign-up code')
       return false
+    } finally { setChecking(false) }
+  }, [])
+
+  // Re-read access, e.g. a parent checking whether their trainer has linked their child yet.
+  const refreshAccount = useCallback(async () => {
+    setChecking(true)
+    setError(null)
+    try {
+      const me = await api.get<Pick<AccountSession, 'groupIds' | 'memberships' | 'children'>>('/auth/me')
+      const current = currentSession()
+      if (current) {
+        const next = { ...current, ...me }
+        saveSession(next)
+        setAccount(next)
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not check your access')
     } finally { setChecking(false) }
   }, [])
 
@@ -202,7 +219,7 @@ export function useTrainerAccess(groupId: string) {
 
   return {
     ...state, checking, error, requestLoginCode, verifyLoginCode,
-    needsWorkspace, requestSignupCode, verifySignupCode, createWorkspace,
+    needsWorkspace, requestSignupCode, verifySignupCode, createWorkspace, refreshAccount,
     signedInEmail: account?.user.email ?? '',
     lock, inviteTrainer, inviteOwner, inviteOwnerForGroup,
     canInvite, isSuperadmin, accountRole,

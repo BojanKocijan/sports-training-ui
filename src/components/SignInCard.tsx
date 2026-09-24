@@ -1,76 +1,35 @@
 import { useState } from 'react'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
-import { suggestWorkspaceName } from '../utils/workspaceName'
-import { parentInviteMailto, parentInviteMessage } from '../utils/parentInvite'
+import { setSignInIntent, type SignInIntent } from '../lib/signInIntent'
 import { Card } from './ui/card'
 
-/** Email + one-time-code sign-in. Trainers sign in with their own email; a parent uses the same
- * form once a trainer has linked (and they have confirmed) their email to a child. */
+const inputClass = 'mt-1 w-full rounded-xl border border-black/10 px-3 py-2 dark:border-white/10 dark:bg-neutral-800'
+
+/** First pick trainer or parent, then email + one-time code (or the instant sign-in link).
+ * Everyone can request a code; what they can do afterwards depends on their access: trainers
+ * without a workspace name one, parents without a linked child ask their trainer. */
 export function SignInCard({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
-  const { checking, error, requestLoginCode, verifyLoginCode, requestSignupCode, verifySignupCode } = trainerAccess
-  const [signUp, setSignUp] = useState(false)
-  const [workspaceName, setWorkspaceName] = useState('')
-  const [parentMode, setParentMode] = useState(false)
-  const [copied, setCopied] = useState<'message' | 'link' | null>(null)
-  const [trainerEmail, setTrainerEmail] = useState('')
+  const { checking, error, requestSignupCode, verifySignupCode } = trainerAccess
+  const [role, setRole] = useState<SignInIntent | null>(null)
   const [email, setEmail] = useState('')
   const [emailCode, setEmailCode] = useState('')
   const [codeSent, setCodeSent] = useState(false)
 
-  if (parentMode) {
+  if (!role) {
     return (
       <Card className="w-full rounded-3xl p-5 shadow-lg">
-        <p className="inline-block rounded-full bg-orange-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
-          Parents
-        </p>
-        <h2 className="mt-2 text-lg font-bold dark:text-white">Ask your child's trainer</h2>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          Parents don't create their own account. Your child's trainer adds your email, and then you can sign in here to follow your child's progress. Email them, or copy the message or link and send it in any app you like:
-        </p>
-        <label className="mt-3 block text-sm dark:text-white" htmlFor="parent-email">Your email</label>
-        <input
-          id="parent-email" type="email" autoComplete="email" value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 dark:border-white/10 dark:bg-neutral-800"
-        />
-        <textarea
-          readOnly
-          aria-label="Message for your trainer"
-          rows={6}
-          value={parentInviteMessage({ parentEmail: email, appUrl: window.location.origin })}
-          className="mt-3 w-full rounded-xl border border-black/10 bg-neutral-50 px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-800"
-        />
-        <label className="mt-3 block text-sm dark:text-white" htmlFor="parent-trainer-email">Trainer's email (optional)</label>
-        <input
-          id="parent-trainer-email" type="email" value={trainerEmail}
-          onChange={(event) => setTrainerEmail(event.target.value)}
-          className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 dark:border-white/10 dark:bg-neutral-800"
-        />
-        <a
-          href={parentInviteMailto({ trainerEmail, parentEmail: email, appUrl: window.location.origin })}
-          className="mt-3 block w-full rounded-xl bg-orange-500 py-2.5 text-center text-sm font-bold text-white"
-        >
-          Email it
-        </a>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          {([['message', 'Copy message', parentInviteMessage({ parentEmail: email, appUrl: window.location.origin })],
-             ['link', 'Copy link', window.location.origin]] as const).map(([kind, label, text]) => (
-            <button
-              key={kind}
-              type="button"
-              className="rounded-xl border border-orange-500 py-2 text-sm font-semibold text-orange-600 dark:text-orange-300"
-              onClick={async () => {
-                try { await navigator.clipboard.writeText(text); setCopied(kind) } catch { /* Clipboard blocked. */ }
-              }}
-            >
-              {label}
-            </button>
-          ))}
+        <h2 className="text-lg font-bold dark:text-white">Sign in to CoachCub</h2>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">How are you coming in?</p>
+        <div className="mt-4 grid gap-3">
+          <button type="button" onClick={() => { setRole('trainer'); setSignInIntent('trainer') }}
+            className="rounded-xl bg-orange-500 py-3 text-sm font-bold text-white">
+            I'm a trainer
+          </button>
+          <button type="button" onClick={() => { setRole('parent'); setSignInIntent('parent') }}
+            className="rounded-xl border border-orange-500 py-3 text-sm font-bold text-orange-600 dark:text-orange-300">
+            I'm a parent
+          </button>
         </div>
-        {copied && <p role="status" className="mt-2 text-xs text-neutral-500">Copied. Paste it to your trainer in any app.</p>}
-        <button type="button" className="mt-3 text-sm text-neutral-500 underline" onClick={() => setParentMode(false)}>
-          Back to sign in
-        </button>
       </Card>
     )
   }
@@ -80,89 +39,51 @@ export function SignInCard({ trainerAccess }: { trainerAccess: ReturnType<typeof
       <form
         onSubmit={async (event) => {
           event.preventDefault()
-          if (signUp) {
-            const name = workspaceName.trim() || suggestWorkspaceName(email)
-            if (codeSent) await verifySignupCode(email, emailCode, name)
-            else if (await requestSignupCode(email)) setCodeSent(true)
-          } else if (codeSent) await verifyLoginCode(email, emailCode)
-          else if (await requestLoginCode(email)) setCodeSent(true)
+          if (codeSent) await verifySignupCode(email, emailCode)
+          else if (await requestSignupCode(email)) setCodeSent(true)
         }}
       >
         <p className="inline-block rounded-full bg-orange-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">
-          Trainers &amp; invited parents
+          {role === 'trainer' ? 'Trainers' : 'Parents'}
         </p>
-        <h2 className="mt-2 text-lg font-bold dark:text-white">{signUp ? 'Create your workspace' : 'Sign in'}</h2>
+        <h2 className="mt-2 text-lg font-bold dark:text-white">Sign in</h2>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          {signUp
-            ? "We'll email you a code, or a button to sign in instantly. Your workspace starts on the Free plan with one basketball group."
-            : "Use your email. We'll send you a sign-in code or an instant sign-in button, no password needed."}
+          {role === 'trainer'
+            ? "We'll email you a code or an instant sign-in button, no password needed. New here? You'll set up your workspace next."
+            : "Use the email your child's trainer added. We'll email you a code or an instant sign-in button. If it isn't linked yet, we'll help you ask the trainer."}
         </p>
         <label className="mt-3 block text-sm dark:text-white" htmlFor="trainer-email">Email</label>
         <input
-          id="trainer-email"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
+          id="trainer-email" type="email" autoComplete="email" required value={email}
           onChange={(event) => { setEmail(event.target.value); setCodeSent(false) }}
-          className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 dark:border-white/10 dark:bg-neutral-800"
+          className={inputClass}
         />
-        {signUp && (
-          <>
-            <label className="mt-3 block text-sm dark:text-white" htmlFor="signup-workspace-name">Workspace name</label>
-            <input
-              id="signup-workspace-name"
-              type="text"
-              maxLength={80}
-              placeholder={email ? suggestWorkspaceName(email) : 'e.g. Bojan Kocijan Basketball'}
-              value={workspaceName}
-              onChange={(event) => setWorkspaceName(event.target.value)}
-              className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 dark:border-white/10 dark:bg-neutral-800"
-            />
-          </>
-        )}
         {codeSent && (
           <>
             <label className="mt-3 block text-sm dark:text-white" htmlFor="trainer-email-code">Sign-in code</label>
             <input
-              id="trainer-email-code"
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              required
-              value={emailCode}
-              onChange={(event) => setEmailCode(event.target.value)}
-              className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 dark:border-white/10 dark:bg-neutral-800"
+              id="trainer-email-code" type="text" inputMode="numeric" autoComplete="one-time-code" required
+              value={emailCode} onChange={(event) => setEmailCode(event.target.value)} className={inputClass}
             />
           </>
         )}
         {error && <p className="mt-2 text-sm text-red-600" role="alert">{error}</p>}
         <button
-          type="submit"
-          disabled={checking || (codeSent && !emailCode)}
+          type="submit" disabled={checking || (codeSent && !emailCode)}
           className="mt-4 w-full rounded-xl bg-orange-500 py-2.5 text-sm font-bold text-white disabled:opacity-50"
         >
-          {checking ? 'Please wait...' : codeSent ? (signUp ? 'Create workspace' : 'Sign in') : signUp ? 'Send sign-up code' : 'Send sign-in code'}
-        </button>
-        <button
-          type="button"
-          className="mt-3 block text-sm text-neutral-500 underline"
-          onClick={() => { setSignUp((v) => !v); setCodeSent(false); setEmailCode('') }}
-        >
-          {signUp ? 'Already have an account? Sign in' : 'New here? Create a workspace'}
-        </button>
-        <button type="button" className="mt-3 block text-sm text-neutral-500 underline" onClick={() => setParentMode(true)}>
-          I'm a parent
+          {checking ? 'Please wait...' : codeSent ? 'Sign in' : 'Send sign-in code'}
         </button>
         {codeSent && (
-          <button
-            type="button"
-            className="mt-3 text-sm text-neutral-500 underline"
-            onClick={async () => { await (signUp ? requestSignupCode(email) : requestLoginCode(email)) }}
-          >
+          <button type="button" className="mt-3 text-sm text-neutral-500 underline"
+            onClick={async () => { await requestSignupCode(email) }}>
             Send a new code
           </button>
         )}
+        <button type="button" className="mt-3 block text-sm text-neutral-500 underline"
+          onClick={() => { setRole(null); setCodeSent(false); setEmailCode('') }}>
+          {role === 'trainer' ? "I'm a parent instead" : "I'm a trainer instead"}
+        </button>
       </form>
     </Card>
   )

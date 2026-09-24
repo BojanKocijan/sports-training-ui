@@ -5,7 +5,10 @@ import { Card } from './ui/card'
 
 /** Shown to a signed-in account that has no workspace yet (arrived via the emailed "Sign in
  * instantly" link): name the workspace, then land in the app. Basketball is the only sport. */
-export function WorkspaceOnboardingCard({ trainerAccess }: { trainerAccess: ReturnType<typeof useTrainerAccess> }) {
+export function WorkspaceOnboardingCard({ trainerAccess, onNotTrainer }: {
+  trainerAccess: ReturnType<typeof useTrainerAccess>
+  onNotTrainer?: () => void
+}) {
   const { checking, error, createWorkspace, signedInEmail, lock } = trainerAccess
   const [name, setName] = useState(() => suggestWorkspaceName(signedInEmail))
 
@@ -28,7 +31,10 @@ export function WorkspaceOnboardingCard({ trainerAccess }: { trainerAccess: Retu
           className="mt-4 w-full rounded-xl bg-orange-500 py-2.5 text-sm font-bold text-white disabled:opacity-50">
           {checking ? 'Creating...' : 'Create workspace'}
         </button>
-        <button type="button" className="mt-3 text-sm text-neutral-500 underline" onClick={lock}>Use a different email</button>
+        {onNotTrainer && (
+          <button type="button" className="mt-3 block text-sm text-neutral-500 underline" onClick={onNotTrainer}>I'm actually a parent</button>
+        )}
+        <button type="button" className="mt-2 block text-sm text-neutral-500 underline" onClick={lock}>Use a different email</button>
       </form>
     </Card>
   )
