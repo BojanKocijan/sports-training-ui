@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { suggestWorkspaceName } from '../utils/workspaceName'
-import { parentInviteMailto } from '../utils/parentInvite'
+import { parentInviteMailto, parentInviteMessage } from '../utils/parentInvite'
 import { Card } from './ui/card'
 
 /** Email + one-time-code sign-in. Trainers sign in with their own email; a parent uses the same
@@ -11,6 +11,7 @@ export function SignInCard({ trainerAccess }: { trainerAccess: ReturnType<typeof
   const [signUp, setSignUp] = useState(false)
   const [workspaceName, setWorkspaceName] = useState('')
   const [parentMode, setParentMode] = useState(false)
+  const [copied, setCopied] = useState<'message' | 'link' | null>(null)
   const [trainerEmail, setTrainerEmail] = useState('')
   const [email, setEmail] = useState('')
   const [emailCode, setEmailCode] = useState('')
@@ -24,7 +25,7 @@ export function SignInCard({ trainerAccess }: { trainerAccess: ReturnType<typeof
         </p>
         <h2 className="mt-2 text-lg font-bold dark:text-white">Ask your child's trainer</h2>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          Parents don't create their own account. Your child's trainer adds your email, and then you can sign in here to follow your child's progress. Send them a note:
+          Parents don't create their own account. Your child's trainer adds your email, and then you can sign in here to follow your child's progress. Email them, or copy the message or link and send it in any app you like:
         </p>
         <label className="mt-3 block text-sm dark:text-white" htmlFor="parent-email">Your email</label>
         <input
@@ -32,7 +33,14 @@ export function SignInCard({ trainerAccess }: { trainerAccess: ReturnType<typeof
           onChange={(event) => setEmail(event.target.value)}
           className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 dark:border-white/10 dark:bg-neutral-800"
         />
-        <label className="mt-3 block text-sm dark:text-white" htmlFor="parent-trainer-email">Trainer's email</label>
+        <textarea
+          readOnly
+          aria-label="Message for your trainer"
+          rows={6}
+          value={parentInviteMessage({ parentEmail: email, appUrl: window.location.origin })}
+          className="mt-3 w-full rounded-xl border border-black/10 bg-neutral-50 px-3 py-2 text-sm dark:border-white/10 dark:bg-neutral-800"
+        />
+        <label className="mt-3 block text-sm dark:text-white" htmlFor="parent-trainer-email">Trainer's email (optional)</label>
         <input
           id="parent-trainer-email" type="email" value={trainerEmail}
           onChange={(event) => setTrainerEmail(event.target.value)}
@@ -40,11 +48,26 @@ export function SignInCard({ trainerAccess }: { trainerAccess: ReturnType<typeof
         />
         <a
           href={parentInviteMailto({ trainerEmail, parentEmail: email, appUrl: window.location.origin })}
-          className="mt-4 block w-full rounded-xl bg-orange-500 py-2.5 text-center text-sm font-bold text-white"
+          className="mt-3 block w-full rounded-xl bg-orange-500 py-2.5 text-center text-sm font-bold text-white"
         >
-          Write the email
+          Email it
         </a>
-        <p className="mt-2 text-xs text-neutral-500">It opens in your own email app, so you can edit it before sending.</p>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          {([['message', 'Copy message', parentInviteMessage({ parentEmail: email, appUrl: window.location.origin })],
+             ['link', 'Copy link', window.location.origin]] as const).map(([kind, label, text]) => (
+            <button
+              key={kind}
+              type="button"
+              className="rounded-xl border border-orange-500 py-2 text-sm font-semibold text-orange-600 dark:text-orange-300"
+              onClick={async () => {
+                try { await navigator.clipboard.writeText(text); setCopied(kind) } catch { /* Clipboard blocked. */ }
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {copied && <p role="status" className="mt-2 text-xs text-neutral-500">Copied. Paste it to your trainer in any app.</p>}
         <button type="button" className="mt-3 text-sm text-neutral-500 underline" onClick={() => setParentMode(false)}>
           Back to sign in
         </button>
