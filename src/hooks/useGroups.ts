@@ -10,6 +10,9 @@ export interface ApiGroup {
   name: string
   emoji: string
   status: 'available' | 'coming_soon'
+  /** e.g. 'Basketball'; undefined when the API does not say yet. */
+  sportName?: string
+  sportEmoji?: string
 }
 
 interface RawGroup {
@@ -20,6 +23,8 @@ interface RawGroup {
     label: string
     emoji: string
     status: 'available' | 'coming_soon'
+    /** Which sport this age group belongs to (older API deploys omit it). */
+    sport?: { name: string; emoji: string } | null
   } | null
 }
 
@@ -37,6 +42,8 @@ function mapGroup(group: RawGroup): ApiGroup {
     name: group.name,
     emoji: group.group_templates?.emoji ?? '🏀',
     status: group.group_templates?.status ?? 'available',
+    sportName: group.group_templates?.sport?.name,
+    sportEmoji: group.group_templates?.sport?.emoji,
   }
 }
 

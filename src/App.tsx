@@ -17,11 +17,13 @@ import { useGroups } from './hooks/useGroups'
 import { usePlans } from './hooks/usePlans'
 import { type EyeColor, type Gender, type JerseyColor, usePlayers } from './hooks/usePlayers'
 import { useTrainerAccess } from './hooks/useTrainerAccess'
+import { childOptions as buildChildOptions } from './utils/childOptions'
 import { formatDate } from './utils/format'
 
 function App() {
   const [tab, setTab] = useState<Tab>('groups')
   // A trainer whose email is also linked to a child can flip to that child's parent view.
+  const [openChildId, setOpenChildId] = useState<string | null>(null)
   const [asParent, setAsParentState] = useState(() => {
     try { return sessionStorage.getItem('view-as-parent') === '1' } catch { return false }
   })
@@ -52,6 +54,9 @@ function App() {
   } = usePlayers(groupId)
   // The signed-in trainer's membership is scoped to the active group.
   const trainerAccess = useTrainerAccess(groupId)
+  const childOptions = buildChildOptions(trainerAccess.children, groups)
+  const childLabels = Object.fromEntries(childOptions.map((c) => [c.id, c.label]))
+  const openChild = (id: string) => { setOpenChildId(id); setAsParent(true) }
 
   useEffect(() => {
     if (!trainerAccess.unlocked) {
@@ -174,15 +179,20 @@ function App() {
               kind: 'parent',
               lock: trainerAccess.lock,
               onSwitchToTrainer: trainerAccess.kind === 'trainer' ? () => setAsParent(false) : undefined,
+              childOptions,
+              onOpenChild: openChild,
             }}
           />
-          <ParentHome linkedChildren={trainerAccess.children} />
+          <ParentHome linkedChildren={trainerAccess.children} selectedId={openChildId} onSelect={setOpenChildId} optionLabels={childLabels} />
         </>
       ) : trainerAccess.isSuperadmin && superadminView === 'dashboard' ? (
         <SuperAdminDashboard
           onOpenTrainingApp={() => setSuperadminView('training')}
           onLogout={trainerAccess.lock}
           onInviteOwner={trainerAccess.inviteOwnerForGroup}
+          onOpenParentView={trainerAccess.children.length > 0 ? () => setAsParent(true) : undefined}
+          childOptions={childOptions}
+          onOpenChild={openChild}
         />
       ) : viewingPlayer ? (
         <PlayerDetailScreen
@@ -212,6 +222,8 @@ function App() {
               inviteOwner: trainerAccess.inviteOwner,
               accountRole: trainerAccess.accountRole,
               onOpenParentView: trainerAccess.children.length > 0 ? () => setAsParent(true) : undefined,
+              childOptions,
+              onOpenChild: openChild,
             }}
             onAdminHome={
               trainerAccess.isSuperadmin

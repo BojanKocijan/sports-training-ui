@@ -150,4 +150,21 @@ describe('SuperAdminDashboard', () => {
       onOpenTrainingApp,
     ).toHaveBeenCalledOnce()
   })
+
+  it('offers the parent view in the account menu only when the admin has a linked child', async () => {
+    const onOpenParentView = vi.fn()
+    const { rerender } = render(
+      <SuperAdminDashboard onOpenTrainingApp={vi.fn()} onLogout={vi.fn()} onInviteOwner={vi.fn()} />,
+    )
+    await userEvent.click(screen.getByRole('button', { name: /superadmin account menu/i }))
+    expect(screen.queryByRole('menuitem', { name: /parent view/i })).not.toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+
+    rerender(
+      <SuperAdminDashboard onOpenTrainingApp={vi.fn()} onLogout={vi.fn()} onInviteOwner={vi.fn()} onOpenParentView={onOpenParentView} />,
+    )
+    await userEvent.click(screen.getByRole('button', { name: /superadmin account menu/i }))
+    await userEvent.click(screen.getByRole('menuitem', { name: /parent view/i }))
+    expect(onOpenParentView).toHaveBeenCalled()
+  })
 })
