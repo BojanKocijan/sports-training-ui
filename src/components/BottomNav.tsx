@@ -15,8 +15,8 @@ export function BottomNav({
   onChange: (tab: Tab) => void
 }) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 backdrop-blur pb-[env(safe-area-inset-bottom)] lg:hidden">
-      <div className="mx-auto flex max-w-md md:max-w-3xl">
+    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card/95 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] backdrop-blur lg:hidden">
+      <div className="mx-auto flex max-w-md px-2 md:max-w-3xl md:px-3">
         {TABS.map((tab) => {
           const isActive = tab.id === active
           return (

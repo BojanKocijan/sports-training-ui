@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LayoutDashboard, Shield } from "lucide-react";
 import { useClub } from "../hooks/useClub";
 import type { ApiGroup } from "../hooks/useGroups";
 import type { AccountRole } from "../hooks/useTrainerAccess";
@@ -61,29 +62,29 @@ export function ClubHeader({
   const showLogo = Boolean(club.logoUrl) && failedLogoUrl !== club.logoUrl;
 
   return (
-    <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-4 py-2 pt-[calc(env(safe-area-inset-top)+0.5rem)]">
-      <div className="flex min-w-0 items-center gap-3">
+    <div className="flex items-center justify-between gap-1 border-b border-border bg-card px-2 py-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] sm:px-4">
+      <div className="flex min-w-0 items-center gap-1 sm:gap-2">
         <div className="flex min-w-0 items-center gap-2">
           {showLogo ? (
             <img
               src={`${import.meta.env.BASE_URL}${club.logoUrl}`}
               alt={`${club.name} logo`}
-              className="h-6 w-6 shrink-0 rounded-full object-contain"
+              className="h-7 w-7 shrink-0 rounded-full object-contain sm:h-8 sm:w-8"
               onError={() => setFailedLogoUrl(club.logoUrl)}
             />
           ) : (
             <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground sm:h-8 sm:w-8"
               aria-label={`${club.name} initials`}
             >
               {clubInitials(club.name)}
             </span>
           )}
-          <span className="truncate text-xs font-bold uppercase tracking-wide text-muted-foreground">
+          <span className="hidden truncate text-sm font-bold uppercase tracking-wide text-foreground sm:inline">
             {club.name}
           </span>
           {club.tier === "free" && !trainerAccess?.isSuperadmin && (
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+            <span className="hidden rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary sm:inline-flex">
               FREE
             </span>
           )}
@@ -96,7 +97,7 @@ export function ClubHeader({
           />
         )}
       </div>
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex shrink-0 items-center justify-end gap-0.5 sm:gap-2">
         {/* List of packages */}
         {/* {!trainerAccess?.isSuperadmin && (
           <Button
@@ -114,24 +115,31 @@ export function ClubHeader({
             variant="ghost"
             size="sm"
             onClick={onAdminHome}
+            aria-label="Admin dashboard"
+            className="size-8 px-1 sm:size-auto sm:gap-2 sm:px-3"
           >
-            Admin dashboard
+            <LayoutDashboard className="size-4 sm:hidden" />
+            <span className="hidden sm:inline">Admin dashboard</span>
           </Button>
         )}
         <Button
           variant="ghost"
-          size="sm"
+          size="icon-sm"
           onClick={() => setPrivacyOpen(true)}
-          className="px-0 py-0 text-[11px] text-muted-foreground underline-offset-2 hover:bg-transparent hover:underline"
+          aria-label="Privacy"
+          title="Privacy"
+          className="size-8 text-muted-foreground sm:size-auto sm:px-0 sm:py-0 sm:text-[11px] sm:underline-offset-2 sm:hover:bg-transparent sm:hover:underline"
         >
-          Privacy
+          <Shield className="size-4 sm:hidden" />
+          <span className="hidden sm:inline">Privacy</span>
         </Button>
         {club.tier !== "free" &&
           !trainerAccess?.isSuperadmin &&
           trainerAccess?.canInvite &&
           trainerAccess.inviteTrainer && (
-          <Button variant="ghost" size="sm" onClick={() => setInviteOpen(true)}>
-            Invite trainer
+          <Button variant="ghost" size="icon-sm" aria-label="Invite trainer" onClick={() => setInviteOpen(true)} className="sm:w-auto sm:px-3">
+            <span className="sm:hidden">＋</span>
+            <span className="hidden sm:inline">Invite trainer</span>
           </Button>
         )}
         <ThemeToggle />
