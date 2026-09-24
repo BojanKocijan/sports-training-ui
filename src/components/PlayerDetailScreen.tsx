@@ -14,6 +14,7 @@ import {
 import { usePlayerProgress, type PlayerCategoryStat } from '../hooks/usePlayerProgress'
 import type { TrainingPlan } from '../hooks/usePlans'
 import { groupSkillCategories, useSkillCategories } from '../hooks/useSkillCategories'
+import { SKILL_GRADES, SKILL_GRADE_LEGEND } from '../data/skillGrade'
 import { formatDate, toLocalIso } from '../utils/format'
 import { PlayerPreviewCard } from './player-form/PlayerPreviewCard'
 import { SpotlightPlayerEditor } from './player-form/SpotlightPlayerEditor'
@@ -22,12 +23,6 @@ import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { CategoryIcon } from './CategoryIcon'
-
-const SCALE = [
-  { value: 1, emoji: '😐' },
-  { value: 2, emoji: '🙂' },
-  { value: 3, emoji: '🤩' },
-] as const
 
 /** A player's full-screen detail view — a sibling of the other top-level screens (rendered by
  * App.tsx, replacing the trainer layout entirely), not a modal overlaid on top of it. It used to
@@ -187,7 +182,7 @@ export function PlayerDetailScreen({
       earned: totalCategories > 0 && categoriesTried >= totalCategories,
     },
     { id: 'consistent', emoji: '🔥', label: 'Consistent', earned: totalRatings >= 5 },
-    { id: 'rising-star', emoji: '🤩', label: 'Rising star', earned: totalRatings > 0 && avgRating >= 2.5 },
+    { id: 'rising-star', emoji: '⭐', label: 'Rising star', earned: totalRatings > 0 && avgRating >= 2.5 },
   ]
 
   const sortedPlans = [...plans].sort((a, b) => a.training_date.localeCompare(b.training_date))
@@ -420,6 +415,8 @@ export function PlayerDetailScreen({
                   </select>
                 </div>
 
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">{SKILL_GRADE_LEGEND}</p>
+
                 {rateError && <p className="text-sm text-red-600">{rateError}</p>}
 
                 <div className="space-y-2">
@@ -445,7 +442,7 @@ export function PlayerDetailScreen({
                               )}
                             </div>
                             <div className="mt-1 flex items-center gap-1">
-                              {SCALE.map((s) => (
+                              {SKILL_GRADES.map((s) => (
                                 <Button
                                   key={s.value}
                                   variant="ghost"
@@ -453,12 +450,13 @@ export function PlayerDetailScreen({
                                   shape="pill"
                                   disabled={pending[cat.id]}
                                   onClick={() => rate(cat.id, s.value)}
-                                  aria-label={`Rate ${cat.label} ${s.value} of 3 for this training`}
-                                  className={`text-lg ${
-                                    saved === s.value ? 'bg-orange-100 dark:bg-orange-500/20' : ''
+                                  aria-label={`Rate ${cat.label} ${s.value} of 3, ${s.label}, for this training`}
+                                  title={s.label}
+                                  className={`text-sm font-bold ${
+                                    saved === s.value ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300' : 'border border-neutral-200 text-neutral-500 dark:border-neutral-700'
                                   }`}
                                 >
-                                  {s.emoji}
+                                  {s.value}
                                 </Button>
                               ))}
                             </div>
