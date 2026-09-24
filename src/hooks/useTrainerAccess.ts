@@ -153,11 +153,11 @@ export function useTrainerAccess(groupId: string) {
     } finally { setChecking(false) }
   }, [])
 
-  const createWorkspace = useCallback(async (workspaceName: string) => {
+  const createWorkspace = useCallback(async (workspaceName: string, groupTemplateId: 'u8' | 'u10') => {
     setChecking(true)
     setError(null)
     try {
-      await api.post('/auth/workspace', { workspaceName })
+      await api.post('/auth/workspace', { workspaceName, groupTemplateId })
       const me = await api.get<Pick<AccountSession, 'groupIds' | 'memberships' | 'children'>>('/auth/me')
       const current = currentSession()
       if (current) {
