@@ -102,12 +102,15 @@ describe('SuperAdminDashboard', () => {
       }),
     ).toBeInTheDocument()
 
-    // Overview: platform admins are listed, workspaces appear in the sidebar and as cards.
+    // Overview: platform admins are listed; workspaces are a navigation entry, not a list.
     expect(screen.getByText('superadmin@example.com')).toBeInTheDocument()
-    expect(screen.getByRole('navigation', { name: 'Workspaces' })).toHaveTextContent('Basketball App')
+    const nav = screen.getByRole('navigation', { name: 'Admin sections' })
+    expect(nav).not.toHaveTextContent('Basketball App')
 
-    // Opening a workspace shows its own details, trainers and parents.
-    await userEvent.click(within(screen.getByRole('navigation', { name: 'Workspaces' })).getByRole('button', { name: /Basketball App/ }))
+    // Workspaces opens a table; a row opens the workspace with its trainers and parents.
+    await userEvent.click(within(nav).getByRole('button', { name: /^Workspaces/ }))
+    expect(screen.getByRole('heading', { name: 'Workspaces' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Basketball App' }))
     expect(screen.getByRole('heading', { name: 'Basketball App' })).toBeInTheDocument()
     expect(screen.getByText('U8')).toBeInTheDocument()
 
