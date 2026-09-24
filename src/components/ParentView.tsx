@@ -5,7 +5,6 @@ import { useGroups } from '../hooks/useGroups'
 import { usePlayerProgress } from '../hooks/usePlayerProgress'
 import { usePlans } from '../hooks/usePlans'
 import { formatDate } from '../utils/format'
-import { GroupProgressSummary } from './GroupProgressSummary'
 import { HomePractice } from './HomePractice'
 import { MascotCoach } from './MascotCoach'
 import { PlayerBadges } from './PlayerBadges'
@@ -16,8 +15,8 @@ import { Card } from './ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { CategoryIcon } from './CategoryIcon'
 
-/** Read-only view unlocked by a parent code (see sports-training-api#20) — scoped to one child
- * plus the group's overall progress and schedule. No edit controls anywhere, no way to switch
+/** Read-only view for a parent, scoped to one child: their mascot, badges, own progress and the
+ * group's schedule. No group-wide progress: the parent view is about their own child. No edit controls anywhere, no way to switch
  * to another child or group: unlike the trainer app, this isn't a tabbed shell, just three tabs.
  * Logging out is handled globally now, via the ClubHeader trainer-access menu. */
 export function ParentView({
@@ -107,8 +106,6 @@ export function ParentView({
           </section>
 
           <HomePractice stats={byCategory} exercises={exercises} categories={categories} groupTemplateId={groupTemplateId} />
-
-          <GroupProgressSummary groupId={groupId} />
         </TabsContent>
 
         <TabsContent value="training" className="pt-3">

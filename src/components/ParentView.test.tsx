@@ -200,7 +200,7 @@ describe('ParentView', () => {
 
     await userEvent.click(screen.getByRole('tab', { name: /stats/i }))
     expect(screen.getByText(/2\.5/)).toBeInTheDocument()
-    expect(screen.getByTestId('group-progress')).toBeInTheDocument()
+    expect(screen.queryByTestId('group-progress')).not.toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('tab', { name: /trainings/i }))
     expect(screen.getByText(/upcoming trainings/i)).toBeInTheDocument()
