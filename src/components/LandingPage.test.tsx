@@ -20,6 +20,12 @@ describe('LandingPage', () => {
     expect(screen.getByText(/if it isn't linked yet, we'll help you ask the trainer/i)).toBeInTheDocument()
   })
 
+  it('explains that a parent must be invited by the trainer and can also be a trainer', () => {
+    render(<LandingPage trainerAccess={access} />)
+    expect(screen.getByText(/you need to be invited by their trainer/i)).toBeInTheDocument()
+    expect(screen.getByText(/one account is both trainer and parent/i)).toBeInTheDocument()
+  })
+
   it('shows basketball as available and more sports as coming soon', () => {
     render(<LandingPage trainerAccess={access} />)
     expect(screen.getByText(/basketball · available now/i)).toBeInTheDocument()

@@ -140,9 +140,10 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
             <div className="mt-4 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-neutral-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-neutral-200">
               <p className="font-bold text-neutral-900 dark:text-neutral-50">Are you a parent?</p>
               <p className="mt-1">
-                Parents can't create an account on their own. Your child's trainer sends an invitation to your
-                email: accept it there to create your account, and then you can sign in here to follow your
-                child's progress. If you also coach, the same account works as a trainer.
+                To follow your child you need to be invited by their trainer: they add your email to your
+                child's profile. Once you're added, choose "I'm a parent" and sign in with that email to see
+                your child's progress. If you also coach, one account is both trainer and parent, and you can
+                switch between the two views from the account menu.
               </p>
             </div>
           </div>
