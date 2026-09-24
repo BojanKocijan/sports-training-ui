@@ -58,12 +58,15 @@ export function SignInCard({ trainerAccess, role, onSwitchRole }: {
         >
           {checking ? 'Please wait...' : codeSent ? 'Sign in' : 'Send sign-in code'}
         </button>
+        {/* Resend disabled temporarily until resend flow is fixed.
         {codeSent && (
-          <button type="button" className="mt-3 text-sm text-neutral-500 underline"
-            onClick={async () => { await requestSignupCode(email) }}>
-            Send a new code
-          </button>
-        )}
+          <>
+            <button type="button" disabled={checking} className="mt-3 text-sm text-neutral-500 underline disabled:opacity-50"
+              onClick={async () => { await requestSignupCode(email) }}>
+              {checking ? 'Sending...' : 'Send a new code'}
+            </button>
+          </>
+        )} */}
         <button type="button" className="mt-3 block text-sm text-neutral-500 underline"
           onClick={() => { setCodeSent(false); setEmailCode(''); onSwitchRole(role === 'trainer' ? 'parent' : 'trainer') }}>
           {role === 'trainer' ? "I'm a parent instead" : "I'm a trainer instead"}

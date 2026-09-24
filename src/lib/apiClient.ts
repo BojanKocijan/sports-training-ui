@@ -9,7 +9,13 @@ export class ApiRequestError extends Error {}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!API_URL) throw new ApiRequestError('API is not configured')
-  const publicAuth = ['/auth/request-code', '/auth/verify-code', '/auth/refresh'].includes(path)
+  const publicAuth = [
+    '/auth/request-code',
+    '/auth/verify-code',
+    '/auth/signup/request',
+    '/auth/signup/verify',
+    '/auth/refresh',
+  ].includes(path)
   const session = publicAuth ? null : await validSession(API_URL)
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
