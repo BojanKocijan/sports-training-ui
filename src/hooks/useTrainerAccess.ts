@@ -71,7 +71,8 @@ export function useTrainerAccess(groupId: string) {
   // A parent's account has no group access of its own: it is linked to specific children, who may
   // sit in different groups, so parent access is not tied to the selected group.
   const linkedChildren = account?.children ?? []
-  const isParent = Boolean(account && !account.user.superadmin && account.groupIds.length === 0 && linkedChildren.length > 0)
+  // Independent of trainer access: an account can be both a trainer and a parent.
+  const isParent = Boolean(account && !account.user.superadmin && linkedChildren.length > 0)
   const state = trainer
     ? { unlocked: true, kind: 'trainer' as AccessKind }
     : isParent
