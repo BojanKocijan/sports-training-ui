@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { LayoutDashboard, Shield } from "lucide-react";
 import { useClub } from "../hooks/useClub";
 import type { ApiGroup } from "../hooks/useGroups";
 import type { AccountRole } from "../hooks/useTrainerAccess";
@@ -110,33 +109,10 @@ export function ClubHeader({
           </Button>
         )} */}
 
-        {trainerAccess?.isSuperadmin && onAdminHome && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onAdminHome}
-            aria-label="Admin dashboard"
-            className="size-11 px-1 sm:size-auto sm:gap-2 sm:px-3"
-          >
-            <LayoutDashboard className="size-4 sm:hidden" />
-            <span className="hidden sm:inline">Admin dashboard</span>
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => setPrivacyOpen(true)}
-          aria-label="Privacy"
-          title="Privacy"
-          className="size-11 text-muted-foreground sm:size-auto sm:px-0 sm:py-0 sm:text-[11px] sm:underline-offset-2 sm:hover:bg-transparent sm:hover:underline"
-        >
-          <Shield className="size-4 sm:hidden" />
-          <span className="hidden sm:inline">Privacy</span>
-        </Button>
-        {trainerAccess?.canInvite && trainerAccess.inviteTrainer && (
-          <Button variant="ghost" size="icon-sm" aria-label="Invite trainer" onClick={() => setInviteOpen(true)} className="sm:w-auto sm:px-3">
-            <span className="sm:hidden">＋</span>
-            <span className="hidden sm:inline">Invite trainer</span>
+        {/* Signed-out visitors have no account menu, so Privacy stays reachable here. */}
+        {!trainerAccess && (
+          <Button variant="ghost" size="sm" onClick={() => setPrivacyOpen(true)} className="text-muted-foreground">
+            Privacy
           </Button>
         )}
         <ThemeToggle />
@@ -147,6 +123,11 @@ export function ClubHeader({
             onLock={trainerAccess.lock}
             onOpenParentView={trainerAccess.onOpenParentView}
             onSwitchToTrainer={trainerAccess.onSwitchToTrainer}
+            onAdminHome={trainerAccess.isSuperadmin ? onAdminHome : undefined}
+            onInviteTrainer={
+              trainerAccess.canInvite && trainerAccess.inviteTrainer ? () => setInviteOpen(true) : undefined
+            }
+            onOpenPrivacy={() => setPrivacyOpen(true)}
           />
         )}
       </div>
