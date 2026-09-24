@@ -23,6 +23,8 @@ import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { CategoryIcon } from './CategoryIcon'
+import { PlayerBadges } from './PlayerBadges'
+import { usePlayerBadges } from '../hooks/usePlayerBadges'
 
 /** A player's full-screen detail view — a sibling of the other top-level screens (rendered by
  * App.tsx, replacing the trainer layout entirely), not a modal overlaid on top of it. It used to
@@ -172,18 +174,7 @@ export function PlayerDetailScreen({
   const categoriesTried = byCategory.length
   const totalCategories = groupedSkills.length
   const totalRatings = byCategory.reduce((sum, c) => sum + c.count, 0)
-  const avgRating = totalRatings > 0 ? byCategory.reduce((sum, c) => sum + c.average * c.count, 0) / totalRatings : 0
-
-  const badges = [
-    {
-      id: 'tried-it-all',
-      emoji: '🎯',
-      label: 'Tried it all',
-      earned: totalCategories > 0 && categoriesTried >= totalCategories,
-    },
-    { id: 'consistent', emoji: '🔥', label: 'Consistent', earned: totalRatings >= 5 },
-    { id: 'rising-star', emoji: '⭐', label: 'Rising star', earned: totalRatings > 0 && avgRating >= 2.5 },
-  ]
+  const badges = usePlayerBadges(byCategory)
 
   const sortedPlans = [...plans].sort((a, b) => a.training_date.localeCompare(b.training_date))
   const today = toLocalIso(new Date())
@@ -335,23 +326,7 @@ export function PlayerDetailScreen({
             hideCaption
           />
 
-          <div className="flex gap-3">
-            {badges.map((b) => (
-              <div
-                key={b.id}
-                className={`flex w-20 flex-col items-center gap-1 rounded-2xl border px-2 py-2 text-center ${
-                  b.earned
-                    ? 'border-orange-200 bg-orange-50 dark:border-orange-500/30 dark:bg-orange-500/10'
-                    : 'border-black/10 bg-neutral-100 opacity-40 dark:border-white/10 dark:bg-neutral-900'
-                }`}
-              >
-                <span className="text-xl">{b.emoji}</span>
-                <span className="text-[10px] font-semibold leading-tight text-neutral-600 dark:text-neutral-300">
-                  {b.label}
-                </span>
-              </div>
-            ))}
-          </div>
+          <PlayerBadges badges={badges} />
         </div>
 
         <Tabs defaultValue="stats">

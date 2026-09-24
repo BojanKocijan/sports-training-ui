@@ -29,6 +29,7 @@ export function PlayerPreviewCard({
   mascotId,
   hideMeta = false,
   hideCaption = false,
+  size = 'lg',
 }: {
   nickname: string
   jerseyColor: JerseyColor | null
@@ -48,6 +49,8 @@ export function PlayerPreviewCard({
    * controls -- for callers (e.g. PlayerDetailScreen, #117) that already show the player's name in
    * their own heading and would otherwise show it twice. */
   hideCaption?: boolean
+  /** Mascot size; the parent's mascot tab uses 'xl'. */
+  size?: 'md' | 'lg' | 'xl'
 }) {
   const [view, setView] = useState<PreviewView>('still')
   const [showBall, setShowBall] = useState(true)
@@ -62,7 +65,7 @@ export function PlayerPreviewCard({
       gender={gender ?? undefined}
       number={jerseyNumber}
       nickname={nickname.trim() || 'Preview'}
-      size="lg"
+      size={size}
       groupId={groupId}
       mascotId={mascotId}
     />

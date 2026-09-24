@@ -240,4 +240,18 @@ describe('ParentView', () => {
     await userEvent.click(screen.getByRole('tab', { name: /stats/i }))
     expect(screen.queryByText(/practise together at home/i)).not.toBeInTheDocument()
   })
+
+  it('shows the child\'s reward badges on the mascot tab, dimming those not earned yet', () => {
+    progressMock.mockReturnValue({
+      byCategory: [{ categoryId: 'dribbling', average: 1.4, count: 6, lastRatedAt: '2026-09-20' }],
+      loading: false,
+      error: null,
+      refresh: vi.fn(),
+    })
+    render(<ParentView groupId="u8" player={{ id: 'player-1', nickname: 'Mila' }} />)
+    const badges = screen.getByRole('list', { name: 'Badges' })
+    expect(badges).toHaveTextContent('Consistent')
+    expect(screen.getByLabelText('Consistent')).toBeInTheDocument()
+    expect(screen.getByLabelText('Rising star (not earned yet)')).toBeInTheDocument()
+  })
 })

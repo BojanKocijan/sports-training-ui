@@ -8,6 +8,8 @@ import { formatDate } from '../utils/format'
 import { GroupProgressSummary } from './GroupProgressSummary'
 import { HomePractice } from './HomePractice'
 import { MascotCoach } from './MascotCoach'
+import { PlayerBadges } from './PlayerBadges'
+import { usePlayerBadges } from '../hooks/usePlayerBadges'
 import { SportLoader } from './SportLoader'
 import { PlayerPreviewCard } from './player-form/PlayerPreviewCard'
 import { Card } from './ui/card'
@@ -28,6 +30,7 @@ export function ParentView({
   const { byCategory, loading, error } = usePlayerProgress(player.id)
   const { categories } = useCategories()
   const { upcoming, loading: plansLoading } = usePlans(groupId)
+  const badges = usePlayerBadges(byCategory)
   const { exercises } = useExercises()
   const { groups } = useGroups()
   const groupTemplateId = groups.find((g) => g.id === (player.group_id ?? groupId))?.templateId
@@ -60,7 +63,9 @@ export function ParentView({
             groupId={player.group_id ?? groupId}
             mascotId={player.mascot_id}
             hideCaption
+            size="xl"
           />
+          {!loading && <div className="mt-4"><PlayerBadges badges={badges} /></div>}
           {!loading && <MascotCoach nickname={player.nickname} stats={byCategory} categories={categories} />}
         </TabsContent>
 
