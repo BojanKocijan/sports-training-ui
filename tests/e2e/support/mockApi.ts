@@ -62,6 +62,21 @@ export async function mockGate(page: Page) {
     }),
   )
 
+  // The sign-in card now uses the sign-up endpoints for everyone (#135).
+  await page.route(`${API_URL}/auth/signup/request`, (route) =>
+    route.fulfill({
+      status: 202,
+      json: {},
+    }),
+  )
+
+  await page.route(`${API_URL}/auth/signup/verify`, (route) =>
+    route.fulfill({
+      status: 201,
+      json: accountSession,
+    }),
+  )
+
   await page.route(`${API_URL}/plans*`, (route) =>
     route.fulfill({ json: [] }),
   )
@@ -85,6 +100,9 @@ export async function mockGate(page: Page) {
 /** Signs in through the account email OTP flow on the already-loaded LockScreen,
  * leaving the application navigation visible. */
 export async function login(page: Page) {
+  // The card first asks how the visitor is coming in.
+  await page.getByRole('button', { name: "I'm a trainer" }).click()
+
   await page.getByLabel('Email').fill(EMAIL)
 
   await page
