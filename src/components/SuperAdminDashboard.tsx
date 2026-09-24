@@ -170,6 +170,31 @@ function ParentsTable({ parents }: { parents: Parent[] }) {
   )
 }
 
+/** One card for all workspaces: the total, split into Free and Paid (any plan other than Free),
+ * opening the Workspaces table. */
+function WorkspacesCard({ workspaces, onOpen }: { workspaces: AdminOverview['workspaces']; onOpen: () => void }) {
+  const free = workspaces.filter((w) => w.tier === 'free').length
+  const paid = workspaces.length - free
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={`Workspaces: ${workspaces.length} total, ${free} free, ${paid} paid. Open the workspaces table`}
+      className="w-full rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition-colors hover:border-primary/50"
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-foreground">Workspaces</span>
+        <Building2 className="h-4 w-4 text-primary" />
+      </div>
+      <p className="mt-2 text-4xl font-bold text-foreground">{workspaces.length}</p>
+      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+        <span><span className="font-semibold text-foreground">{free}</span> <span className="text-muted-foreground">Free</span></span>
+        <span><span className="font-semibold text-foreground">{paid}</span> <span className="text-muted-foreground">Paid</span></span>
+      </div>
+    </button>
+  )
+}
+
 export function SuperAdminDashboard({
   onOpenTrainingApp,
   onLogout,
@@ -189,7 +214,6 @@ export function SuperAdminDashboard({
 
   const stats = overview
     ? [
-        { label: 'Workspaces', value: overview.stats.workspaces, icon: Building2 },
         { label: 'Staff accounts', value: overview.stats.staffAccounts, icon: Users },
         { label: 'Platform admins', value: overview.stats.platformAdmins, icon: ShieldCheck },
         { label: 'Groups', value: overview.stats.groups, icon: Layers3 },
@@ -272,7 +296,9 @@ export function SuperAdminDashboard({
                 </p>
               </div>
 
-              <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <WorkspacesCard workspaces={overview.workspaces} onOpen={() => setSelected(WORKSPACES)} />
+
+              <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {stats.map(({ label, value, icon: Icon }) => (
                   <div key={label} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                     <div className="flex items-center justify-between">

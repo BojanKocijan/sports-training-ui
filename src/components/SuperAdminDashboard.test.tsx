@@ -102,7 +102,8 @@ describe('SuperAdminDashboard', () => {
       }),
     ).toBeInTheDocument()
 
-    // Overview: platform admins are listed; workspaces are a navigation entry, not a list.
+    // Overview: one Workspaces card (total, free vs paid); admins are listed; workspaces are a nav entry, not a list.
+    expect(screen.getByRole('button', { name: /Workspaces: 1 total, 1 free, 0 paid/ })).toBeInTheDocument()
     expect(screen.getByText('superadmin@example.com')).toBeInTheDocument()
     const nav = screen.getByRole('navigation', { name: 'Admin sections' })
     expect(nav).not.toHaveTextContent('Basketball App')
