@@ -183,6 +183,7 @@ function App() {
           onOpenTrainingApp={() => setSuperadminView('training')}
           onLogout={trainerAccess.lock}
           onInviteOwner={trainerAccess.inviteOwnerForGroup}
+          onOpenParentView={trainerAccess.children.length > 0 ? () => setAsParent(true) : undefined}
         />
       ) : viewingPlayer ? (
         <PlayerDetailScreen

@@ -199,10 +199,13 @@ export function SuperAdminDashboard({
   onOpenTrainingApp,
   onLogout,
   onInviteOwner,
+  onOpenParentView,
 }: {
   onOpenTrainingApp: () => void
   onLogout: () => void
   onInviteOwner: (email: string, groupId: string) => Promise<void>
+  /** Only when the admin's email is also linked to a child: opens their parent view. */
+  onOpenParentView?: () => void
 }) {
   const { overview, loading, error, refresh } = useAdminOverview()
   const [selected, setSelected] = useState<string>(PLATFORM)
@@ -244,7 +247,7 @@ export function SuperAdminDashboard({
               Open training app
             </Button>
             <ThemeToggle />
-            <TrainerAccessMenu kind="trainer" accountRole="superadmin" onLock={onLogout} />
+            <TrainerAccessMenu kind="trainer" accountRole="superadmin" onLock={onLogout} onOpenParentView={onOpenParentView} />
           </div>
         </div>
       </header>
