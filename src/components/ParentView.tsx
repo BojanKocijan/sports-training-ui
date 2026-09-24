@@ -1,17 +1,22 @@
 import type { ParentPlayer } from '../hooks/useTrainerAccess'
 import { categoryInfo, useCategories } from '../hooks/useCategories'
+import { useExercises } from '../hooks/useExercises'
+import { useGroups } from '../hooks/useGroups'
 import { usePlayerProgress } from '../hooks/usePlayerProgress'
 import { usePlans } from '../hooks/usePlans'
 import { formatDate } from '../utils/format'
-import { GroupProgressSummary } from './GroupProgressSummary'
+import { HomePractice } from './HomePractice'
+import { MascotCoach } from './MascotCoach'
+import { PlayerBadges } from './PlayerBadges'
+import { usePlayerBadges } from '../hooks/usePlayerBadges'
 import { SportLoader } from './SportLoader'
 import { PlayerPreviewCard } from './player-form/PlayerPreviewCard'
 import { Card } from './ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { CategoryIcon } from './CategoryIcon'
 
-/** Read-only view unlocked by a parent code (see sports-training-api#20) — scoped to one child
- * plus the group's overall progress and schedule. No edit controls anywhere, no way to switch
+/** Read-only view for a parent, scoped to one child: their mascot, badges, own progress and the
+ * group's schedule. No group-wide progress: the parent view is about their own child. No edit controls anywhere, no way to switch
  * to another child or group: unlike the trainer app, this isn't a tabbed shell, just three tabs.
  * Logging out is handled globally now, via the ClubHeader trainer-access menu. */
 export function ParentView({
@@ -24,6 +29,10 @@ export function ParentView({
   const { byCategory, loading, error } = usePlayerProgress(player.id)
   const { categories } = useCategories()
   const { upcoming, loading: plansLoading } = usePlans(groupId)
+  const badges = usePlayerBadges(byCategory)
+  const { exercises } = useExercises()
+  const { groups } = useGroups()
+  const groupTemplateId = groups.find((g) => g.id === (player.group_id ?? groupId))?.templateId
 
   return (
     <div className="mx-auto max-w-md space-y-5 px-4 pb-24 pt-4 md:max-w-2xl">
@@ -53,7 +62,10 @@ export function ParentView({
             groupId={player.group_id ?? groupId}
             mascotId={player.mascot_id}
             hideCaption
+            size="xl"
           />
+          {!loading && <div className="mt-4"><PlayerBadges badges={badges} /></div>}
+          {!loading && <MascotCoach nickname={player.nickname} stats={byCategory} categories={categories} />}
         </TabsContent>
 
         <TabsContent value="stats" className="space-y-5 pt-3">
@@ -93,7 +105,7 @@ export function ParentView({
             )}
           </section>
 
-          <GroupProgressSummary groupId={groupId} />
+          <HomePractice stats={byCategory} exercises={exercises} categories={categories} groupTemplateId={groupTemplateId} />
         </TabsContent>
 
         <TabsContent value="training" className="pt-3">
