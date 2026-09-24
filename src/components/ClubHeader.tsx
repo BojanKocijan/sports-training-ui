@@ -47,6 +47,9 @@ export function ClubHeader({
     onOpenParentView?: () => void;
     /** Parent view of an account that is also a trainer: back to the trainer app. */
     onSwitchToTrainer?: () => void;
+    /** Linked children with their sport, and opening one, for swapping from the avatar. */
+    childOptions?: { id: string; label: string }[];
+    onOpenChild?: (id: string) => void;
   };
   onAdminHome?: () => void;
 }) {
@@ -128,6 +131,8 @@ export function ClubHeader({
               trainerAccess.canInvite && trainerAccess.inviteTrainer ? () => setInviteOpen(true) : undefined
             }
             onOpenPrivacy={() => setPrivacyOpen(true)}
+            childOptions={trainerAccess.childOptions}
+            onOpenChild={trainerAccess.onOpenChild}
           />
         )}
       </div>

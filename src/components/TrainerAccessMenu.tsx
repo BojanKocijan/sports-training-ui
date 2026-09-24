@@ -34,6 +34,8 @@ export function TrainerAccessMenu({
   onAdminHome,
   onInviteTrainer,
   onOpenPrivacy,
+  childOptions,
+  onOpenChild,
 }: {
   kind: 'trainer' | 'parent'
   accountRole?: AccountRole | null
@@ -47,6 +49,9 @@ export function TrainerAccessMenu({
   /** Only for accounts allowed to invite trainers. */
   onInviteTrainer?: () => void
   onOpenPrivacy?: () => void
+  /** Every linked child with its sport, so a parent can swap between them from the avatar. */
+  childOptions?: { id: string; label: string }[]
+  onOpenChild?: (id: string) => void
 }) {
   const { emoji, label } =
     kind === 'parent'
@@ -85,7 +90,17 @@ export function TrainerAccessMenu({
             Invite trainer
           </DropdownMenuItem>
         )}
-        {onOpenParentView && (
+        {onOpenChild && childOptions && childOptions.length > 1 ? (
+          <>
+            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Parent view</DropdownMenuLabel>
+            {childOptions.map((c) => (
+              <DropdownMenuItem key={c.id} onClick={() => onOpenChild(c.id)}>
+                <ArrowLeftRight />
+                {c.label}
+              </DropdownMenuItem>
+            ))}
+          </>
+        ) : onOpenParentView && (
           <DropdownMenuItem onClick={onOpenParentView}>
             <ArrowLeftRight />
             My children (parent view)
