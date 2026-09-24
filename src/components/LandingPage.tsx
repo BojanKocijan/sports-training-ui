@@ -74,7 +74,7 @@ function HeroVideo() {
   if (still) {
     return (
       <div className={frame}>
-        <img src="/videos/sports-montage-poster.webp" alt="Playful animal mascots playing different sports" className="h-full w-full object-cover" />
+        <img src="/videos/sports-montage-v2-poster.webp" alt="Playful animal mascots playing different sports" className="h-full w-full object-cover" />
       </div>
     )
   }
@@ -87,15 +87,15 @@ function HeroVideo() {
         loop
         playsInline
         preload="metadata"
-        poster="/videos/sports-montage-poster.webp"
+        poster="/videos/sports-montage-v2-poster.webp"
         aria-label="Playful animal mascots playing different sports"
       >
         {/* Phone-sized encodes first (WebM before MP4 where supported), then the 720p ones. The clip
           * is a seamless loop: its tail is cross-faded into its head. */}
-        <source src="/videos/sports-montage-405.webm" type="video/webm" media="(max-width: 767px)" />
-        <source src="/videos/sports-montage-405.mp4" type="video/mp4" media="(max-width: 767px)" />
-        <source src="/videos/sports-montage-720.webm" type="video/webm" />
-        <source src="/videos/sports-montage-720.mp4" type="video/mp4" />
+        <source src="/videos/sports-montage-v2-405.webm" type="video/webm" media="(max-width: 767px)" />
+        <source src="/videos/sports-montage-v2-405.mp4" type="video/mp4" media="(max-width: 767px)" />
+        <source src="/videos/sports-montage-v2-720.webm" type="video/webm" />
+        <source src="/videos/sports-montage-v2-720.mp4" type="video/mp4" />
       </video>
     </div>
   )

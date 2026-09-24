@@ -54,7 +54,7 @@ describe('LandingPage', () => {
     expect(video).not.toBeNull()
     expect(video).toHaveProperty('muted', true)
     expect(video).toHaveProperty('loop', true)
-    expect(video?.getAttribute('poster')).toBe('/videos/sports-montage-poster.webp')
+    expect(video?.getAttribute('poster')).toBe('/videos/sports-montage-v2-poster.webp')
   })
 
   it('shows only the poster when the visitor prefers reduced motion', () => {
