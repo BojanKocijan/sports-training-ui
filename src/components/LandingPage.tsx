@@ -167,7 +167,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white text-neutral-900 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-950 dark:text-neutral-50">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-        <a href="#top" aria-label="CoachCub home" className="rounded-xl dark:bg-white dark:px-2 dark:py-1">
+        <a href="/" aria-label="CoachCub home" className="rounded-xl dark:bg-white dark:px-2 dark:py-1">
           <img src="/logos/coachcub-logo.webp" alt="CoachCub" width={1844} height={403} className="h-9 w-auto md:h-11" />
         </a>
         <div className="flex items-center gap-2">
