@@ -330,7 +330,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
       </footer>
 
       <Dialog open={open} onOpenChange={(next) => { if (!next) { setFlow(null); setDismissed(true) } }}>
-        <DialogContent showCloseButton={false} className="max-w-md border-0 bg-transparent p-0 shadow-none ring-0">
+        <DialogContent showCloseButton={false} className={`${trainerAccess.needsWorkspace && getSignInIntent() === 'parent' ? 'sm:max-w-2xl' : 'max-w-md'} border-0 bg-transparent p-0 shadow-none ring-0`}>
           {/* Its own row above the cards, so it reads as closing the whole dialog, not the note. */}
           <div className="flex justify-end">
             <DialogClose asChild>

@@ -19,6 +19,7 @@ import { type EyeColor, type Gender, type JerseyColor, usePlayers } from './hook
 import { useTrainerAccess } from './hooks/useTrainerAccess'
 import { getSignInIntent, setSignInIntent } from './lib/signInIntent'
 import { ParentNoChildCard } from './components/ParentNoChildCard'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from './components/ui/dialog'
 import { childOptions as buildChildOptions } from './utils/childOptions'
 import { formatDate } from './utils/format'
 
@@ -188,14 +189,18 @@ function App() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
       {parentMismatch ? (
-        <div className="mx-auto max-w-md px-4 pb-10 pt-12">
-          <ParentNoChildCard
-            trainerAccess={trainerAccess}
-            note={`This email is ${trainerAccess.roles.admin ? 'a platform admin' : 'a trainer'} account, not a parent account.`}
-            notParentLabel={trainerAccess.roles.admin ? 'Continue to my admin account' : 'Continue to my trainer account'}
-            onNotParent={() => { setSignInIntent(null); setParentMismatchAcknowledged(true) }}
-          />
-        </div>
+        <Dialog open onOpenChange={() => { /* Only the links in the card leave this step. */ }}>
+          <DialogContent showCloseButton={false} className="border-0 bg-transparent p-0 shadow-none ring-0 sm:max-w-2xl">
+            <DialogTitle className="sr-only">No child linked yet</DialogTitle>
+            <DialogDescription className="sr-only">Ask your child's trainer to add your email.</DialogDescription>
+            <ParentNoChildCard
+              trainerAccess={trainerAccess}
+              note={`This email is ${trainerAccess.roles.admin ? 'a platform admin' : 'a trainer'} account, not a parent account.`}
+              notParentLabel={trainerAccess.roles.admin ? 'Continue to my admin account' : 'Continue to my trainer account'}
+              onNotParent={() => { setSignInIntent(null); setParentMismatchAcknowledged(true) }}
+            />
+          </DialogContent>
+        </Dialog>
       ) : !trainerAccess.unlocked ? (
         <LandingPage trainerAccess={trainerAccess} />
       ) : trainerAccess.kind === 'parent' || (asParent && trainerAccess.children.length > 0) ? (
