@@ -25,6 +25,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { CategoryIcon } from './CategoryIcon'
 import { PlayerBadges } from './PlayerBadges'
 import { usePlayerBadges } from '../hooks/usePlayerBadges'
+import { PlayerProgressionTimeline } from './PlayerProgressionTimeline'
+import { usePlayerProgression } from '../hooks/usePlayerProgression'
 
 /** A player's full-screen detail view — a sibling of the other top-level screens (rendered by
  * App.tsx, replacing the trainer layout entirely), not a modal overlaid on top of it. It used to
@@ -184,6 +186,10 @@ export function PlayerDetailScreen({
   const totalRatings = byCategory.reduce((sum, c) => sum + c.count, 0)
   const badges = usePlayerBadges(byCategory)
 
+  // Server-driven milestone path (sports-training-api#115) — points rolled up from ratings unlock
+  // badges/diplomas/promotion flags, awarded here by the trainer, never automatically.
+  const progression = usePlayerProgression(player.id)
+
   const sortedPlans = [...plans].sort((a, b) => a.training_date.localeCompare(b.training_date))
   const today = toLocalIso(new Date())
   const defaultPlan = sortedPlans.find((p) => p.training_date >= today) ?? sortedPlans[sortedPlans.length - 1]
@@ -342,6 +348,7 @@ export function PlayerDetailScreen({
            * hero image -- the hero can grow freely without burying navigation. */}
           <TabsList className="sticky top-0 z-10 w-full bg-neutral-50 dark:bg-neutral-950">
             <TabsTrigger value="stats">Stats</TabsTrigger>
+            <TabsTrigger value="progression">Milestones</TabsTrigger>
             <TabsTrigger value="training">This training</TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
           </TabsList>
@@ -372,6 +379,22 @@ export function PlayerDetailScreen({
                 )}
               </Card>
             ))}
+          </TabsContent>
+
+          <TabsContent value="progression" className="space-y-2">
+            {progression.loading && <p className="text-sm text-neutral-400">Loading progression...</p>}
+            {progression.error && (
+              <p className="text-sm text-red-600">Could not load progression: {progression.error}</p>
+            )}
+            {!progression.loading && progression.progression && (
+              <PlayerProgressionTimeline
+                points={progression.progression.points}
+                milestones={progression.progression.milestones}
+                onAward={progression.award}
+                awardingId={progression.awardingId}
+                awardError={progression.awardError}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="training" className="space-y-3">
