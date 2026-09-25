@@ -70,6 +70,7 @@ export function CreateExerciseDialog({
   const steps = input.steps.map((s) => s.trim()).filter(Boolean)
   const canSave = input.title.trim().length > 0 && input.goal.trim().length > 0 && steps.length > 0
     && input.durationMinutes > 0 && (input.icon.kind === 'emoji' ? input.icon.value.trim().length > 0 : true)
+  const isDirty = JSON.stringify(input) !== JSON.stringify(toInput(editing))
 
   async function save() {
     setSaving(true)
@@ -94,7 +95,10 @@ export function CreateExerciseDialog({
         onOpenChange(next)
       }}
     >
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent
+        className="max-h-[85vh] overflow-y-auto sm:max-w-lg"
+        confirmClose={() => !isDirty || window.confirm('Discard this exercise? Your changes will be lost.')}
+      >
         <DialogTitle>{editing ? 'Edit your exercise' : 'Create your own exercise'}</DialogTitle>
         <DialogDescription>
           {editing ? 'Only you can see or change this.' : 'Private to you — you can share it with your club later.'}
