@@ -19,6 +19,7 @@ import { type EyeColor, type Gender, type JerseyColor, usePlayers } from './hook
 import { useTrainerAccess } from './hooks/useTrainerAccess'
 import { getSignInIntent, setSignInIntent } from './lib/signInIntent'
 import { ParentNoChildCard } from './components/ParentNoChildCard'
+import { XIcon } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './components/ui/dialog'
 import { childOptions as buildChildOptions } from './utils/childOptions'
 import { formatDate } from './utils/format'
@@ -193,12 +194,18 @@ function App() {
           <DialogContent showCloseButton={false} className="border-0 bg-transparent p-0 shadow-none ring-0 sm:max-w-2xl">
             <DialogTitle className="sr-only">No child linked yet</DialogTitle>
             <DialogDescription className="sr-only">Ask your child's trainer to add your email.</DialogDescription>
+            <div className="relative [&_h2]:pr-10">
             <ParentNoChildCard
               trainerAccess={trainerAccess}
               note={`This email is ${trainerAccess.roles.admin ? 'a platform admin' : 'a trainer'} account, not a parent account.`}
               notParentLabel={trainerAccess.roles.admin ? 'Continue to my admin account' : 'Continue to my trainer account'}
               onNotParent={() => { setSignInIntent(null); setParentMismatchAcknowledged(true) }}
             />
+              <button type="button" aria-label="Close" onClick={trainerAccess.lock}
+                className="absolute right-4 top-4 grid size-8 place-items-center rounded-full text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                <XIcon className="size-4" aria-hidden="true" />
+              </button>
+            </div>
           </DialogContent>
         </Dialog>
       ) : !trainerAccess.unlocked ? (

@@ -331,18 +331,18 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
 
       <Dialog open={open} onOpenChange={(next) => { if (!next) { setFlow(null); setDismissed(true) } }}>
         <DialogContent showCloseButton={false} className={`${trainerAccess.needsWorkspace && getSignInIntent() === 'parent' ? 'sm:max-w-2xl' : 'max-w-md'} border-0 bg-transparent p-0 shadow-none ring-0`}>
-          {/* Its own row above the cards, so it reads as closing the whole dialog, not the note. */}
-          <div className="flex justify-end">
+          <DialogTitle className="sr-only">Sign in to CoachCub</DialogTitle>
+          <DialogDescription className="sr-only">Choose whether you are new or already have an account, then use your email.</DialogDescription>
+          <div className="relative [&_h2]:pr-10">
+            <AccessCard trainerAccess={trainerAccess} flow={flow} onChange={(next) => { setFlow(next); setDismissed(false) }} />
+            {/* Inside the dialog on every step, so it always cancels the whole sign-in. */}
             <DialogClose asChild>
               <button type="button" aria-label="Close"
-                className="grid size-9 place-items-center rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-50 dark:hover:bg-neutral-700">
+                className="absolute right-4 top-4 grid size-8 place-items-center rounded-full text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800">
                 <XIcon className="size-4" aria-hidden="true" />
               </button>
             </DialogClose>
           </div>
-          <DialogTitle className="sr-only">Sign in to CoachCub</DialogTitle>
-          <DialogDescription className="sr-only">Choose whether you are new or already have an account, then use your email.</DialogDescription>
-          <AccessCard trainerAccess={trainerAccess} flow={flow} onChange={(next) => { setFlow(next); setDismissed(false) }} />
         </DialogContent>
       </Dialog>
       {privacyOpen && <PrivacyPolicyScreen onClose={() => setPrivacyOpen(false)} />}
