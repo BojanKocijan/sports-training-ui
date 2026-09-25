@@ -7,6 +7,7 @@ import {
   IconBulb,
   IconCompass,
   IconCone,
+  IconDroplet,
   IconFlame,
   IconHeart,
   IconMedal2,
@@ -46,6 +47,7 @@ export const EXERCISE_ICON_LIBRARY: Record<string, Icon> = {
   bulb: IconBulb,
   medal: IconMedal2,
   award: IconAward,
+  droplet: IconDroplet,
 }
 
 export const EXERCISE_ICON_IDS = Object.keys(EXERCISE_ICON_LIBRARY)
