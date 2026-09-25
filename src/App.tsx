@@ -38,10 +38,10 @@ function App() {
     useState<'dashboard' | 'training'>('dashboard')
   const activePlan = useActivePlan()
   const { groupId, setGroupId } = useActiveGroup()
-  const { groups } = useGroups()
+  const { groups: allGroups } = useGroups()
   const { exercises } = useExercises()
   const { plans, nextPlan, refresh: refreshPlans } = usePlans(groupId)
-  const activeGroup = groups.find((group) => group.id === groupId)
+  const activeGroup = allGroups.find((group) => group.id === groupId)
   const groupTemplateId = activeGroup?.templateId ?? groupId
   const groupTemplateLabel = activeGroup?.templateLabel ?? groupTemplateId.toUpperCase()
   useSportTheme(activeGroup?.sportAccentColor)
@@ -58,7 +58,13 @@ function App() {
   } = usePlayers(groupId)
   // The signed-in trainer's membership is scoped to the active group.
   const trainerAccess = useTrainerAccess(groupId)
-  const childOptions = buildChildOptions(trainerAccess.children, groups)
+  const childOptions = buildChildOptions(trainerAccess.children, allGroups)
+  // Only the groups this account actually belongs to -- the club's full catalog (including other
+  // age bands and "coming soon" placeholders) isn't this trainer's to switch into. Superadmins
+  // manage the whole club, so they keep seeing everything.
+  const visibleGroups = trainerAccess.isSuperadmin || trainerAccess.groupIds.length === 0
+    ? allGroups
+    : allGroups.filter((group) => trainerAccess.groupIds.includes(group.id))
   // Where the person said they were coming in (trainer or parent) vs what the account is (#roles).
   // A parent login on an account with no child but a trainer/admin role gets an explanation, not the
   // trainer app; a parent login with a child lands in the parent view. The avatar menu switches.
@@ -177,7 +183,7 @@ function App() {
     const planExercises = nextPlan.exercise_ids
       .map((id) => findExercise(exercises, id))
       .filter((e): e is NonNullable<typeof e> => Boolean(e))
-    const planGroupName = groups.find((g) => g.id === nextPlan.group_id)?.name ?? nextPlan.group_id
+    const planGroupName = allGroups.find((g) => g.id === nextPlan.group_id)?.name ?? nextPlan.group_id
     return {
       ...activePlan,
       planTitle: `${planGroupName} · ${formatDate(nextPlan.training_date)}`,
@@ -185,7 +191,7 @@ function App() {
       planExercises,
       totalMinutes: planExercises.reduce((sum, e) => sum + e.durationMinutes, 0),
     }
-  }, [nextPlan, activePlan, groups, exercises])
+  }, [nextPlan, activePlan, allGroups, exercises])
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
@@ -228,7 +234,7 @@ function App() {
         <PlayerDetailScreen
           player={viewingPlayer}
           plans={plans}
-          groups={groups}
+          groups={allGroups}
           onClose={closePlayerDetail}
           onSaveEdit={(...args) => handleEditPlayer(viewingPlayer.id, ...args)}
           saving={savingPlayer}
@@ -242,7 +248,7 @@ function App() {
       ) : (
         <>
           <ClubHeader
-            groupSwitcher={{ groups, groupId, setGroupId }}
+            groupSwitcher={{ groups: visibleGroups, groupId, setGroupId }}
             trainerAccess={{
               kind: 'trainer',
               lock: trainerAccess.lock,

@@ -12,7 +12,7 @@ import {
 
 const ACCOUNT_ROLE_INFO: Record<AccountRole, { emoji: string; label: string }> = {
   superadmin: { emoji: '🛡️', label: 'Superadmin' },
-  owner: { emoji: '👑', label: 'Owner' },
+  owner: { emoji: '', label: 'Owner' },
   club_admin: { emoji: '⚙️', label: 'Club admin' },
   trainer: { emoji: '🧑‍🏫', label: 'Trainer' },
   co_coach: { emoji: '🤝', label: 'Co-coach' },
@@ -77,10 +77,10 @@ export function TrainerAccessMenu({
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="min-w-64">
         <DropdownMenuLabel>
-          {emoji} {label}
-          {email && <span className="block max-w-56 truncate text-xs font-normal text-muted-foreground">{email}</span>}
+          {emoji ? `${emoji} ${label}` : label}
+          {email && <span className="block max-w-72 truncate text-xs font-normal text-muted-foreground">{email}</span>}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {onAdminHome && (
