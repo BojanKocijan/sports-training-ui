@@ -7,7 +7,9 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAdminOverview, type AdminOverview } from '../hooks/useAdminOverview'
+import { useSportTierLimits } from '../hooks/useSportTierLimits'
 import { AddOwnerDialog } from './AddOwnerDialog'
+import { SportTierLimitsCard } from './SportTierLimitsCard'
 import { ThemeToggle } from './ThemeToggle'
 import { INITIAL_TABLE_STATE, WorkspacesTable, type TableState } from './WorkspacesTable'
 import { WorkspacePlanEditor } from './WorkspacePlanEditor'
@@ -18,9 +20,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 type Access = AdminOverview['access'][number]
 type Parent = AdminOverview['parents'][number]
 
-/** Navigation: the platform-wide overview, the workspaces table, or one workspace by id. */
+/** Navigation: the platform-wide overview, the workspaces table, sport pricing limits, or one
+ * workspace by id. */
 const PLATFORM = 'platform'
 const WORKSPACES = 'workspaces'
+const PRICING = 'pricing'
 
 function roleLabel(role: string) {
   if (role === 'club_admin') return 'Club admin'
@@ -212,6 +216,7 @@ export function SuperAdminDashboard({
   onOpenChild?: (id: string) => void
 }) {
   const { overview, loading, error, refresh } = useAdminOverview()
+  const { limits, loading: limitsLoading, error: limitsError, refresh: refreshLimits } = useSportTierLimits()
   const [selected, setSelected] = useState<string>(PLATFORM)
   const [tableState, setTableState] = useState<TableState>(INITIAL_TABLE_STATE)
   const [ownerWorkspaceId, setOwnerWorkspaceId] = useState<string | null>(null)
@@ -276,6 +281,15 @@ export function SuperAdminDashboard({
             <span>Workspaces</span>
             {overview && <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">{overview.workspaces.length}</span>}
           </button>
+
+          <button
+            type="button"
+            aria-current={selected === PRICING ? 'page' : undefined}
+            onClick={() => setSelected(PRICING)}
+            className={`${navItem(selected === PRICING)} mt-1`}
+          >
+            <span>Pricing & limits</span>
+          </button>
         </nav>
 
         <main className="min-w-0 flex-1 space-y-8">
@@ -324,6 +338,32 @@ export function SuperAdminDashboard({
                 </div>
                 <AdminsTable admins={overview.platformAdmins} />
               </section>
+            </>
+          )}
+
+          {selected === PRICING && (
+            <>
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Pricing & limits</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Default seat caps by sport and tier. A workspace's own override (set from its Plan tab) takes precedence over these.
+                </p>
+              </div>
+
+              {limitsLoading && (
+                <p role="status" className="text-sm text-muted-foreground">Loading pricing limits...</p>
+              )}
+
+              {limitsError && (
+                <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+                  <p className="text-sm text-destructive">{limitsError}</p>
+                  <Button variant="secondary" size="sm" className="mt-3" onClick={() => void refreshLimits()}>
+                    Try again
+                  </Button>
+                </div>
+              )}
+
+              {limits && <SportTierLimitsCard limits={limits} onSaved={refreshLimits} />}
             </>
           )}
 

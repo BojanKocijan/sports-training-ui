@@ -13,6 +13,15 @@ import {
 } from 'vitest'
 import { SuperAdminDashboard } from './SuperAdminDashboard'
 
+vi.mock('../hooks/useSportTierLimits', () => ({
+  useSportTierLimits: () => ({
+    loading: false,
+    error: null,
+    refresh: vi.fn(),
+    limits: [{ sportId: 'basketball', tier: 'free', maxPlayers: 15, updatedAt: '2026-09-25T00:00:00Z' }],
+  }),
+}))
+
 vi.mock('../hooks/useAdminOverview', () => ({
   useAdminOverview: () => ({
     loading: false,
@@ -127,6 +136,22 @@ describe('SuperAdminDashboard', () => {
     // Back to the platform overview from the sidebar.
     await userEvent.click(screen.getByRole('button', { name: 'Platform overview' }))
     expect(screen.getByRole('heading', { name: 'Platform overview' })).toBeInTheDocument()
+  })
+
+  it('shows the sport pricing/limits page with the Basketball default from useSportTierLimits', async () => {
+    render(
+      <SuperAdminDashboard
+        onOpenTrainingApp={vi.fn()}
+        onLogout={vi.fn()}
+        onInviteOwner={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Pricing & limits' }))
+    expect(screen.getByRole('heading', { name: 'Pricing & limits' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Basketball' })).toBeInTheDocument()
+    expect(screen.getByText('Free trial')).toBeInTheDocument()
+    expect(screen.getByLabelText('Basketball Free trial max players')).toHaveValue(15)
   })
 
   it('opens the regular training app on demand', () => {
