@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import type { ExerciseIcon } from '../hooks/useExercises'
-import { EMOJI_LIBRARY } from './EmojiLibrary'
 import { EXERCISE_ICON_IDS, EXERCISE_ICON_LIBRARY } from './ExerciseIconLibrary'
 
 /** A trainer's icon choice for their own custom exercise: pick one from our icon library, or
- * pick an emoji from a curated grid — the seeded library is moving to icon-library-only icons
+ * type/paste any emoji of their own — the seeded library is moving to icon-library-only icons
  * (#203), but a custom exercise stays the trainer's own choice either way. */
 export function IconPicker({ value, onChange }: { value: ExerciseIcon; onChange: (icon: ExerciseIcon) => void }) {
   const [tab, setTab] = useState<ExerciseIcon['kind']>(value.kind)
@@ -54,24 +53,17 @@ export function IconPicker({ value, onChange }: { value: ExerciseIcon; onChange:
           })}
         </div>
       ) : (
-        <div className="mt-3 grid grid-cols-5 gap-2 sm:grid-cols-8">
-          {EMOJI_LIBRARY.map((emoji) => {
-            const active = value.kind === 'emoji' && value.value === emoji
-            return (
-              <button
-                key={emoji}
-                type="button"
-                aria-label={emoji}
-                aria-pressed={active}
-                onClick={() => onChange({ kind: 'emoji', value: emoji })}
-                className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 text-xl ${
-                  active ? 'border-orange-500 bg-orange-50 dark:bg-orange-500/10' : 'border-border bg-card'
-                }`}
-              >
-                {emoji}
-              </button>
-            )
-          })}
+        <div className="mt-3">
+          <label className="text-xs font-semibold uppercase tracking-wide text-neutral-400">Emoji</label>
+          <input
+            type="text"
+            inputMode="text"
+            maxLength={8}
+            value={value.kind === 'emoji' ? value.value : ''}
+            onChange={(e) => onChange({ kind: 'emoji', value: e.target.value })}
+            placeholder="🏀"
+            className="mt-1 block w-20 rounded-xl border border-border bg-card px-3 py-2 text-center text-2xl"
+          />
         </div>
       )}
     </div>
