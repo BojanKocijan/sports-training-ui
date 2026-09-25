@@ -16,6 +16,7 @@ import { findExercise, useExercises } from './hooks/useExercises'
 import { useGroups } from './hooks/useGroups'
 import { usePlans } from './hooks/usePlans'
 import { type EyeColor, type Gender, type JerseyColor, usePlayers } from './hooks/usePlayers'
+import { useSportTheme } from './hooks/useSportTheme'
 import { useTrainerAccess } from './hooks/useTrainerAccess'
 import { getSignInIntent, setSignInIntent } from './lib/signInIntent'
 import { ParentNoChildDialog } from './components/ParentNoChildDialog'
@@ -43,6 +44,7 @@ function App() {
   const activeGroup = groups.find((group) => group.id === groupId)
   const groupTemplateId = activeGroup?.templateId ?? groupId
   const groupTemplateLabel = activeGroup?.templateLabel ?? groupTemplateId.toUpperCase()
+  useSportTheme(activeGroup?.sportAccentColor)
   // Owned here, not inside PlayersSection, so PlayerDetailScreen (a sibling top-level screen, see
   // below) can use the same roster data and mutations without a second fetch.
   const {

@@ -13,6 +13,9 @@ export interface ApiGroup {
   /** e.g. 'Basketball'; undefined when the API does not say yet. */
   sportName?: string
   sportEmoji?: string
+  /** This sport's brand color (hex), driving per-sport theming (sports-training-ui#220) —
+   * undefined on older API deploys, in which case the app keeps its default orange. */
+  sportAccentColor?: string
 }
 
 interface RawGroup {
@@ -24,7 +27,7 @@ interface RawGroup {
     emoji: string
     status: 'available' | 'coming_soon'
     /** Which sport this age group belongs to (older API deploys omit it). */
-    sport?: { name: string; emoji: string } | null
+    sport?: { name: string; emoji: string; accent_color?: string } | null
   } | null
 }
 
@@ -44,6 +47,7 @@ function mapGroup(group: RawGroup): ApiGroup {
     status: group.group_templates?.status ?? 'available',
     sportName: group.group_templates?.sport?.name,
     sportEmoji: group.group_templates?.sport?.emoji,
+    sportAccentColor: group.group_templates?.sport?.accent_color,
   }
 }
 
