@@ -5,7 +5,6 @@ import { PrivacyPolicyScreen } from './PrivacyPolicyScreen'
 import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { SignInCard } from './SignInCard'
 import { Card } from './ui/card'
-import { XIcon } from 'lucide-react'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from './ui/dialog'
 import type { AuthMode, SignInIntent } from '../lib/signInIntent'
 import { ThemeToggle } from './ThemeToggle'
@@ -330,19 +329,16 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
       </footer>
 
       <Dialog open={open} onOpenChange={(next) => { if (!next) { setFlow(null); setDismissed(true) } }}>
-        <DialogContent showCloseButton={false} className="max-w-md border-0 bg-transparent p-0 shadow-none ring-0">
-          {/* Its own row above the cards, so it reads as closing the whole dialog, not the note. */}
-          <div className="flex justify-end">
-            <DialogClose asChild>
-              <button type="button" aria-label="Close"
-                className="grid size-9 place-items-center rounded-full bg-white text-neutral-900 shadow-md hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-50 dark:hover:bg-neutral-700">
-                <XIcon className="size-4" aria-hidden="true" />
-              </button>
-            </DialogClose>
-          </div>
+        <DialogContent showCloseButton={false} className={`${trainerAccess.needsWorkspace && getSignInIntent() === 'parent' ? 'sm:max-w-2xl' : 'max-w-md'} border-0 bg-transparent p-0 shadow-none ring-0`}>
           <DialogTitle className="sr-only">Sign in to CoachCub</DialogTitle>
           <DialogDescription className="sr-only">Choose whether you are new or already have an account, then use your email.</DialogDescription>
           <AccessCard trainerAccess={trainerAccess} flow={flow} onChange={(next) => { setFlow(next); setDismissed(false) }} />
+          {/* Below the card on every step, so it always cancels the whole sign-in. */}
+          <DialogClose asChild>
+            <button type="button" className="w-full rounded-xl bg-white py-2.5 text-sm font-semibold text-neutral-900 shadow-md hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-50 dark:hover:bg-neutral-700">
+              Cancel
+            </button>
+          </DialogClose>
         </DialogContent>
       </Dialog>
       {privacyOpen && <PrivacyPolicyScreen onClose={() => setPrivacyOpen(false)} />}

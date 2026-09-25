@@ -93,15 +93,13 @@ describe('LandingPage', () => {
     expect(screen.getAllByAltText(/the mascot$/i)).toHaveLength(8)
   })
 
-  it('closes the sign-in dialog with a Close button that sits outside the parent note', () => {
+  it('closes the sign-in dialog with a Cancel button below the card', () => {
     render(<LandingPage trainerAccess={access} />)
     fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: /^sign in$/i }))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    const close = screen.getByRole('button', { name: 'Close' })
-    expect(screen.getAllByRole('button', { name: 'Close' })).toHaveLength(1)
-    // Not inside a card: it is a direct child row of the dialog, above the sign-in content.
-    expect(close.closest('[data-slot="card"]')).toBeNull()
-    fireEvent.click(close)
+    const cancel = screen.getByRole('button', { name: 'Cancel' })
+    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull()
+    fireEvent.click(cancel)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

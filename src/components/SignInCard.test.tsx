@@ -52,15 +52,14 @@ describe('SignInCard', () => {
 })
 
 describe('ParentNoChildCard', () => {
-  it('offers email, copy and a re-check for a parent with no linked child', () => {
+  it('offers a single send-email action for a parent with no linked child', () => {
     const a = access()
     render(<ParentNoChildCard trainerAccess={a} onNotParent={vi.fn()} />)
     expect(screen.getByText(/no child linked to mum@example.com yet/i)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Open in my email app' }).getAttribute('href')).toMatch(/^mailto:/)
-    expect(screen.getByRole('button', { name: 'Copy message' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: "Send email to my child's trainer" }).getAttribute('href')).toMatch(/^mailto:/)
     expect(screen.getByLabelText('Message to your trainer').textContent).toMatch(/mum@example\.com/)
-    expect(screen.getByRole('button', { name: 'Copy link' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /check again/i }))
+    expect(screen.queryByRole('button', { name: /copy/i })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Check again' }))
     expect(a.refreshAccount).toHaveBeenCalled()
   })
 
