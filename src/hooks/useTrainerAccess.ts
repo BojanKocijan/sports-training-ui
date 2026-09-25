@@ -87,6 +87,12 @@ export function useTrainerAccess(groupId: string) {
   const needsWorkspace = Boolean(
     account && !account.user.superadmin && account.groupIds.length === 0 && linkedChildren.length === 0,
   )
+  // What this account is (also returned by the API as `roles`; derived here so an older API still works).
+  const roles = {
+    parent: linkedChildren.length > 0,
+    trainer: Boolean(account && account.memberships.length > 0),
+    admin: Boolean(account?.user.superadmin),
+  }
   const state = trainer
     ? { unlocked: true, kind: 'trainer' as AccessKind }
     : isParent
@@ -230,7 +236,7 @@ export function useTrainerAccess(groupId: string) {
 
   return {
     ...state, checking, error, requestLoginCode, verifyLoginCode,
-    needsWorkspace, requestSignupCode, verifySignupCode, createWorkspace, refreshAccount,
+    needsWorkspace, roles, requestSignupCode, verifySignupCode, createWorkspace, refreshAccount,
     signedInEmail: account?.user.email ?? '',
     lock, inviteTrainer, inviteOwner, inviteOwnerForGroup,
     canInvite, isSuperadmin, accountRole,
