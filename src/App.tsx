@@ -188,7 +188,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-      {parentMismatch ? (
+      {parentMismatch && (
         <Dialog open onOpenChange={() => { /* Only the links in the card leave this step. */ }}>
           <DialogContent showCloseButton={false} className="border-0 bg-transparent p-0 shadow-none ring-0 sm:max-w-2xl">
             <DialogTitle className="sr-only">No child linked yet</DialogTitle>
@@ -205,7 +205,8 @@ function App() {
             </button>
           </DialogContent>
         </Dialog>
-      ) : !trainerAccess.unlocked ? (
+      )}
+      {!trainerAccess.unlocked ? (
         <LandingPage trainerAccess={trainerAccess} />
       ) : trainerAccess.kind === 'parent' || (asParent && trainerAccess.children.length > 0) ? (
         <>
