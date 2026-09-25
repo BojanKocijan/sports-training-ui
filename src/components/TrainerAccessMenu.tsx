@@ -28,6 +28,7 @@ const ACCOUNT_FALLBACK = { emoji: '👤', label: 'Account' }
 export function TrainerAccessMenu({
   kind,
   accountRole,
+  email,
   onLock,
   onOpenParentView,
   onSwitchToTrainer,
@@ -39,6 +40,9 @@ export function TrainerAccessMenu({
 }: {
   kind: 'trainer' | 'parent'
   accountRole?: AccountRole | null
+  /** The signed-in account's email — shown in the menu so a trainer can confirm which account
+   * they're on without logging out first (sports-training-ui#222). */
+  email?: string
   onLock: () => void
   /** Only for a trainer whose email is also linked to a child. */
   onOpenParentView?: () => void
@@ -76,6 +80,7 @@ export function TrainerAccessMenu({
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
           {emoji} {label}
+          {email && <span className="block truncate text-xs font-normal text-muted-foreground">{email}</span>}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {onAdminHome && (

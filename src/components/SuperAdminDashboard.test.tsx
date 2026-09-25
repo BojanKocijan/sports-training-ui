@@ -194,7 +194,7 @@ describe('SuperAdminDashboard', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'Open training app',
+        name: /Open training app/,
       }),
     )
 

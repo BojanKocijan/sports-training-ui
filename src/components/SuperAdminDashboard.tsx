@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAdminOverview, type AdminOverview } from '../hooks/useAdminOverview'
+import { useClub } from '../hooks/useClub'
 import { useSportTierLimits } from '../hooks/useSportTierLimits'
 import { useTierCatalog } from '../hooks/useTierCatalog'
 import { AddOwnerDialog } from './AddOwnerDialog'
@@ -208,6 +209,7 @@ export function SuperAdminDashboard({
   onOpenParentView,
   childOptions,
   onOpenChild,
+  email,
 }: {
   onOpenTrainingApp: () => void
   onLogout: () => void
@@ -216,8 +218,11 @@ export function SuperAdminDashboard({
   onOpenParentView?: () => void
   childOptions?: { id: string; label: string }[]
   onOpenChild?: (id: string) => void
+  /** The signed-in account's email, shown in the account menu (sports-training-ui#222). */
+  email?: string
 }) {
   const { overview, loading, error, refresh } = useAdminOverview()
+  const club = useClub()
   const { limits, loading: limitsLoading, error: limitsError, refresh: refreshLimits } = useSportTierLimits()
   const { tiers: catalog, loading: catalogLoading, error: catalogError } = useTierCatalog()
   const [selected, setSelected] = useState<string>(PLATFORM)
@@ -256,10 +261,12 @@ export function SuperAdminDashboard({
 
           <div className="flex items-center gap-2">
             <Button variant="secondary" size="sm" onClick={onOpenTrainingApp}>
-              Open training app
+              {/* Today there's only ever one workspace to open — names it so it's never a
+               * surprise, ahead of sports-training-api#112 letting a superadmin reach several. */}
+              Open training app → {club.name}
             </Button>
             <ThemeToggle />
-            <TrainerAccessMenu kind="trainer" accountRole="superadmin" onLock={onLogout} onOpenParentView={onOpenParentView} childOptions={childOptions} onOpenChild={onOpenChild} />
+            <TrainerAccessMenu kind="trainer" accountRole="superadmin" email={email} onLock={onLogout} onOpenParentView={onOpenParentView} childOptions={childOptions} onOpenChild={onOpenChild} />
           </div>
         </div>
       </header>
