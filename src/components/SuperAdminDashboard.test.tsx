@@ -22,6 +22,28 @@ vi.mock('../hooks/useSportTierLimits', () => ({
   }),
 }))
 
+vi.mock('../hooks/useTierCatalog', () => ({
+  useTierCatalog: () => ({
+    loading: false,
+    error: null,
+    refresh: vi.fn(),
+    tiers: [
+      {
+        id: 'free', label: 'FREE', priceLabel: '€0', additionalGroupLabel: null,
+        monthlyPriceLabel: null, monthlyAdditionalGroupLabel: null, seasonMonths: null,
+        items: ['1 sport', '1 group', '15 players', '1 trainer', 'Full core feature set', 'No expiry'],
+        status: 'available',
+      },
+      {
+        id: 'coach', label: 'COACH / TEAM', priceLabel: '€60 / season first group',
+        additionalGroupLabel: '€50 / additional group', monthlyPriceLabel: null,
+        monthlyAdditionalGroupLabel: null, seasonMonths: 12,
+        items: ['Owner + limited co-coaches'], status: 'planned',
+      },
+    ],
+  }),
+}))
+
 vi.mock('../hooks/useAdminOverview', () => ({
   useAdminOverview: () => ({
     loading: false,
@@ -152,6 +174,11 @@ describe('SuperAdminDashboard', () => {
     expect(screen.getByRole('heading', { name: 'Basketball' })).toBeInTheDocument()
     expect(screen.getByText('Free trial')).toBeInTheDocument()
     expect(screen.getByLabelText('Basketball Free trial max players')).toHaveValue(15)
+
+    // Full tier catalog (pricing, status, features incl. sharing/inviting) underneath.
+    expect(screen.getByRole('heading', { name: 'What each tier includes' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'FREE' })).toBeInTheDocument()
+    expect(screen.getByText('Owner + limited co-coaches')).toBeInTheDocument()
   })
 
   it('opens the regular training app on demand', () => {
