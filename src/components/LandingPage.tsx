@@ -6,7 +6,7 @@ import type { useTrainerAccess } from '../hooks/useTrainerAccess'
 import { SignInCard } from './SignInCard'
 import { Card } from './ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog'
-import type { SignInIntent } from '../lib/signInIntent'
+import type { AuthMode, SignInIntent } from '../lib/signInIntent'
 import { ThemeToggle } from './ThemeToggle'
 import { WorkspaceOnboardingCard } from './WorkspaceOnboardingCard'
 import { ParentNoChildCard } from './ParentNoChildCard'
@@ -107,10 +107,13 @@ function HeroVideo() {
  * way they said they were coming in (trainer: name a workspace; parent: ask the trainer to link
  * their child). Otherwise the sign-in form for the chosen role, with the parent information first
  * for parents. */
-function AccessCard({ trainerAccess, flow, onSwitchRole }: {
+/** Where the sign-in dialog is: a role and/or a mode still to pick (null), or both chosen. */
+interface AuthFlow { role: SignInIntent | null; mode: AuthMode | null }
+
+function AccessCard({ trainerAccess, flow, onChange }: {
   trainerAccess: ReturnType<typeof useTrainerAccess>
-  flow: SignInIntent | 'choose' | null
-  onSwitchRole: (next: SignInIntent) => void
+  flow: AuthFlow | null
+  onChange: (next: AuthFlow) => void
 }) {
   const [intent, setIntent] = useState(getSignInIntent)
   if (trainerAccess.needsWorkspace) {
@@ -119,38 +122,51 @@ function AccessCard({ trainerAccess, flow, onSwitchRole }: {
     }
     return <WorkspaceOnboardingCard trainerAccess={trainerAccess} onNotTrainer={() => { setSignInIntent('parent'); setIntent('parent') }} />
   }
-  if (flow === 'choose') {
+  const role = flow?.role ?? null
+  const mode = flow?.mode ?? null
+  if (!role || !mode) {
+    // One question at a time: who they are (unless the page already knew), then new or existing.
+    const options: { label: string; role: SignInIntent; mode: AuthMode }[] = ([
+      ['New trainer', 'trainer', 'signup'], ['Existing trainer', 'trainer', 'login'],
+      ['New parent', 'parent', 'signup'], ['Existing parent', 'parent', 'login'],
+    ] as const).map(([label, r, m]) => ({ label, role: r, mode: m })).filter((o) => !role || o.role === role)
     return (
       <Card className="w-full rounded-3xl p-5 shadow-lg">
-        <h2 className="text-lg font-bold dark:text-white">Sign in to CoachCub</h2>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">How are you coming in?</p>
+        <h2 className="text-lg font-bold dark:text-white">{role ? `Are you new, ${role === 'trainer' ? 'trainer' : 'parent'}?` : 'Welcome to CoachCub'}</h2>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          {role ? 'New here, or already have an account?' : 'How are you coming in?'}
+        </p>
         <div className="mt-4 grid gap-3">
-          <button type="button" onClick={() => onSwitchRole('trainer')} className="rounded-xl bg-orange-500 py-3 text-sm font-bold text-white">
-            I'm a trainer
-          </button>
-          <button type="button" onClick={() => onSwitchRole('parent')}
-            className="rounded-xl border border-orange-500 py-3 text-sm font-bold text-orange-600 dark:text-orange-300">
-            I'm a parent
-          </button>
+          {options.map((o) => (
+            <button key={o.label} type="button" onClick={() => { setSignInIntent(o.role); onChange({ role: o.role, mode: o.mode }) }}
+              className={o.mode === 'signup'
+                ? 'rounded-xl bg-orange-500 py-3 text-sm font-bold text-white'
+                : 'rounded-xl border border-orange-500 py-3 text-sm font-bold text-orange-600 dark:text-orange-300'}>
+              {o.label}{o.mode === 'signup' ? ': sign up' : ': log in'}
+            </button>
+          ))}
         </div>
       </Card>
     )
   }
-  const role = flow ?? 'trainer'
   return (
     <>
       {role === 'parent' && (
         <div className="mb-3 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-neutral-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-neutral-200">
           <p className="font-bold text-neutral-900 dark:text-neutral-50">Following your child?</p>
           <p className="mt-1">
-            You need to be invited by their trainer: they add your email to your child's profile. Once
-            you're added, sign in with that email to see your child's progress. If you also coach, one
-            account is both trainer and parent, and you can switch between the two views from the
-            account menu.
+            Their trainer adds your email to your child's profile. Sign up or log in with that email to
+            see your child's progress. If it isn't linked yet, we'll help you ask the trainer. If you
+            also coach, one account is both trainer and parent, and you can switch between the two
+            views from the account menu.
           </p>
         </div>
       )}
-      <SignInCard trainerAccess={trainerAccess} role={role} onSwitchRole={onSwitchRole} />
+      <SignInCard
+        trainerAccess={trainerAccess} role={role} mode={mode}
+        onSwitchRole={(next) => { setSignInIntent(next); onChange({ role: next, mode }) }}
+        onSwitchMode={(next) => onChange({ role, mode: next })}
+      />
     </>
   )
 }
@@ -159,10 +175,10 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
   const [privacyOpen, setPrivacyOpen] = useState(false)
   // Which role's sign-in dialog is open. A signed-in account that still needs a workspace (or a
   // child link) opens it automatically, since that is the next step for them.
-  const [flow, setFlow] = useState<SignInIntent | 'choose' | null>(null)
+  const [flow, setFlow] = useState<AuthFlow | null>(null)
   const [dismissed, setDismissed] = useState(false)
   const open = flow !== null || (trainerAccess.needsWorkspace && !dismissed)
-  const choose = (role: SignInIntent) => { setSignInIntent(role); setFlow(role); setDismissed(false) }
+  const choose = (role: SignInIntent) => { setSignInIntent(role); setFlow({ role, mode: null }); setDismissed(false) }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white text-neutral-900 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-950 dark:text-neutral-50">
@@ -172,7 +188,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
         </a>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <button type="button" onClick={() => { setFlow('choose'); setDismissed(false) }}
+          <button type="button" onClick={() => { setFlow({ role: null, mode: null }); setDismissed(false) }}
             className="whitespace-nowrap rounded-full bg-orange-500 px-4 py-2 text-sm font-bold text-white hover:bg-orange-600">
             Sign in
           </button>
@@ -299,7 +315,7 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">
-        <p>Trainers, <button type="button" onClick={() => choose('trainer')} className="font-semibold text-orange-600 underline">sign in</button> to set up your group and invite parents.</p>
+        <p>Trainers, <button type="button" onClick={() => choose('trainer')} className="font-semibold text-orange-600 underline">sign up or log in</button> to set up your group and invite parents.</p>
         <p className="mx-auto mt-4 max-w-xl">
           Our mascots and the hero video are AI-generated, guided by the experience of an illustrator and a 3D artist.
         </p>
@@ -315,8 +331,8 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
       <Dialog open={open} onOpenChange={(next) => { if (!next) { setFlow(null); setDismissed(true) } }}>
         <DialogContent className="max-w-md border-0 bg-transparent p-0 shadow-none ring-0">
           <DialogTitle className="sr-only">Sign in to CoachCub</DialogTitle>
-          <DialogDescription className="sr-only">Choose how you are coming in and sign in with your email.</DialogDescription>
-          <AccessCard trainerAccess={trainerAccess} flow={flow} onSwitchRole={choose} />
+          <DialogDescription className="sr-only">Choose whether you are new or already have an account, then use your email.</DialogDescription>
+          <AccessCard trainerAccess={trainerAccess} flow={flow} onChange={(next) => { setFlow(next); setDismissed(false) }} />
         </DialogContent>
       </Dialog>
       {privacyOpen && <PrivacyPolicyScreen onClose={() => setPrivacyOpen(false)} />}

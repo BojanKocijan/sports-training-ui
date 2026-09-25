@@ -16,8 +16,19 @@ describe('LandingPage', () => {
     render(<LandingPage trainerAccess={access} />)
     fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: /^sign in$/i }))
     expect(screen.getByText('How are you coming in?')).toBeInTheDocument()
-    fireEvent.click(screen.getAllByRole('button', { name: /i'm a trainer/i }).at(-1)!)
+    expect(screen.getByRole('button', { name: /new trainer/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /existing trainer/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /new parent/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /existing parent/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /existing trainer/i }))
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument()
+  })
+
+  it('asks a trainer or parent from the hero whether they are new or existing', () => {
+    render(<LandingPage trainerAccess={access} />)
+    fireEvent.click(screen.getAllByRole('button', { name: /^i'm a trainer$/i })[0])
+    expect(screen.getByRole('button', { name: /new trainer/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /new parent/i })).not.toBeInTheDocument()
   })
 
   it('has one Sign in button in the header and the trainer / parent choice in the hero', () => {
@@ -26,7 +37,8 @@ describe('LandingPage', () => {
     expect(within(header).getByRole('button', { name: /^sign in$/i })).toBeInTheDocument()
     expect(within(header).queryByRole('button', { name: /i'm a trainer/i })).not.toBeInTheDocument()
     fireEvent.click(screen.getAllByRole('button', { name: /i'm a parent/i })[0])
-    expect(screen.getByText(/you need to be invited by their trainer/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /new parent/i }))
+    expect(screen.getByText(/their trainer adds your email/i)).toBeInTheDocument()
     expect(screen.getByText(/one account is both trainer and parent/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument()
   })

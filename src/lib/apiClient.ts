@@ -5,7 +5,13 @@ const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.trim().rep
 export const isApiConfigured = Boolean(API_URL)
 export const apiBaseUrl = API_URL ?? ''
 
-export class ApiRequestError extends Error {}
+export class ApiRequestError extends Error {
+  status?: number
+  constructor(message: string, status?: number) {
+    super(message)
+    this.status = status
+  }
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!API_URL) throw new ApiRequestError('API is not configured')
@@ -27,7 +33,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   })
   if (!res.ok) {
     const body = await res.json().catch(() => null)
-    throw new ApiRequestError(body?.error ?? `Request failed with status ${res.status}`)
+    throw new ApiRequestError(body?.error ?? `Request failed with status ${res.status}`, res.status)
   }
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>

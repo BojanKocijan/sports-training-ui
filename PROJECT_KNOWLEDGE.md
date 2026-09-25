@@ -245,6 +245,8 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 
 ## Changelog
 
+- **2026-09-25** — Sign-up and log-in are separate. The landing dialog asks new vs existing for each role (new/existing trainer, new/existing parent). Sign-up (`/auth/signup/request`) refuses an email that already has an account (409, "Log in instead") and sends the branded confirmation email (link + code, 15 min expiry; template in sports-training-api `supabase/templates/confirmation.html`, must also be pasted into the hosted Supabase dashboard). Log-in keeps the emailed code. The link opens in a new tab; the waiting tab signs in through the `storage` event. `ParentNoChildCard` shows the full note the parent sends their trainer themselves.
+
 - **2026-09-22** — In-progress trainer login migration: email OTP and invitation replace group passcodes; parent codes stay child-scoped and read-only. FREE is the product tier, not a pilot. Hosted rollout awaits matching API migration and Auth email configuration.
 - **2026-09-21** — Local UI uses strict port 5174 and calls the sibling API on port 3002, avoiding other local services. Both projects require Node 22+; the API must allow the exact UI origin. The API client trims trailing slashes and sends JSON Content-Type only for requests with a body, so GET requests no longer trigger unnecessary preflights.
 

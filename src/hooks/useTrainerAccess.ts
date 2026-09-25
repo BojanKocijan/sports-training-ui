@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { api, apiBaseUrl } from '../lib/apiClient'
-import { currentSession, saveSession, signOut, type AccountSession } from '../lib/accountSession'
+import { api, apiBaseUrl, ApiRequestError } from '../lib/apiClient'
+import { currentSession, saveSession, signOut, STORAGE_KEY, syncSessionFromStorage, type AccountSession } from '../lib/accountSession'
 import type { EyeColor, Gender, JerseyColor } from './usePlayers'
 
 /** A child shown in the parent view. Appearance fields are optional so the view can also render
@@ -58,12 +58,21 @@ export function useTrainerAccess(groupId: string) {
     }
     const onChange = () => setAccount(currentSession())
     window.addEventListener('trainer-session-changed', onChange)
+    // The emailed confirmation link opens in another tab and saves the session to localStorage:
+    // this (waiting) tab picks it up, so the person carries on where they started.
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY) setAccount(syncSessionFromStorage())
+    }
+    window.addEventListener('storage', onStorage)
     if (currentSession()) {
       api.get<{ groupIds: string[]; memberships: AccountSession['memberships']; children?: AccountSession['children'] }>('/auth/me')
         .then(({ groupIds, memberships, children }) => setAccount((prev) => prev ? { ...prev, groupIds, memberships, children } : null))
         .catch(() => saveSession(null))
     }
-    return () => window.removeEventListener('trainer-session-changed', onChange)
+    return () => {
+      window.removeEventListener('trainer-session-changed', onChange)
+      window.removeEventListener('storage', onStorage)
+    }
   }, [])
 
   useEffect(() => { setError(null) }, [groupId])
@@ -110,15 +119,17 @@ export function useTrainerAccess(groupId: string) {
     } finally { setChecking(false) }
   }, [])
 
-  const requestSignupCode = useCallback(async (email: string) => {
+  /** 'sent': confirmation email on its way. 'exists': the address already has an account, so
+   * the person should log in instead (the error explains it). 'failed': anything else. */
+  const requestSignupCode = useCallback(async (email: string): Promise<'sent' | 'exists' | 'failed'> => {
     setChecking(true)
     setError(null)
     try {
       await api.post('/auth/signup/request', { email })
-      return true
+      return 'sent'
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not send sign-up code')
-      return false
+      setError(e instanceof Error ? e.message : 'Could not send the confirmation email')
+      return e instanceof ApiRequestError && e.status === 409 ? 'exists' : 'failed'
     } finally { setChecking(false) }
   }, [])
 
