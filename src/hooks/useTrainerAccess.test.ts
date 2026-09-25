@@ -129,6 +129,16 @@ describe('useTrainerAccess', () => {
     expect(postMock).toHaveBeenCalledWith('/auth/invite', { email: 'colleague@example.com', groupIds: ['u8', 'u10'], role: 'trainer' })
   })
 
+  it('resolves clubId from any active membership, not only one scoped to the currently active group', async () => {
+    const groupScoped = { ...session, memberships: [{ club_id: 'club-1', group_id: 'u10', role: 'trainer', active: true }] }
+    saveSession(groupScoped)
+    getMock.mockResolvedValue({ groupIds: ['u10'], memberships: groupScoped.memberships })
+    // Viewing 'u8', a group this account has no membership scoped to - custom exercises are
+    // club-scoped, so clubId (and the planner's "Create exercise" button) shouldn't disappear.
+    const { result } = renderHook(() => useTrainerAccess('u8'))
+    await waitFor(() => expect(result.current.clubId).toBe('club-1'))
+  })
+
   it('reports which roles the signed-in account has (parent, trainer, admin)', async () => {
     saveSession(session)
     const { result } = renderHook(() => useTrainerAccess('u8'))

@@ -242,8 +242,11 @@ export function useTrainerAccess(groupId: string) {
     lock, inviteTrainer, inviteOwner, inviteOwnerForGroup,
     canInvite, isSuperadmin, accountRole,
     userId: account?.user.id ?? null,
-    /** The active group's club — a custom exercise's create/share endpoints are club-scoped. */
-    clubId: clubMembership?.club_id ?? null,
+    /** The account's club — custom exercises are club-scoped, not group-scoped, so this comes
+     * from any active membership, not just one matching the currently active group tab (a
+     * group-scoped trainer viewing a different group than their own would otherwise never see
+     * the "Create exercise" button at all). */
+    clubId: clubMembership?.club_id ?? account?.memberships.find((m) => m.active)?.club_id ?? null,
     groupIds: account?.groupIds ?? [],
     children: linkedChildren,
   }
