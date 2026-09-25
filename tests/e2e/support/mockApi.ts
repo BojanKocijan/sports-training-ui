@@ -103,6 +103,7 @@ export async function login(page: Page) {
   // The landing page offers I'm a trainer / I'm a parent (header on wide screens, hero on
   // phones); the trainer choice opens the sign-in dialog.
   await page.getByRole('button', { name: "I'm a trainer" }).filter({ visible: true }).first().click()
+  await page.getByRole('button', { name: /existing trainer/i }).click()
 
   await page.getByLabel('Email').fill(EMAIL)
 
@@ -113,7 +114,7 @@ export async function login(page: Page) {
   await page.getByLabel('Sign-in code').fill(OTP_CODE)
 
   await page
-    .getByRole('button', { name: 'Sign in', exact: true })
+    .getByRole('button', { name: 'Log in', exact: true })
     .click()
 
   await page.getByRole('navigation').waitFor()

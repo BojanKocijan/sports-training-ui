@@ -23,7 +23,7 @@ export interface AccountSession {
   children?: LinkedChild[]
 }
 
-const STORAGE_KEY = 'sports-training-account-session'
+export const STORAGE_KEY = 'sports-training-account-session'
 let session: AccountSession | null = null
 let refreshInFlight: Promise<AccountSession | null> | null = null
 
@@ -40,6 +40,13 @@ function readStored(): AccountSession | null {
 
 export function currentSession(): AccountSession | null {
   return session ?? (session = readStored())
+}
+
+/** Another tab changed the stored session (e.g. the emailed confirmation link signed in there):
+ * re-read it so this tab follows. */
+export function syncSessionFromStorage(): AccountSession | null {
+  session = readStored()
+  return session
 }
 
 export function saveSession(next: AccountSession | null) {
