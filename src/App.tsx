@@ -271,7 +271,7 @@ function App() {
                   onViewPlayer={setViewingPlayerId}
                 />
               )}
-              {tab === 'library' && <ExercisesScreen />}
+              {tab === 'library' && <ExercisesScreen trainerAccess={trainerAccess} />}
               {tab === 'session' && (
                 <SessionScreen
                   activePlan={sessionPlan}
