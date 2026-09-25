@@ -5,9 +5,13 @@ import { Card } from './ui/card'
 
 /** A signed-in parent whose email is not linked to a child yet: they can't do anything until
  * their child's trainer adds them, so give them ways to ask (email, copy the message or the link). */
-export function ParentNoChildCard({ trainerAccess, onNotParent }: {
+export function ParentNoChildCard({ trainerAccess, onNotParent, notParentLabel = "I'm actually a trainer", note }: {
   trainerAccess: ReturnType<typeof useTrainerAccess>
   onNotParent: () => void
+  /** Label of the way out for an account that is a trainer or admin, not a parent. */
+  notParentLabel?: string
+  /** Extra line under the heading, e.g. saying what this account is. */
+  note?: string
 }) {
   const { signedInEmail, lock, refreshAccount, checking } = trainerAccess
   const [trainerEmail, setTrainerEmail] = useState('')
@@ -19,6 +23,7 @@ export function ParentNoChildCard({ trainerAccess, onNotParent }: {
     <Card className="w-full rounded-3xl p-5 shadow-lg">
       <h2 className="text-lg font-bold dark:text-white">No child linked to {signedInEmail} yet</h2>
       <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+        {note && <span className="mb-2 block font-semibold text-neutral-700 dark:text-neutral-200">{note}</span>}
         Your child's trainer needs to add your email. CoachCub doesn't message them for you: send them the note below
         yourself, from your own email account, WhatsApp or SMS. Then sign in again and you'll see your child's progress.
       </p>
@@ -53,7 +58,7 @@ export function ParentNoChildCard({ trainerAccess, onNotParent }: {
         {checking ? 'Checking...' : 'My trainer added me: check again'}
       </button>
       <button type="button" className="mt-3 block text-sm text-neutral-500 underline" onClick={onNotParent}>
-        I'm actually a trainer
+        {notParentLabel}
       </button>
       <button type="button" className="mt-2 block text-sm text-neutral-500 underline" onClick={lock}>Use a different email</button>
     </Card>

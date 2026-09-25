@@ -17,6 +17,8 @@ import { useGroups } from './hooks/useGroups'
 import { usePlans } from './hooks/usePlans'
 import { type EyeColor, type Gender, type JerseyColor, usePlayers } from './hooks/usePlayers'
 import { useTrainerAccess } from './hooks/useTrainerAccess'
+import { getSignInIntent, setSignInIntent } from './lib/signInIntent'
+import { ParentNoChildCard } from './components/ParentNoChildCard'
 import { childOptions as buildChildOptions } from './utils/childOptions'
 import { formatDate } from './utils/format'
 
@@ -55,6 +57,21 @@ function App() {
   // The signed-in trainer's membership is scoped to the active group.
   const trainerAccess = useTrainerAccess(groupId)
   const childOptions = buildChildOptions(trainerAccess.children, groups)
+  // Where the person said they were coming in (trainer or parent) vs what the account is (#roles).
+  // A parent login on an account with no child but a trainer/admin role gets an explanation, not the
+  // trainer app; a parent login with a child lands in the parent view. The avatar menu switches.
+  const [parentMismatchAcknowledged, setParentMismatchAcknowledged] = useState(false)
+  const parentMismatch =
+    trainerAccess.unlocked && getSignInIntent() === 'parent' && !parentMismatchAcknowledged &&
+    !trainerAccess.roles.parent && (trainerAccess.roles.trainer || trainerAccess.roles.admin)
+  useEffect(() => {
+    if (trainerAccess.unlocked && getSignInIntent() === 'parent' && trainerAccess.roles.parent) {
+      setAsParent(true)
+      setSignInIntent(null)
+    }
+    // Only when the account or its children change, not on every asParent toggle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trainerAccess.unlocked, trainerAccess.roles.parent])
   const childLabels = Object.fromEntries(childOptions.map((c) => [c.id, c.label]))
   const openChild = (id: string) => { setOpenChildId(id); setAsParent(true) }
 
@@ -170,7 +187,16 @@ function App() {
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-      {!trainerAccess.unlocked ? (
+      {parentMismatch ? (
+        <div className="mx-auto max-w-md px-4 pb-10 pt-12">
+          <ParentNoChildCard
+            trainerAccess={trainerAccess}
+            note={`This email is ${trainerAccess.roles.admin ? 'a platform admin' : 'a trainer'} account, not a parent account.`}
+            notParentLabel={trainerAccess.roles.admin ? 'Continue to my admin account' : 'Continue to my trainer account'}
+            onNotParent={() => { setSignInIntent(null); setParentMismatchAcknowledged(true) }}
+          />
+        </div>
+      ) : !trainerAccess.unlocked ? (
         <LandingPage trainerAccess={trainerAccess} />
       ) : trainerAccess.kind === 'parent' || (asParent && trainerAccess.children.length > 0) ? (
         <>

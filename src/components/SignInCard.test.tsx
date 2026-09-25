@@ -63,4 +63,13 @@ describe('ParentNoChildCard', () => {
     fireEvent.click(screen.getByRole('button', { name: /check again/i }))
     expect(a.refreshAccount).toHaveBeenCalled()
   })
+
+  it('says what the account is and offers a way to continue when a trainer chose parent', () => {
+    const a = access()
+    const onNotParent = vi.fn()
+    render(<ParentNoChildCard trainerAccess={a} onNotParent={onNotParent} note="This email is a trainer account, not a parent account." notParentLabel="Continue to my trainer account" />)
+    expect(screen.getByText(/this email is a trainer account, not a parent account/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to my trainer account' }))
+    expect(onNotParent).toHaveBeenCalled()
+  })
 })

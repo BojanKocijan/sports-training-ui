@@ -128,4 +128,13 @@ describe('useTrainerAccess', () => {
     await act(async () => { await result.current.inviteTrainer('colleague@example.com', ['u8', 'u10']) })
     expect(postMock).toHaveBeenCalledWith('/auth/invite', { email: 'colleague@example.com', groupIds: ['u8', 'u10'], role: 'trainer' })
   })
+
+  it('reports which roles the signed-in account has (parent, trainer, admin)', async () => {
+    saveSession(session)
+    const { result } = renderHook(() => useTrainerAccess('u8'))
+    expect(result.current.roles).toEqual({ parent: false, trainer: true, admin: false })
+    saveSession({ ...session, user: { ...session.user, superadmin: true }, children: [{ id: 'kid', nickname: 'Milo', group_id: 'u8', jersey_number: null, jersey_color: null, eye_color: null, gender: null, mascot_id: null }] })
+    const { result: both } = renderHook(() => useTrainerAccess('u8'))
+    expect(both.current.roles).toEqual({ parent: true, trainer: true, admin: true })
+  })
 })
