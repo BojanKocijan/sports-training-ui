@@ -333,7 +333,7 @@ export function SuperAdminDashboard({
                 <h2 className="text-2xl font-bold text-foreground">Workspaces</h2>
                 <p className="mt-1 text-sm text-muted-foreground">Open a workspace for its plan, groups and people.</p>
               </div>
-              <WorkspacesTable overview={overview} state={tableState} onState={setTableState} onOpen={setSelected} />
+              <WorkspacesTable overview={overview} state={tableState} onState={setTableState} onOpen={setSelected} onDeleted={refresh} />
             </>
           )}
 
