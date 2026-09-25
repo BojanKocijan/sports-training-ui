@@ -4,7 +4,7 @@ import { exercisesForGroup, findExercise, useExercises } from '../hooks/useExerc
 import { formatDate } from '../utils/format'
 import { Calendar } from './Calendar'
 import { CategoryCard } from './CategoryCard'
-import { SelectableExerciseCard } from './SelectableExerciseCard'
+import { ExerciseCard } from './ExerciseCard'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 
@@ -149,7 +149,7 @@ export function PlanTrainingWizard({
             </p>
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
               {filtered.map((ex) => (
-                <SelectableExerciseCard
+                <ExerciseCard
                   key={ex.id}
                   exercise={ex}
                   selected={selected.has(ex.id)}
