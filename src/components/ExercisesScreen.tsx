@@ -5,7 +5,7 @@ import { exercisesForGroup, useExercises } from '../hooks/useExercises'
 import { useGroups } from '../hooks/useGroups'
 import { useRatings } from '../hooks/useRatings'
 import { CategoryChip } from './CategoryChip'
-import { ExerciseLibraryCard } from './ExerciseLibraryCard'
+import { ExerciseCard } from './ExerciseCard'
 
 export function ExercisesScreen() {
   const [query, setQuery] = useState('')
@@ -77,7 +77,7 @@ export function ExercisesScreen() {
         {filtered.map((exercise) => {
           const s = stats(exercise.id)
           return (
-            <ExerciseLibraryCard
+            <ExerciseCard
               key={exercise.id}
               exercise={exercise}
               onRate={(value) => rate(exercise.id, value)}
