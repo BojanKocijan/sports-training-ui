@@ -11,6 +11,8 @@ import { HomePractice } from './HomePractice'
 import { MascotCoach } from './MascotCoach'
 import { PlayerBadges } from './PlayerBadges'
 import { usePlayerBadges } from '../hooks/usePlayerBadges'
+import { PlayerProgressionTimeline } from './PlayerProgressionTimeline'
+import { usePlayerProgression } from '../hooks/usePlayerProgression'
 import { SportLoader } from './SportLoader'
 import { PlayerPreviewCard } from './player-form/PlayerPreviewCard'
 import { Card } from './ui/card'
@@ -40,6 +42,9 @@ export function ParentView({
   const topLevelStats = rollUpToTopLevel(skillStats, parentOf)
   const { upcoming, loading: plansLoading } = usePlans(groupId)
   const badges = usePlayerBadges(byCategory)
+  // Read-only here: no `onAward` is passed, so the timeline shows eligible milestones as
+  // "waiting on your trainer" with no action, matching the API's trainer-only award endpoint.
+  const progression = usePlayerProgression(player.id)
   const { exercises } = useExercises()
   const { groups } = useGroups()
   const groupTemplateId = groups.find((g) => g.id === (player.group_id ?? groupId))?.templateId
@@ -59,6 +64,7 @@ export function ParentView({
         <TabsList className="w-full">
           <TabsTrigger value="mascot">Mascot</TabsTrigger>
           <TabsTrigger value="stats">Stats</TabsTrigger>
+          <TabsTrigger value="progression">Milestones</TabsTrigger>
           <TabsTrigger value="training">Trainings</TabsTrigger>
         </TabsList>
 
@@ -119,6 +125,19 @@ export function ParentView({
           </section>
 
           <HomePractice stats={topLevelStats} exercises={exercises} labelFor={labelFor} groupTemplateId={groupTemplateId} />
+        </TabsContent>
+
+        <TabsContent value="progression" className="space-y-2 pt-3">
+          {progression.loading && <p className="text-sm text-neutral-400">Loading progression...</p>}
+          {progression.error && (
+            <p className="text-sm text-red-600">Could not load progression: {progression.error}</p>
+          )}
+          {!progression.loading && progression.progression && (
+            <PlayerProgressionTimeline
+              points={progression.progression.points}
+              milestones={progression.progression.milestones}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="training" className="pt-3">
