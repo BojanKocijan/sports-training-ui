@@ -9,7 +9,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } fr
 import type { AuthMode, SignInIntent } from '../lib/signInIntent'
 import { ThemeToggle } from './ThemeToggle'
 import { WorkspaceOnboardingCard } from './WorkspaceOnboardingCard'
-import { ParentNoChildCard } from './ParentNoChildCard'
+import { ParentNoChildDialog } from './ParentNoChildDialog'
 import { getSignInIntent, setSignInIntent } from '../lib/signInIntent'
 
 const MASCOT_BASE = '/images/basketball/u8%20u10'
@@ -110,17 +110,16 @@ function HeroVideo() {
 /** Where the sign-in dialog is: a role and/or a mode still to pick (null), or both chosen. */
 interface AuthFlow { role: SignInIntent | null; mode: AuthMode | null }
 
-function AccessCard({ trainerAccess, flow, onChange }: {
+function AccessCard({ trainerAccess, flow, onChange, onNotTrainer }: {
   trainerAccess: ReturnType<typeof useTrainerAccess>
   flow: AuthFlow | null
   onChange: (next: AuthFlow) => void
+  /** The account needs a workspace and isn't a parent: the way out to the (separately dialoged) parent case. */
+  onNotTrainer: () => void
 }) {
-  const [intent, setIntent] = useState(getSignInIntent)
   if (trainerAccess.needsWorkspace) {
-    if (intent === 'parent') {
-      return <ParentNoChildCard trainerAccess={trainerAccess} onNotParent={() => { setSignInIntent('trainer'); setIntent('trainer') }} />
-    }
-    return <WorkspaceOnboardingCard trainerAccess={trainerAccess} onNotTrainer={() => { setSignInIntent('parent'); setIntent('parent') }} />
+    // A needs-workspace parent is shown by ParentNoChildDialog instead, not here.
+    return <WorkspaceOnboardingCard trainerAccess={trainerAccess} onNotTrainer={onNotTrainer} />
   }
   const role = flow?.role ?? null
   const mode = flow?.mode ?? null
@@ -196,8 +195,11 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
   // child link) opens it automatically, since that is the next step for them.
   const [flow, setFlow] = useState<AuthFlow | null>(null)
   const [dismissed, setDismissed] = useState(false)
+  const [intent, setIntent] = useState(getSignInIntent)
   const open = flow !== null || (trainerAccess.needsWorkspace && !dismissed)
-  const choose = (role: SignInIntent) => { setSignInIntent(role); setFlow({ role, mode: null }); setDismissed(false) }
+  const choose = (role: SignInIntent) => { setSignInIntent(role); setIntent(role); setFlow({ role, mode: null }); setDismissed(false) }
+  const closeDialog = () => { setFlow(null); setDismissed(true) }
+  const showParentNoChild = trainerAccess.needsWorkspace && intent === 'parent'
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white text-neutral-900 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-950 dark:text-neutral-50">
@@ -347,19 +349,34 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
         </p>
       </footer>
 
-      <Dialog open={open} onOpenChange={(next) => { if (!next) { setFlow(null); setDismissed(true) } }}>
-        <DialogContent showCloseButton={false} className={`${trainerAccess.needsWorkspace && getSignInIntent() === 'parent' ? 'sm:max-w-2xl' : 'max-w-md'} border-0 bg-transparent p-0 shadow-none ring-0`}>
-          <DialogTitle className="sr-only">Sign in to CoachCub</DialogTitle>
-          <DialogDescription className="sr-only">Choose whether you are new or already have an account, then use your email.</DialogDescription>
-          <AccessCard trainerAccess={trainerAccess} flow={flow} onChange={(next) => { setFlow(next); setDismissed(false) }} />
-          {/* Below the card on every step, so it always cancels the whole sign-in. */}
-          <DialogClose asChild>
-            <button type="button" className="w-full rounded-xl bg-white py-2.5 text-sm font-semibold text-neutral-900 shadow-md hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-50 dark:hover:bg-neutral-700">
-              Cancel
-            </button>
-          </DialogClose>
-        </DialogContent>
-      </Dialog>
+      {showParentNoChild ? (
+        <ParentNoChildDialog
+          open={open}
+          onOpenChange={(next) => { if (!next) closeDialog() }}
+          trainerAccess={trainerAccess}
+          onNotParent={() => { setSignInIntent('trainer'); setIntent('trainer') }}
+          onCancel={closeDialog}
+        />
+      ) : (
+        <Dialog open={open} onOpenChange={(next) => { if (!next) closeDialog() }}>
+          <DialogContent showCloseButton={false} className={`${trainerAccess.needsWorkspace ? 'sm:max-w-2xl' : 'max-w-md'} border-0 bg-transparent p-0 shadow-none ring-0`}>
+            <DialogTitle className="sr-only">Sign in to CoachCub</DialogTitle>
+            <DialogDescription className="sr-only">Choose whether you are new or already have an account, then use your email.</DialogDescription>
+            <AccessCard
+              trainerAccess={trainerAccess}
+              flow={flow}
+              onChange={(next) => { setFlow(next); setDismissed(false) }}
+              onNotTrainer={() => { setSignInIntent('parent'); setIntent('parent') }}
+            />
+            {/* Below the card on every step, so it always cancels the whole sign-in. */}
+            <DialogClose asChild>
+              <button type="button" className="w-full rounded-xl bg-white py-2.5 text-sm font-semibold text-neutral-900 shadow-md hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-50 dark:hover:bg-neutral-700">
+                Cancel
+              </button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
+      )}
       {privacyOpen && <PrivacyPolicyScreen onClose={() => setPrivacyOpen(false)} />}
     </div>
   )
