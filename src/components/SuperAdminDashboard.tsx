@@ -8,9 +8,11 @@ import {
 import { useState } from 'react'
 import { useAdminOverview, type AdminOverview } from '../hooks/useAdminOverview'
 import { useSportTierLimits } from '../hooks/useSportTierLimits'
+import { useTierCatalog } from '../hooks/useTierCatalog'
 import { AddOwnerDialog } from './AddOwnerDialog'
 import { SportTierLimitsCard } from './SportTierLimitsCard'
 import { ThemeToggle } from './ThemeToggle'
+import { TierPackagesGrid } from './TierPackagesGrid'
 import { INITIAL_TABLE_STATE, WorkspacesTable, type TableState } from './WorkspacesTable'
 import { WorkspacePlanEditor } from './WorkspacePlanEditor'
 import { TrainerAccessMenu } from './TrainerAccessMenu'
@@ -217,6 +219,7 @@ export function SuperAdminDashboard({
 }) {
   const { overview, loading, error, refresh } = useAdminOverview()
   const { limits, loading: limitsLoading, error: limitsError, refresh: refreshLimits } = useSportTierLimits()
+  const { tiers: catalog, loading: catalogLoading, error: catalogError } = useTierCatalog()
   const [selected, setSelected] = useState<string>(PLATFORM)
   const [tableState, setTableState] = useState<TableState>(INITIAL_TABLE_STATE)
   const [ownerWorkspaceId, setOwnerWorkspaceId] = useState<string | null>(null)
@@ -364,6 +367,25 @@ export function SuperAdminDashboard({
               )}
 
               {limits && <SportTierLimitsCard limits={limits} onSaved={refreshLimits} />}
+
+              <section>
+                <div className="mb-3">
+                  <h3 className="text-lg font-bold text-foreground">What each tier includes</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Everything decided so far per tier — pricing, status, and features (sharing, inviting, org admin). Free is live; the rest are planned.
+                  </p>
+                </div>
+
+                {catalogLoading && (
+                  <p role="status" className="text-sm text-muted-foreground">Loading tier catalog...</p>
+                )}
+
+                {catalogError && (
+                  <p role="alert" className="text-sm text-destructive">{catalogError}</p>
+                )}
+
+                {catalog && <TierPackagesGrid tiers={catalog} />}
+              </section>
             </>
           )}
 
