@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api, isApiConfigured } from '../lib/apiClient'
 
 export interface Club {
+  id: string | null
   name: string
   /** Path under `public/`, relative to the app's base URL (no leading slash) — see ClubHeader. */
   logoUrl: string | null
@@ -18,9 +19,10 @@ export interface Club {
  * No sport here — a club can run several sport sections (see the `groups`/`group_templates`
  * tables via useGroups), so sport is a property of the active group, not the club.
  */
-const FALLBACK_CLUB: Club = { name: 'Basketball App', logoUrl: null, tier: null, playerLimit: 15 }
+const FALLBACK_CLUB: Club = { id: null, name: 'Basketball App', logoUrl: null, tier: null, playerLimit: 15 }
 
 interface ClubRecord {
+  id: string
   name: string
   logo_url: string | null
   tier: 'free' | 'coach' | 'club' | 'federation' | null
@@ -38,7 +40,7 @@ export function useClub() {
       .then((data) => {
         const first = data[0]
         if (cancelled || !first) return
-        setClub({ name: first.name, logoUrl: first.logo_url, tier: first.tier, playerLimit: first.player_limit ?? 15 })
+        setClub({ id: first.id, name: first.name, logoUrl: first.logo_url, tier: first.tier, playerLimit: first.player_limit ?? 15 })
       })
       .catch(() => {
         // keep the fallback club on error

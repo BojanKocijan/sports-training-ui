@@ -99,6 +99,11 @@ export function ExercisesScreen({ trainerAccess }: { trainerAccess: ReturnType<t
   const activeGroup = groups.find((g) => g.id === groupId)
   const templateId = activeGroup?.templateId ?? groupId
   const [dialogState, setDialogState] = useState<{ open: boolean; editing?: Exercise }>({ open: false })
+  // A superadmin has no trainer_memberships row at all (their access bypasses membership checks
+  // entirely, both here and on the API), so trainerAccess.clubId - which only ever comes from a
+  // membership - is always null for them. Since this app serves a single club today, their own
+  // club-wide access falls back to that one club's id instead of hiding "Create exercise" outright.
+  const clubId = trainerAccess.clubId ?? (trainerAccess.isSuperadmin ? club.id : null)
 
   const trainable = exercisesForGroup(exercises, templateId).filter((e) => !e.isBreak)
 
@@ -136,7 +141,7 @@ export function ExercisesScreen({ trainerAccess }: { trainerAccess: ReturnType<t
             Tap one to see the steps, run its timer, or rate it.
           </p>
         </div>
-        {trainerAccess.clubId && (
+        {clubId && (
           <Button size="sm" shape="pill" className="shrink-0" onClick={() => setDialogState({ open: true })}>
             + Create exercise
           </Button>
@@ -189,11 +194,11 @@ export function ExercisesScreen({ trainerAccess }: { trainerAccess: ReturnType<t
         )}
       </div>
 
-      {trainerAccess.clubId && (
+      {clubId && (
         <CreateExerciseDialog
           open={dialogState.open}
           onOpenChange={(open) => setDialogState((prev) => ({ ...prev, open }))}
-          clubId={trainerAccess.clubId}
+          clubId={clubId}
           editing={dialogState.editing}
           onSaved={() => setDialogState({ open: false })}
         />
