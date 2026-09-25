@@ -218,6 +218,7 @@ export function useTrainerAccess(groupId: string) {
 
   const isSuperadmin = Boolean(account?.user.superadmin)
 
+  const clubMembership = account?.memberships.find((m) => m.group_id === null || m.group_id === groupId)
   const clubRole = account?.memberships.find((m) => m.group_id === null)?.role
   const groupRole = account?.memberships.find((m) => m.group_id === groupId)?.role
   const membershipRole = clubRole ?? groupRole
@@ -240,6 +241,9 @@ export function useTrainerAccess(groupId: string) {
     signedInEmail: account?.user.email ?? '',
     lock, inviteTrainer, inviteOwner, inviteOwnerForGroup,
     canInvite, isSuperadmin, accountRole,
+    userId: account?.user.id ?? null,
+    /** The active group's club — a custom exercise's create/share endpoints are club-scoped. */
+    clubId: clubMembership?.club_id ?? null,
     groupIds: account?.groupIds ?? [],
     children: linkedChildren,
   }
