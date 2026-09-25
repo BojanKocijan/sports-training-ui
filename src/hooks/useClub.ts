@@ -5,7 +5,7 @@ export interface Club {
   name: string
   /** Path under `public/`, relative to the app's base URL (no leading slash) — see ClubHeader. */
   logoUrl: string | null
-  tier: 'free' | null
+  tier: 'free' | 'coach' | 'club' | 'federation' | null
   /** FREE player capacity for this workspace (server default 15). */
   playerLimit: number
 }
@@ -23,7 +23,7 @@ const FALLBACK_CLUB: Club = { name: 'Basketball App', logoUrl: null, tier: null,
 interface ClubRecord {
   name: string
   logo_url: string | null
-  tier: 'free' | null
+  tier: 'free' | 'coach' | 'club' | 'federation' | null
   player_limit?: number
 }
 

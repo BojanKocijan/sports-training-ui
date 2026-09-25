@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { Exercise } from '../hooks/useExercises'
 import { CategoryBadges } from './CategoryBadges'
+import { ExerciseIcon } from './ExerciseIcon'
 import { ExerciseTimer } from './ExerciseTimer'
 import { RatingWidget } from './RatingWidget'
 import { Card } from './ui/card'
@@ -17,6 +18,8 @@ export function ExerciseCard({
   onRate,
   ratingAverage,
   ratingCount,
+  ownerActions,
+  statusBadge,
 }: {
   exercise: Exercise
   /** Selection checkbox on the left, for the planner's picker. Omit it in the library, where the
@@ -26,6 +29,12 @@ export function ExerciseCard({
   onRate?: (value: number) => void
   ratingAverage?: number | null
   ratingCount?: number
+  /** Edit/delete/share controls for the trainer's own custom exercise (sports-training-api#98) —
+   * rendered at the end of the expanded section, only when this card is expanded. */
+  ownerActions?: ReactNode
+  /** A small "Private"/"Pending review"/"Shared with club"/"Rejected" pill, shown collapsed too
+   * so the owner can scan status at a glance — the caller decides when it applies. */
+  statusBadge?: ReactNode
 }) {
   const [expanded, setExpanded] = useState(false)
   const selectable = onToggle !== undefined
@@ -56,7 +65,7 @@ export function ExerciseCard({
         >
           <div className="flex items-center justify-between gap-2">
             <h3 className="flex items-center gap-2 truncate font-bold text-foreground">
-              <span>{exercise.emoji}</span>
+              <ExerciseIcon exercise={exercise} className="h-4 w-4" />
               {exercise.title}
             </h3>
             {/* Bigger and bolder than the rest of the header: this is the number a trainer scans
@@ -64,8 +73,9 @@ export function ExerciseCard({
             <span className="shrink-0 text-sm font-bold text-foreground">{exercise.durationMinutes}′</span>
           </div>
           <p className="mt-0.5 truncate text-xs font-normal text-muted-foreground">{exercise.goal}</p>
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <CategoryBadges categories={exercise.categories} />
+            {statusBadge}
             {ratingCount != null && ratingCount > 0 && ratingAverage != null && (
               <span className="shrink-0 text-xs font-medium text-muted-foreground">
                 🤩 {ratingAverage.toFixed(1)} · {ratingCount}×
@@ -103,6 +113,8 @@ export function ExerciseCard({
           {onRate && (
             <RatingWidget onRate={onRate} average={ratingAverage ?? null} count={ratingCount ?? 0} />
           )}
+
+          {ownerActions}
         </div>
       )}
     </Card>

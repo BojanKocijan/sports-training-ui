@@ -8,7 +8,7 @@ export function InviteTrainerDialog({ open, onOpenChange, onInvite, groups = [],
   groups?: { id: string; name: string; status: 'available' | 'coming_soon' }[]
   defaultGroupId?: string
   /** Free workspaces include a single trainer seat, so inviting another is not possible. */
-  tier?: 'free' | null
+  tier?: 'free' | 'coach' | 'club' | 'federation' | null
 }) {
   const [email, setEmail] = useState('')
   const [selected, setSelected] = useState<string[]>([])
