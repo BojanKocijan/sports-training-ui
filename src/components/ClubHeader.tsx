@@ -38,6 +38,8 @@ export function ClubHeader({
   trainerAccess?: {
     kind: "trainer" | "parent";
     lock: () => void;
+    /** The signed-in account's email, shown in the account menu (sports-training-ui#222). */
+    email?: string;
     canInvite?: boolean;
     inviteTrainer?: (email: string, groupIds?: string[]) => Promise<void>;
     isSuperadmin?: boolean;
@@ -123,6 +125,7 @@ export function ClubHeader({
           <TrainerAccessMenu
             kind={trainerAccess.kind}
             accountRole={trainerAccess.accountRole}
+            email={trainerAccess.email}
             onLock={trainerAccess.lock}
             onOpenParentView={trainerAccess.onOpenParentView}
             onSwitchToTrainer={trainerAccess.onSwitchToTrainer}

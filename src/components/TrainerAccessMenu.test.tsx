@@ -26,4 +26,17 @@ describe('TrainerAccessMenu', () => {
     expect(await screen.findByRole('menuitem', { name: /log out/i })).toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: /my children|back to trainer/i })).not.toBeInTheDocument()
   })
+
+  it('shows the signed-in email so a trainer can confirm which account they\'re on', async () => {
+    render(<TrainerAccessMenu kind="trainer" accountRole="trainer" email="coach@example.com" onLock={vi.fn()} />)
+    await userEvent.click(screen.getByRole('button', { name: /account menu/i }))
+    expect(await screen.findByText('coach@example.com')).toBeInTheDocument()
+  })
+
+  it('omits the email line entirely when none is known', async () => {
+    render(<TrainerAccessMenu kind="trainer" accountRole="trainer" onLock={vi.fn()} />)
+    await userEvent.click(screen.getByRole('button', { name: /account menu/i }))
+    expect(await screen.findByRole('menuitem', { name: /log out/i })).toBeInTheDocument()
+    expect(screen.queryByText((text) => text.includes('@'))).not.toBeInTheDocument()
+  })
 })

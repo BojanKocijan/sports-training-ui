@@ -206,6 +206,7 @@ function App() {
             trainerAccess={{
               kind: 'parent',
               lock: trainerAccess.lock,
+              email: trainerAccess.signedInEmail,
               onSwitchToTrainer: trainerAccess.kind === 'trainer' ? () => setAsParent(false) : undefined,
               childOptions,
               onOpenChild: openChild,
@@ -221,6 +222,7 @@ function App() {
           onOpenParentView={trainerAccess.children.length > 0 ? () => setAsParent(true) : undefined}
           childOptions={childOptions}
           onOpenChild={openChild}
+          email={trainerAccess.signedInEmail}
         />
       ) : viewingPlayer ? (
         <PlayerDetailScreen
@@ -244,6 +246,7 @@ function App() {
             trainerAccess={{
               kind: 'trainer',
               lock: trainerAccess.lock,
+              email: trainerAccess.signedInEmail,
               canInvite: trainerAccess.canInvite,
               inviteTrainer: trainerAccess.inviteTrainer,
               isSuperadmin: trainerAccess.isSuperadmin,
