@@ -42,9 +42,9 @@ export function GroupMenu({
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" className="min-w-[var(--radix-dropdown-menu-trigger-width)]">
+      <DropdownMenuContent align="start">
         {/* Basketball is the only sport available today; other sports are coming later. */}
-        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground whitespace-nowrap">
           🏀 Basketball · the only sport for now
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

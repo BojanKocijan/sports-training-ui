@@ -80,7 +80,7 @@ export function TrainerAccessMenu({
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
           {emoji} {label}
-          {email && <span className="block truncate text-xs font-normal text-muted-foreground">{email}</span>}
+          {email && <span className="block max-w-56 truncate text-xs font-normal text-muted-foreground">{email}</span>}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {onAdminHome && (
