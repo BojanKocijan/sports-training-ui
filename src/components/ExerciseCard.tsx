@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import type { Exercise } from '../hooks/useExercises'
-import { useCountdown } from '../hooks/useCountdown'
 import { CategoryBadges } from './CategoryBadges'
+import { ExerciseTimer } from './ExerciseTimer'
 import { RatingWidget } from './RatingWidget'
-import { Button } from './ui/button'
 import { Card } from './ui/card'
 
 /** The one exercise card, everywhere an exercise is listed: the library and the planner's picker.
@@ -29,9 +28,6 @@ export function ExerciseCard({
   ratingCount?: number
 }) {
   const [expanded, setExpanded] = useState(false)
-  const { remaining, running, start, pause, reset } = useCountdown(exercise.durationMinutes * 60)
-  const mm = Math.floor(remaining / 60)
-  const ss = remaining % 60
   const selectable = onToggle !== undefined
 
   return (
@@ -81,19 +77,7 @@ export function ExerciseCard({
 
       {expanded && (
         <div className="space-y-4 border-t border-border px-0 pb-1 pt-4">
-          <Card className="flex items-center justify-between rounded-xl border-0 bg-muted px-3 py-2 shadow-none hover:shadow-none [--card-spacing:0]">
-            <span className="font-mono text-xl font-bold text-foreground">
-              {mm}:{ss.toString().padStart(2, '0')}
-            </span>
-            <div className="flex gap-2">
-              <Button variant="default" onClick={running ? pause : start}>
-                {running ? '⏸' : '▶'}
-              </Button>
-              <Button variant="secondary" onClick={reset}>
-                ↺
-              </Button>
-            </div>
-          </Card>
+          <ExerciseTimer durationMinutes={exercise.durationMinutes} />
 
           <ol className="list-decimal space-y-1.5 pl-5 text-sm text-foreground/80">
             {exercise.steps.map((step, i) => (

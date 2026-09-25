@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { type CategoryId, useCategories } from '../hooks/useCategories'
 import { exercisesForGroup, findExercise, useExercises } from '../hooks/useExercises'
-import { formatDate } from '../utils/format'
-import { Calendar } from './Calendar'
-import { CategoryCard } from './CategoryCard'
-import { ExerciseCard } from './ExerciseCard'
+import { TrainingDateStep } from './TrainingDateStep'
+import { TrainingExercisesStep } from './TrainingExercisesStep'
+import { TrainingFocusStep } from './TrainingFocusStep'
+import { TrainingMinutesBadge } from './TrainingMinutesBadge'
 import { Button } from './ui/button'
-import { Card } from './ui/card'
 
-const STEPS = ['When?', 'Focus', 'Exercises', 'Review'] as const
+const STEPS = ['When?', 'Focus', 'Exercises'] as const
 
 export function PlanTrainingWizard({
   mode,
@@ -49,10 +48,10 @@ export function PlanTrainingWizard({
     activeCategories.length === 0
       ? trainable
       : trainable.filter((e) => e.categories.some((c) => activeCategories.includes(c)))
-  const selectedExercises = [...selected]
+  const selectedMinutes = [...selected]
     .map((id) => findExercise(exercises, id))
     .filter((e): e is NonNullable<typeof e> => Boolean(e))
-  const selectedMinutes = selectedExercises.reduce((sum, e) => sum + e.durationMinutes, 0)
+    .reduce((sum, e) => sum + e.durationMinutes, 0)
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -67,19 +66,18 @@ export function PlanTrainingWizard({
     setActiveCategories((prev) => (prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]))
   }
 
-  const canGoNext =
-    step === 1
-      ? Boolean(date) && !takenDateSet.has(date)
-      : step === 3
-        ? selected.size > 0
-        : true
+  const canGoNext = step === 1 ? Boolean(date) && !takenDateSet.has(date) : true
+  const canSave = Boolean(date) && !takenDateSet.has(date) && selected.size > 0
 
   return (
     <div className="fixed inset-0 z-30 flex flex-col bg-neutral-50 dark:bg-neutral-950">
       <header className="shrink-0 border-b border-black/10 bg-white px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] dark:border-white/10 dark:bg-neutral-900">
-        <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-50">
-          {mode === 'edit' ? 'Edit training' : 'Plan a training'}
-        </h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-50">
+            {mode === 'edit' ? 'Edit training' : 'Plan a training'}
+          </h2>
+          <TrainingMinutesBadge minutes={selectedMinutes} exerciseCount={selected.size} />
+        </div>
         <div className="mt-2 flex items-center gap-1.5">
           {STEPS.map((label, i) => {
             const n = i + 1
@@ -100,90 +98,16 @@ export function PlanTrainingWizard({
 
       <main className="mx-auto w-full max-w-md flex-1 space-y-4 overflow-y-auto px-4 py-4 md:max-w-2xl lg:max-w-3xl">
         {step === 1 && (
-          <div>
-            <label className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
-              Training date
-            </label>
-            <div className="mt-1">
-              <Calendar
-                value={date}
-                onChange={setDate}
-                markedDates={takenDateSet}
-                disabledDates={takenDateSet}
-              />
-            </div>
-            {date && takenDateSet.has(date) && (
-              <p className="mt-2 text-xs font-semibold text-red-600">
-                {groupLabel} already has a training on this date, pick another day.
-              </p>
-            )}
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-neutral-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-orange-500" /> already has a training
-              planned
-            </p>
-          </div>
+          <TrainingDateStep date={date} onChange={setDate} groupLabel={groupLabel} takenDateSet={takenDateSet} />
         )}
-
         {step === 2 && (
-          <div>
-            <p className="mb-2 text-sm text-neutral-500 dark:text-neutral-400">
-              Optionally narrow the exercise list to a focus for this training.
-            </p>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-              {categories.map((cat) => (
-                <CategoryCard
-                  key={cat.id}
-                  categoryId={cat.id}
-                  active={activeCategories.includes(cat.id)}
-                  onToggle={() => toggleCategory(cat.id)}
-                />
-              ))}
-            </div>
-          </div>
+          <TrainingFocusStep categories={categories} activeCategories={activeCategories} onToggle={toggleCategory} />
         )}
-
         {step === 3 && (
-          <div>
-            <p className="mb-2 text-xs text-neutral-500 dark:text-neutral-400">
-              {selected.size} selected · {selectedMinutes}′
-            </p>
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-              {filtered.map((ex) => (
-                <ExerciseCard
-                  key={ex.id}
-                  exercise={ex}
-                  selected={selected.has(ex.id)}
-                  onToggle={() => toggleSelect(ex.id)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {step === 4 && (
-          <div className="space-y-3">
-            <Card className="gap-1 px-4">
-              <p className="text-sm font-bold text-neutral-900 dark:text-neutral-50">
-                {groupLabel} · {formatDate(date)}
-              </p>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                {selected.size} exercises · {selectedMinutes}′ total
-              </p>
-            </Card>
-            <ul className="space-y-1.5">
-              {selectedExercises.map((ex) => (
-                <li key={ex.id}>
-                  <Card size="sm" className="flex-row items-center justify-between px-3 text-sm">
-                    <span>
-                      {ex.emoji} {ex.title}
-                    </span>
-                    <span className="text-xs text-neutral-400">{ex.durationMinutes}′</span>
-                  </Card>
-                </li>
-              ))}
-            </ul>
+          <>
+            <TrainingExercisesStep exercises={filtered} selected={selected} onToggle={toggleSelect} />
             {saveError && <p className="text-xs font-semibold text-red-600">{saveError}</p>}
-          </div>
+          </>
         )}
       </main>
 
@@ -213,7 +137,7 @@ export function PlanTrainingWizard({
               size="lg"
               shape="pill"
               className="flex-1"
-              disabled={saving}
+              disabled={saving || !canSave}
               onClick={() => onSave(date, [...selected])}
             >
               {saving ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Save training'}
