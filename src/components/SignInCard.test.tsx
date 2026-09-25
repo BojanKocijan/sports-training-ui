@@ -30,16 +30,14 @@ describe('SignInCard', () => {
     expect(onSwitchMode).toHaveBeenCalledWith('signup')
   })
 
-  it('signs a new trainer up with a confirmation email that says when it expires', async () => {
-    const a = access({ requestSignupCode: vi.fn().mockResolvedValue('sent'), verifySignupCode: vi.fn() })
+  it('signs a new trainer up with a confirm-by-link email, no code to type', async () => {
+    const a = access({ requestSignupCode: vi.fn().mockResolvedValue('sent') })
     render(<SignInCard trainerAccess={a} role="trainer" mode="signup" onSwitchRole={vi.fn()} onSwitchMode={vi.fn()} />)
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'new@example.com' } })
     fireEvent.click(screen.getByRole('button', { name: 'Send confirmation email' }))
     await waitFor(() => expect(a.requestSignupCode).toHaveBeenCalledWith('new@example.com'))
-    expect(await screen.findByText(/expires in 15 minutes/i)).toBeInTheDocument()
-    fireEvent.change(screen.getByLabelText('Confirmation code'), { target: { value: '123456' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }))
-    await waitFor(() => expect(a.verifySignupCode).toHaveBeenCalledWith('new@example.com', '123456'))
+    expect(await screen.findByText(/link expires in 15 minutes/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/code/i)).not.toBeInTheDocument()
   })
 
   it('tells someone who already has an account to log in instead', async () => {
