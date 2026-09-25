@@ -124,28 +124,47 @@ function AccessCard({ trainerAccess, flow, onChange }: {
   }
   const role = flow?.role ?? null
   const mode = flow?.mode ?? null
-  if (!role || !mode) {
-    // One question at a time: who they are (unless the page already knew), then new or existing.
-    const options: { label: string; role: SignInIntent; mode: AuthMode }[] = ([
-      ['New trainer', 'trainer', 'signup'], ['Existing trainer', 'trainer', 'login'],
-      ['New parent', 'parent', 'signup'], ['Existing parent', 'parent', 'login'],
-    ] as const).map(([label, r, m]) => ({ label, role: r, mode: m })).filter((o) => !role || o.role === role)
+  if (!role) {
+    // Step 1 of 2: who they are.
     return (
       <Card className="w-full rounded-3xl p-5 shadow-lg">
-        <h2 className="text-lg font-bold dark:text-white">{role ? `Are you new, ${role === 'trainer' ? 'trainer' : 'parent'}?` : 'Welcome to CoachCub'}</h2>
-        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          {role ? 'New here, or already have an account?' : 'How are you coming in?'}
-        </p>
+        <h2 className="text-lg font-bold dark:text-white">Welcome to CoachCub</h2>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">How are you coming in?</p>
         <div className="mt-4 grid gap-3">
-          {options.map((o) => (
-            <button key={o.label} type="button" onClick={() => { setSignInIntent(o.role); onChange({ role: o.role, mode: o.mode }) }}
-              className={o.mode === 'signup'
-                ? 'rounded-xl bg-orange-500 py-3 text-sm font-bold text-white'
-                : 'rounded-xl border border-orange-500 py-3 text-sm font-bold text-orange-600 dark:text-orange-300'}>
-              {o.label}{o.mode === 'signup' ? ': sign up' : ': log in'}
+          {([['trainer', "I'm a trainer"], ['parent', "I'm a parent"]] as const).map(([r, label]) => (
+            <button key={r} type="button" onClick={() => { setSignInIntent(r); onChange({ role: r, mode: null }) }}
+              className="rounded-xl bg-orange-500 py-3 text-sm font-bold text-white">
+              {label}
             </button>
           ))}
         </div>
+      </Card>
+    )
+  }
+  if (!mode) {
+    // Step 2 of 2: new or existing, for the chosen role only.
+    const options: { label: string; mode: AuthMode }[] = [
+      { label: `New ${role}: sign up`, mode: 'signup' },
+      { label: `Existing ${role}: log in`, mode: 'login' },
+    ]
+    return (
+      <Card className="w-full rounded-3xl p-5 shadow-lg">
+        <h2 className="text-lg font-bold dark:text-white">{`Are you new, ${role}?`}</h2>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">New here, or already have an account?</p>
+        <div className="mt-4 grid gap-3">
+          {options.map((o) => (
+            <button key={o.label} type="button" onClick={() => onChange({ role, mode: o.mode })}
+              className={o.mode === 'signup'
+                ? 'rounded-xl bg-orange-500 py-3 text-sm font-bold text-white'
+                : 'rounded-xl border border-orange-500 py-3 text-sm font-bold text-orange-600 dark:text-orange-300'}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+        <button type="button" onClick={() => onChange({ role: null, mode: null })}
+          className="mt-4 text-sm font-semibold text-neutral-500 underline dark:text-neutral-400">
+          Back
+        </button>
       </Card>
     )
   }

@@ -12,16 +12,26 @@ const access = {
 } as unknown as ReturnType<typeof useTrainerAccess>
 
 describe('LandingPage', () => {
-  it('opens a trainer / parent chooser from the header Sign in button', () => {
+  it('opens a trainer / parent chooser from the header Sign in button, then new or existing for that role', () => {
     render(<LandingPage trainerAccess={access} />)
     fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: /^sign in$/i }))
     expect(screen.getByText('How are you coming in?')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /i'm a trainer/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /i'm a parent/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /existing trainer/i })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /i'm a trainer/i }))
     expect(screen.getByRole('button', { name: /new trainer/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /existing trainer/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /new parent/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /existing parent/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /new parent/i })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /existing trainer/i }))
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument()
+  })
+
+  it('goes back from new-or-existing to the trainer / parent chooser', () => {
+    render(<LandingPage trainerAccess={access} />)
+    fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: /^sign in$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /i'm a parent/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^back$/i }))
+    expect(screen.getByText('How are you coming in?')).toBeInTheDocument()
   })
 
   it('asks a trainer or parent from the hero whether they are new or existing', () => {
