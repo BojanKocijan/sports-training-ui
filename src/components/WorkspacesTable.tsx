@@ -1,6 +1,14 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreVertical, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import type { AdminOverview } from '../hooks/useAdminOverview'
 import { Button } from './ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu'
+import { DeleteWorkspaceDialog } from './DeleteWorkspaceDialog'
 
 type Workspace = AdminOverview['workspaces'][number]
 
@@ -32,12 +40,14 @@ function dateLabel(value?: string) {
 const th = 'px-4 py-3 font-semibold'
 
 /** Workspaces as a searchable, sortable, paginated table; a row opens the workspace. */
-export function WorkspacesTable({ overview, state, onState, onOpen }: {
+export function WorkspacesTable({ overview, state, onState, onOpen, onDeleted }: {
   overview: AdminOverview
   state: TableState
   onState: (next: TableState) => void
   onOpen: (id: string) => void
+  onDeleted: () => Promise<void>
 }) {
+  const [deleteTarget, setDeleteTarget] = useState<Workspace | null>(null)
   const { rows, total, page, pageCount } = pageOfWorkspaces(overview.workspaces, state)
   const ownerEmail = (w: Workspace) =>
     overview.access.find((a) => a.clubId === w.id && a.role === 'owner')?.email ?? null
@@ -68,6 +78,7 @@ export function WorkspacesTable({ overview, state, onState, onOpen }: {
               {sortHeader('players', 'Players')}
               <th scope="col" className={th}>Owner</th>
               {sortHeader('created', 'Created')}
+              <th scope="col" className="w-10 px-2 py-3"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
@@ -89,10 +100,25 @@ export function WorkspacesTable({ overview, state, onState, onOpen }: {
                 <td className="px-4 py-3">{w.playerCount}</td>
                 <td className="px-4 py-3 text-muted-foreground">{ownerEmail(w) ?? 'No owner'}</td>
                 <td className="px-4 py-3 text-muted-foreground">{dateLabel(w.createdAt)}</td>
+                <td className="px-2 py-2 text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${w.name}`}>
+                        <MoreVertical />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem variant="destructive" onSelect={() => setDeleteTarget(w)}>
+                        <Trash2 />
+                        Delete workspace
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </td>
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No workspaces found.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No workspaces found.</td></tr>
             )}
           </tbody>
         </table>
@@ -113,6 +139,7 @@ export function WorkspacesTable({ overview, state, onState, onOpen }: {
             onClick={() => onState({ ...state, page: page + 1 })}><ChevronRight /></Button>
         </div>
       </div>
+      <DeleteWorkspaceDialog workspace={deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }} onDeleted={onDeleted} />
     </div>
   )
 }
