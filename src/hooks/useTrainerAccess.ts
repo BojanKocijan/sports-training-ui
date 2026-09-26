@@ -16,6 +16,14 @@ export interface ParentPlayer {
   mascot_id?: string | null
 }
 export type AccountRole = 'superadmin' | 'owner' | 'club_admin' | 'trainer' | 'co_coach'
+export interface TrainerInvite {
+  userId: string
+  email: string
+  role: string
+  groupIds: string[]
+  status: 'pending' | 'confirmed'
+  invitedAt: string
+}
 type AccessKind = 'trainer' | 'parent'
 
 // Old trainer passcodes and parent codes are no longer credentials. Clear saved values from
@@ -28,19 +36,31 @@ function clearLegacyCodes() {
   } catch { /* Storage may be disabled. */ }
 }
 
+function incomingEmailSession() {
+  const fragment = new URLSearchParams(window.location.hash.slice(1))
+  const accessToken = fragment.get('access_token')
+  const refreshToken = fragment.get('refresh_token')
+  return accessToken && refreshToken ? { accessToken, refreshToken, fragment } : null
+}
+
 export function useTrainerAccess(groupId: string) {
-  const [account, setAccount] = useState<AccountSession | null>(() => currentSession())
+  // A confirmation/invitation link represents an explicit account switch. Never render a
+  // previously saved account (especially a platform admin) while that new identity is validated.
+  const [account, setAccount] = useState<AccountSession | null>(() => incomingEmailSession() ? null : currentSession())
   const [checking, setChecking] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const clearError = useCallback(() => setError(null), [])
 
   useEffect(() => {
     clearLegacyCodes()
     // Supabase invitation links return tokens in the URL fragment. Remove them immediately,
     // then validate the identity through our API before storing a local session.
-    const fragment = new URLSearchParams(window.location.hash.slice(1))
-    const invitedAccess = fragment.get('access_token')
-    const invitedRefresh = fragment.get('refresh_token')
-    if (invitedAccess && invitedRefresh) {
+    const incoming = incomingEmailSession()
+    if (incoming) {
+      const { accessToken: invitedAccess, refreshToken: invitedRefresh, fragment } = incoming
+      // Remove the old identity before doing any request. If validation fails, the safe state is
+      // signed out, never the account that happened to be open before the link was clicked.
+      saveSession(null)
       window.history.replaceState(null, '', window.location.pathname + window.location.search)
       void fetch(`${apiBaseUrl}/auth/me`, { headers: { Authorization: `Bearer ${invitedAccess}` } })
         .then(async (response) => {
@@ -64,7 +84,7 @@ export function useTrainerAccess(groupId: string) {
       if (event.key === STORAGE_KEY) setAccount(syncSessionFromStorage())
     }
     window.addEventListener('storage', onStorage)
-    if (currentSession()) {
+    if (!incoming && currentSession()) {
       api.get<{ groupIds: string[]; memberships: AccountSession['memberships']; children?: AccountSession['children'] }>('/auth/me')
         .then(({ groupIds, memberships, children }) => setAccount((prev) => prev ? { ...prev, groupIds, memberships, children } : null))
         .catch(() => saveSession(null))
@@ -201,6 +221,17 @@ export function useTrainerAccess(groupId: string) {
     await api.post('/auth/invite', { email, ...body, role: 'trainer' })
   }, [groupId])
 
+  const fetchTrainerInvites = useCallback(async (clubId: string) => {
+    return api.get<TrainerInvite[]>(`/auth/trainer-invites?clubId=${encodeURIComponent(clubId)}`)
+  }, [])
+
+  const correctTrainerInvite = useCallback(async (userId: string, clubId: string, email: string) => {
+    return api.put<{ userId: string; email: string; status: 'pending' }>(
+      `/auth/trainer-invites/${encodeURIComponent(userId)}`,
+      { clubId, email },
+    )
+  }, [])
+
   const inviteOwnerForGroup = useCallback(async (
     email: string,
     targetGroupId: string,
@@ -231,15 +262,15 @@ export function useTrainerAccess(groupId: string) {
         membershipRole === 'co_coach'
       ? membershipRole
       : null
-  const canInvite = Boolean(account?.user.superadmin || (account?.groupIds.includes(groupId) && account.memberships?.some(
+  const canInvite = Boolean(account?.user.superadmin || account?.memberships?.some(
     (m) => m.group_id === null && (m.role === 'owner' || m.role === 'club_admin'),
-  )))
+  ))
 
   return {
-    ...state, checking, error, requestLoginCode, verifyLoginCode,
+    ...state, checking, error, clearError, requestLoginCode, verifyLoginCode,
     needsWorkspace, roles, requestSignupCode, verifySignupCode, createWorkspace, refreshAccount,
     signedInEmail: account?.user.email ?? '',
-    lock, inviteTrainer, inviteOwner, inviteOwnerForGroup,
+    lock, inviteTrainer, fetchTrainerInvites, correctTrainerInvite, inviteOwner, inviteOwnerForGroup,
     canInvite, isSuperadmin, accountRole,
     userId: account?.user.id ?? null,
     /** The account's club — custom exercises are club-scoped, not group-scoped, so this comes

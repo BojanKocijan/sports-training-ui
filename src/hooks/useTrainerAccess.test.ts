@@ -4,9 +4,10 @@ import { api } from '../lib/apiClient'
 import { saveSession, type AccountSession } from '../lib/accountSession'
 import { useTrainerAccess } from './useTrainerAccess'
 
-vi.mock('../lib/apiClient', () => ({ api: { post: vi.fn(), get: vi.fn() }, apiBaseUrl: 'http://localhost:3002' }))
+vi.mock('../lib/apiClient', () => ({ api: { post: vi.fn(), get: vi.fn(), put: vi.fn() }, apiBaseUrl: 'http://localhost:3002' }))
 const postMock = vi.mocked(api.post)
 const getMock = vi.mocked(api.get)
+const putMock = vi.mocked(api.put)
 const session: AccountSession = {
   accessToken: 'jwt', refreshToken: 'refresh', expiresAt: 9999999999,
   user: { id: 'trainer-1', email: 'trainer@example.com', superadmin: false },
@@ -16,6 +17,8 @@ const session: AccountSession = {
 beforeEach(() => {
   saveSession(null)
   localStorage.clear()
+  window.history.replaceState(null, '', '/')
+  vi.unstubAllGlobals()
   vi.clearAllMocks()
   getMock.mockResolvedValue({ groupIds: ['u8'], memberships: session.memberships })
 })
@@ -77,6 +80,28 @@ describe('useTrainerAccess', () => {
     await waitFor(() => expect(localStorage.getItem('u8-trainer-passcode-u8')).toBeNull())
   })
 
+  it('never shows a saved platform admin while a new trainer confirmation link is being validated', async () => {
+    saveSession({
+      ...session,
+      user: { ...session.user, id: 'admin-1', email: 'admin@example.com', superadmin: true },
+      memberships: [],
+    })
+    window.location.hash = 'access_token=new-access&refresh_token=new-refresh&expires_in=3600'
+    const newTrainer = {
+      user: { id: 'new-trainer', email: 'new@example.com', superadmin: false },
+      groupIds: [], memberships: [], children: [],
+    }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(newTrainer) }))
+
+    const { result } = renderHook(() => useTrainerAccess('u8'))
+    expect(result.current.isSuperadmin).toBe(false)
+    expect(result.current.signedInEmail).toBe('')
+    await waitFor(() => expect(result.current.signedInEmail).toBe('new@example.com'))
+    expect(result.current.needsWorkspace).toBe(true)
+    expect(localStorage.getItem('sports-training-account-session')).toContain('new-access')
+    expect(getMock).not.toHaveBeenCalledWith('/auth/me')
+  })
+
   it('lets a superadmin bootstrap a workspace owner', async () => {
     const admin: AccountSession = {
       ...session,
@@ -118,6 +143,17 @@ describe('useTrainerAccess', () => {
     expect(postMock).toHaveBeenCalledWith('/auth/invite', { email: 'colleague@example.com', groupId: 'u8', role: 'trainer' })
   })
 
+  it('lets a club admin manage invitations without granting trainer access', async () => {
+    const clubAdmin = { ...session, groupIds: [], memberships: [{ club_id: 'club-1', group_id: null, role: 'club_admin', active: true }] }
+    saveSession(clubAdmin)
+    getMock.mockResolvedValue({ groupIds: [], memberships: clubAdmin.memberships })
+    const { result } = renderHook(() => useTrainerAccess('u8'))
+    await waitFor(() => expect(result.current.accountRole).toBe('club_admin'))
+    expect(result.current.canInvite).toBe(true)
+    expect(result.current.unlocked).toBe(false)
+    expect(result.current.clubId).toBe('club-1')
+  })
+
   it('invites a trainer to several groups in one call', async () => {
     const owner = { ...session, memberships: [{ club_id: 'club-1', group_id: null, role: 'owner', active: true }] }
     saveSession(owner)
@@ -127,6 +163,17 @@ describe('useTrainerAccess', () => {
     await waitFor(() => expect(result.current.canInvite).toBe(true))
     await act(async () => { await result.current.inviteTrainer('colleague@example.com', ['u8', 'u10']) })
     expect(postMock).toHaveBeenCalledWith('/auth/invite', { email: 'colleague@example.com', groupIds: ['u8', 'u10'], role: 'trainer' })
+  })
+
+  it('loads invitation status and corrects a pending trainer email through the management API', async () => {
+    const invites = [{ userId: 'pending', email: 'typo@example.com', role: 'trainer', groupIds: ['u8'], status: 'pending' as const, invitedAt: '2026-09-26' }]
+    getMock.mockResolvedValueOnce(invites)
+    putMock.mockResolvedValueOnce({ userId: 'replacement', email: 'fixed@example.com', status: 'pending' })
+    const { result } = renderHook(() => useTrainerAccess('u8'))
+    await expect(result.current.fetchTrainerInvites('club-1')).resolves.toEqual(invites)
+    await expect(result.current.correctTrainerInvite('pending', 'club-1', 'fixed@example.com')).resolves.toMatchObject({ status: 'pending' })
+    expect(getMock).toHaveBeenCalledWith('/auth/trainer-invites?clubId=club-1')
+    expect(putMock).toHaveBeenCalledWith('/auth/trainer-invites/pending', { clubId: 'club-1', email: 'fixed@example.com' })
   })
 
   it('resolves clubId from any active membership, not only one scoped to the currently active group', async () => {

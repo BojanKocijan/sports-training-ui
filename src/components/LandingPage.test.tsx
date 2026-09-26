@@ -7,6 +7,7 @@ import { LandingPage } from './LandingPage'
 const access = {
   checking: false,
   error: null,
+  clearError: vi.fn(),
   requestLoginCode: vi.fn(),
   verifyLoginCode: vi.fn(),
 } as unknown as ReturnType<typeof useTrainerAccess>
@@ -26,10 +27,10 @@ describe('LandingPage', () => {
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument()
   })
 
-  it('goes back from new-or-existing to the trainer / parent chooser', () => {
+  it('goes back from new-or-existing trainer to the trainer / parent chooser', () => {
     render(<LandingPage trainerAccess={access} />)
     fireEvent.click(within(screen.getByRole('banner')).getByRole('button', { name: /^sign in$/i }))
-    fireEvent.click(screen.getByRole('button', { name: /i'm a parent/i }))
+    fireEvent.click(screen.getByRole('button', { name: /i'm a trainer/i }))
     fireEvent.click(screen.getByRole('button', { name: /^back$/i }))
     expect(screen.getByText('How are you coming in?')).toBeInTheDocument()
   })
@@ -47,9 +48,10 @@ describe('LandingPage', () => {
     expect(within(header).getByRole('button', { name: /^sign in$/i })).toBeInTheDocument()
     expect(within(header).queryByRole('button', { name: /i'm a trainer/i })).not.toBeInTheDocument()
     fireEvent.click(screen.getAllByRole('button', { name: /i'm a parent/i })[0])
-    fireEvent.click(screen.getByRole('button', { name: /new parent/i }))
     expect(screen.getByText(/their trainer adds your email/i)).toBeInTheDocument()
     expect(screen.getByText(/one account is both trainer and parent/i)).toBeInTheDocument()
+    expect(screen.getByText('Existing parent')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /new parent/i })).not.toBeInTheDocument()
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument()
   })
 

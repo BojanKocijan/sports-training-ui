@@ -6,10 +6,9 @@ import { Card } from './ui/card'
 const inputClass = 'mt-1 w-full rounded-xl border border-black/10 px-3 py-2 dark:border-white/10 dark:bg-neutral-800'
 const CODE_MINUTES = 15
 
-/** Sign up (new trainer / new parent) or log in (existing) with an email. Sign-up only sends a
- * confirmation email: the button in it signs in the tab that is waiting here (no code to type).
- * Log in sends a code, as before. An address that already has an account is told
- * to log in instead. */
+/** Trainers may sign up or log in. Invited parents use login directly. Sign-up sends a
+ * confirmation link; login sends a one-click link with an OTP fallback. An address that already
+ * has an account is told to log in instead. */
 export function SignInCard({ trainerAccess, role, mode, onSwitchRole, onSwitchMode }: {
   trainerAccess: ReturnType<typeof useTrainerAccess>
   role: SignInIntent
@@ -17,7 +16,7 @@ export function SignInCard({ trainerAccess, role, mode, onSwitchRole, onSwitchMo
   onSwitchRole: (next: SignInIntent) => void
   onSwitchMode: (next: AuthMode) => void
 }) {
-  const { checking, error, requestLoginCode, verifyLoginCode, requestSignupCode } = trainerAccess
+  const { checking, error, clearError, requestLoginCode, verifyLoginCode, requestSignupCode } = trainerAccess
   const [email, setEmail] = useState('')
   const [emailCode, setEmailCode] = useState('')
   const [codeSent, setCodeSent] = useState(false)
@@ -25,7 +24,7 @@ export function SignInCard({ trainerAccess, role, mode, onSwitchRole, onSwitchMo
   const signup = mode === 'signup'
   const who = role === 'trainer' ? 'trainer' : 'parent'
 
-  const reset = () => { setCodeSent(false); setEmailCode(''); setExists(false) }
+  const reset = () => { setCodeSent(false); setEmailCode(''); setExists(false); clearError() }
 
   return (
     <Card className="w-full rounded-3xl p-5 shadow-lg">
@@ -71,6 +70,15 @@ export function SignInCard({ trainerAccess, role, mode, onSwitchRole, onSwitchMo
         )}
         {codeSent && !signup && (
           <>
+            <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+              {role === 'parent'
+                ? "Don’t see a code? Ask your child’s coach to confirm the email they used to invite you."
+                : 'Don’t see a code? Ask your club owner or admin to confirm the email they used to invite you.'}
+            </p>
+            {role === 'trainer' && <button type="button" className="mt-1 text-sm text-neutral-500 underline"
+              onClick={() => { reset(); onSwitchMode('signup') }}>
+              Try signing up instead
+            </button>}
             <label className="mt-3 block text-sm dark:text-white" htmlFor="trainer-email-code">Sign-in code</label>
             <input
               id="trainer-email-code" type="text" inputMode="numeric" autoComplete="one-time-code" required
@@ -91,10 +99,10 @@ export function SignInCard({ trainerAccess, role, mode, onSwitchRole, onSwitchMo
         >
           {checking ? 'Please wait...' : codeSent ? (signup ? 'Send the email again' : 'Log in') : signup ? 'Send confirmation email' : 'Send sign-in code'}
         </button>
-        <button type="button" className="mt-3 block text-sm text-neutral-500 underline"
+        {role === 'trainer' && <button type="button" className="mt-3 block text-sm text-neutral-500 underline"
           onClick={() => { reset(); onSwitchMode(signup ? 'login' : 'signup') }}>
           {signup ? `I'm an existing ${who}: log in` : `I'm a new ${who}: sign up`}
-        </button>
+        </button>}
         <button type="button" className="mt-2 block text-sm text-neutral-500 underline"
           onClick={() => { reset(); onSwitchRole(role === 'trainer' ? 'parent' : 'trainer') }}>
           {role === 'trainer' ? "I'm a parent instead" : "I'm a trainer instead"}

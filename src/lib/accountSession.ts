@@ -18,7 +18,7 @@ export interface AccountSession {
   expiresAt: number
   user: { id: string; email: string; superadmin: boolean }
   groupIds: string[]
-  memberships: { club_id: string; group_id: string | null; role: string; active: boolean }[]
+  memberships: { club_id: string; group_id: string | null; role: string; active: boolean; confirmed_at?: string | null }[]
   /** Absent on sessions saved before parents could sign in with an email. */
   children?: LinkedChild[]
 }
