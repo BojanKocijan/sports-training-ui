@@ -5,6 +5,7 @@ import {
   fetchParentLinks,
   ratePlayerProgress,
   removeParentLink,
+  updateParentLink,
   type EyeColor,
   type Gender,
   type JerseyColor,
@@ -25,6 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { CategoryIcon } from './CategoryIcon'
 import { PlayerBadges } from './PlayerBadges'
 import { usePlayerBadges } from '../hooks/usePlayerBadges'
+import { InviteStatusBadge } from './InviteStatusBadge'
 import { PlayerProgressionTimeline } from './PlayerProgressionTimeline'
 import { usePlayerProgression } from '../hooks/usePlayerProgression'
 
@@ -110,6 +112,8 @@ export function PlayerDetailScreen({
   const [parentNotice, setParentNotice] = useState<string | null>(null)
   const [parentError, setParentError] = useState<string | null>(null)
   const [parentEmail, setParentEmail] = useState('')
+  const [editingParentId, setEditingParentId] = useState<string | null>(null)
+  const [correctedParentEmail, setCorrectedParentEmail] = useState('')
 
   // Trainer-only -- parents never see who else is linked (see ParentView).
   useEffect(() => {
@@ -160,6 +164,24 @@ export function PlayerDetailScreen({
       setParentLinks((prev) => prev.filter((l) => l.id !== linkId))
     } catch (e) {
       setParentError(e instanceof Error ? e.message : 'Could not unlink this email')
+    } finally {
+      setParentPending(false)
+    }
+  }
+
+  async function handleCorrectParent(event: FormEvent, linkId: string) {
+    event.preventDefault()
+    setParentPending(true)
+    setParentError(null)
+    setParentNotice(null)
+    try {
+      const updated = await updateParentLink(player.id, linkId, correctedParentEmail.trim())
+      setParentLinks((prev) => prev.map((link) => link.id === linkId ? updated : link))
+      setEditingParentId(null)
+      setCorrectedParentEmail('')
+      setParentNotice(`Invitation sent again to ${updated.email}.`)
+    } catch (e) {
+      setParentError(e instanceof Error ? e.message : 'Could not update this invitation')
     } finally {
       setParentPending(false)
     }
@@ -516,17 +538,27 @@ export function PlayerDetailScreen({
               ) : (
                 <ul className="mt-1 space-y-1.5">
                   {parentLinks.map((link) => (
-                    <li key={link.id} className="flex items-center justify-between gap-2 text-sm">
-                      <span className="min-w-0 truncate text-neutral-800 dark:text-neutral-100">{link.email}</span>
-                      <span className="flex shrink-0 items-center gap-2">
-                        <span className={`text-xs font-semibold ${link.confirmed_at ? 'text-green-600' : 'text-neutral-400'}`}>
-                          {link.confirmed_at ? 'Confirmed' : 'Waiting to sign in'}
-                        </span>
+                    <li key={link.id} className="text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="min-w-0 truncate text-neutral-800 dark:text-neutral-100">{link.email}</span>
+                        <span className="flex shrink-0 items-center gap-2">
+                        <InviteStatusBadge confirmed={Boolean(link.confirmed_at)} />
+                        {!link.confirmed_at && <Button variant="secondary" size="sm" disabled={parentPending}
+                          onClick={() => { setEditingParentId(link.id); setCorrectedParentEmail(link.email) }}>
+                          Correct email
+                        </Button>}
                         <Button variant="destructive" size="sm" disabled={parentPending}
                           onClick={() => handleRemoveParent(link.id)}>
                           Remove
                         </Button>
                       </span>
+                      </div>
+                      {editingParentId === link.id && <form className="mt-2 flex gap-2" onSubmit={(event) => handleCorrectParent(event, link.id)}>
+                        <input type="email" required aria-label="Correct parent email" value={correctedParentEmail}
+                          onChange={(event) => setCorrectedParentEmail(event.target.value)}
+                          className="min-w-0 flex-1 rounded-xl border border-black/10 px-3 py-1.5 dark:border-white/10 dark:bg-neutral-800" />
+                        <Button type="submit" variant="secondary" size="sm" disabled={parentPending}>Save &amp; resend</Button>
+                      </form>}
                     </li>
                   ))}
                 </ul>

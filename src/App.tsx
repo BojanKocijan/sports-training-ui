@@ -198,7 +198,30 @@ function App() {
         onNotParent={() => { setSignInIntent(null); setParentMismatchAcknowledged(true) }}
         onCancel={trainerAccess.lock}
       />
-      {!trainerAccess.unlocked ? (
+      {!trainerAccess.unlocked && trainerAccess.accountRole === 'club_admin' ? (
+        <>
+          <ClubHeader
+            groupSwitcher={{ groups, groupId, setGroupId }}
+            trainerAccess={{
+              kind: 'trainer',
+              lock: trainerAccess.lock,
+              email: trainerAccess.signedInEmail,
+              canInvite: trainerAccess.canInvite,
+              inviteTrainer: trainerAccess.inviteTrainer,
+              clubId: trainerAccess.clubId,
+              fetchTrainerInvites: trainerAccess.fetchTrainerInvites,
+              correctTrainerInvite: trainerAccess.correctTrainerInvite,
+              accountRole: trainerAccess.accountRole,
+            }}
+          />
+          <main className="mx-auto max-w-2xl p-6">
+            <h1 className="text-xl font-bold">Club administration</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Use the account menu to manage trainer invitations. Club administration does not grant training access.
+            </p>
+          </main>
+        </>
+      ) : !trainerAccess.unlocked ? (
         <LandingPage trainerAccess={trainerAccess} />
       ) : trainerAccess.kind === 'parent' || (asParent && trainerAccess.children.length > 0) ? (
         <>
@@ -249,6 +272,9 @@ function App() {
               email: trainerAccess.signedInEmail,
               canInvite: trainerAccess.canInvite,
               inviteTrainer: trainerAccess.inviteTrainer,
+              clubId: trainerAccess.clubId,
+              fetchTrainerInvites: trainerAccess.fetchTrainerInvites,
+              correctTrainerInvite: trainerAccess.correctTrainerInvite,
               isSuperadmin: trainerAccess.isSuperadmin,
               inviteOwner: trainerAccess.inviteOwner,
               accountRole: trainerAccess.accountRole,

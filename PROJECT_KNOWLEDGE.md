@@ -13,7 +13,7 @@
 
 ### What we're building
 
-A pedagogy-and-development tool for volunteer youth-sports trainers — not a club administration platform. A trainer opens the app on the field, runs a structured, age-appropriate training session with a live-synced timer, and logs how each kid/group is developing. A parent, given a code by the trainer, sees their child's schedule and progress. That's the whole product. No membership admin, no payment collection, no chat — those are explicitly out of scope (see positioning below).
+A pedagogy-and-development tool for volunteer youth-sports trainers — not a club administration platform. A trainer opens the app on the field, runs a structured, age-appropriate training session with a live-synced timer, and logs how each kid/group is developing. A parent, invited by the trainer at the email linked to their child, gets a read-only view of that child's schedule and progress. That's the whole product. No membership admin, no payment collection, no chat — those are explicitly out of scope (see positioning below).
 
 ### Why this is worth the time (the market case)
 
@@ -45,7 +45,7 @@ At 5 groups COACH / TEAM costs €260 and CLUB €280 for a season; both cost �
 
 **Platform superadmins** have full feature and tenant access without payment or expiry through a verified Auth account and TOTP MFA. They do not use a group passcode or browser-held service key. Explicit support context and audit trail remain future work.
 
-**Implementation direction:** `clubs` remains the workspace behind FREE, COACH / TEAM and CLUB, with `groups.club_id` ownership. Named trainer identity and membership are now tracked by the API migration. Parent codes remain scoped to one child. Before multi-club rollout, finish tenant filtering for remaining public reference endpoints and add paid licence/entitlement and billing records. Preserve historical data on downgrade or lapse; block over-limit writes instead of deleting data.
+**Implementation direction:** `clubs` remains the workspace behind FREE, COACH / TEAM and CLUB, with `groups.club_id` ownership. Named trainer identity and membership are now tracked by the API migration. Parent access uses a named Auth identity matched to child-scoped `parent_links`; it does not create a trainer membership. Before multi-club rollout, finish tenant filtering for remaining public reference endpoints and add paid licence/entitlement and billing records. Preserve historical data on downgrade or lapse; block over-limit writes instead of deleting data.
 
 ### Canonical account roles and authorization scopes
 
@@ -56,7 +56,7 @@ Roles and product tiers are separate concepts: a **role** determines what a pers
 - **Club admin** — club/workspace-wide administrative role with `group_id = NULL`. Administration alone does not grant training-write capabilities. If a Club admin also coaches, give that user an additional group-scoped Trainer membership for the relevant group(s).
 - **Trainer** — group-scoped role. `group_id` is required and training access is limited to explicitly assigned groups.
 - **Co-coach** — group-scoped role. `group_id` is required and access is limited to explicitly assigned groups; exact paid-tier seat limits remain a future business rule.
-- **Parent** — not an Auth or trainer-membership role. Access is read-only and scoped to one child through that child's parent code.
+- **Parent** — a named Supabase Auth identity, but not a `trainer_memberships` role. Access is read-only and comes only from `parent_links` rows whose email matches the confirmed Auth email; each link is scoped to one child.
 - **Federation admin** — future federation-scoped role. It must live in a separate federation membership model, not in `trainer_memberships`.
 
 Membership scope invariants:
@@ -65,13 +65,48 @@ Membership scope invariants:
 - an Owner can train a group when `owner.club_id == group.club_id`
 - a Club admin cannot train merely because they are a Club admin
 - Superadmin authorization is independent from club memberships
-- Parent authorization is independent from adult Auth accounts
+- Parent authorization is independent from trainer memberships and is derived only from the authenticated email's child links
+
+### Canonical authentication, invitation, and account lifecycle
+
+This section is the cross-repository source of truth for authentication in `sports-training-api` and `sports-training-ui`. The UI copy must mirror it. If an older changelog entry or issue description conflicts with this section, this section describes the current behavior.
+
+**Identity and role resolution**
+- One normalized email represents one Supabase Auth identity. Deleting a workspace, changing the login screen, or adding another role never creates a second identity for the same email.
+- The login choice expresses the person's intent; it does not grant or remove authorization. After authentication, the API derives `admin`, `trainer`, and `parent` roles from `platform_admins`, live `trainer_memberships`, and child-scoped `parent_links`.
+- One identity may have several roles. The UI may open the requested valid view and allow switching views, while the API remains the authority for every protected request.
+- Group passcodes and parent codes are no longer authentication mechanisms. No credential belongs in a request URL.
+
+**Trainer entry**
+- **New trainer** is self-service signup for an email that has no Auth account. `POST /auth/signup/request` sends the branded confirmation email. After link/OTP verification, the authenticated account names a workspace and chooses the first available basketball group through `POST /auth/workspace`; creation is atomic and starts on FREE.
+- Signup for an existing email returns `409` with “Log in instead.” This is intentional even when that identity's previous workspace was soft-deleted: identity ownership must be proven through login before a new workspace can be created.
+- **Existing trainer** covers owners, club admins, invited trainers, returning trainers, and platform superadmins. `POST /auth/request-code` uses `shouldCreateUser: false` and always returns the same generic response so it cannot reveal whether an account exists. The email contains a one-click sign-in link and an email-bound OTP fallback.
+- An owner/club admin invites a trainer to selected groups. The Auth invitation and membership are created together; `trainer_memberships.confirmed_at = NULL` is shown as **Pending**. A pending email can be corrected and re-sent. A successful invite-link or OTP session marks it **Confirmed**. Confirmed access cannot be silently reassigned to another email.
+- A platform superadmin signs in through **Existing trainer**. The `platform_admins` record, not the selected login button or email string in UI code, grants platform access. Production superadmin access also requires TOTP/AAL2.
+
+**Parent entry**
+- Parents do not self-register or create workspaces. The parent entry point goes directly to login; there is no new/existing-parent choice.
+- A trainer links an email to one child. A new Auth identity receives the **Invite user** email with a one-click **Accept invitation** link. An existing identity receives the ordinary one-click sign-in email with the OTP retained as a fallback.
+- `parent_links.confirmed_at = NULL` is shown as **Pending**. Before confirmation, the trainer may use **Correct email** and **Save & resend**. A successful invite-link session through `GET /auth/me` or an OTP session through `POST /auth/verify-code` marks matching links **Confirmed**. Confirmed links cannot be silently reassigned.
+- Parent authorization is read-only and limited to children linked to the authenticated, normalized email. A parent never receives a trainer membership and cannot read the whole roster or perform trainer writes.
+
+**Email links, sessions, and UI state**
+- The canonical Auth templates live under `supabase/templates/`: confirmation for self-service signup, invite for a new invited identity, and magic-link/OTP for ordinary login. Hosted Supabase templates must mirror these files, `UI_BASE_URL` must be an allowed redirect, and production requires configured SMTP.
+- Invite and magic links establish the Supabase session directly. OTP remains a fallback and must be verified together with its email; a code alone is not an identity.
+- When a link opens with a new session fragment, that incoming session takes precedence over any saved browser session before account routing. This prevents a newly invited trainer/parent from being shown as the admin who happened to be logged in previously.
+- Switching role or login/signup mode clears stale authentication errors so an “account already exists” message is not carried into another flow.
+
+**Workspace soft delete and returning owners**
+- Deleting a workspace is a soft delete: `clubs.deleted_at` is set. Club data and historical membership rows remain in Postgres, while every access/discovery query excludes deleted clubs. The user therefore loses access to the deleted workspace without destroying history.
+- Workspace deletion never deletes the Supabase Auth identity. That identity may also be a parent, superadmin, or member of another live workspace, and deleting it would be an unsafe cross-scope side effect.
+- A returning owner must choose **Existing trainer / Log in instead** and authenticate with the existing email. If the identity has no live workspace and no linked child, the UI shows **Name your workspace**.
+- `create_self_service_workspace` blocks a second live workspace but ignores historical memberships whose club is soft-deleted. The authenticated returning owner can therefore create a new FREE workspace while the old workspace remains deleted and auditable.
 
 FREE authorization:
 - one non-expiring workspace
 - one sport
 - one ordinary group
-- six players
+- 15 players by default, adjustable per workspace by a platform superadmin
 - one adult account, which is the Owner and also performs the trainer role operationally
 - the Owner's club-level membership provides access to the FREE group's training functionality
 
@@ -117,7 +152,7 @@ A scan of 19 youth-sports coaching apps across basketball, soccer, swimming, and
 
 **Reframed positioning (this is the actual product, not a side effect):** this app is a **child development & progress-sharing tool for parents**, not a practice planner that happens to have a parent screen. The training session is where the data comes from; the parent-facing progress view is the product. That reframes what's load-bearing for the multi-sport milestone:
 - **Per-skill, per-kid progress tracking** is the core data model, not a bolt-on — must generalize cleanly across sports.
-- **Parent-code sharing** (no login, no PII, nickname only — see `PRIVACY.md`) is the delivery mechanism for that progress data, and needs to stay zero-account as the sport list grows.
+- **Child-scoped parent email invitations** are the delivery mechanism for that progress data. Parents use named Auth identities and receive read-only access only to linked children; the invitation must remain lightweight as the sport list grows.
 - **Age-scoped, no-leaderboard framing** (progress against yourself, not ranked against teammates) is the psychology layer already planned in this milestone (pedagogical guidance, gamification) — it's what makes the progress data mean something to a parent instead of being a number. This is the piece nothing in the competitive set does.
 
 Sport count and exercise-library breadth are table stakes (six competitors already there); the progress-and-psychology layer for parents is not in any of the 19 apps reviewed.
@@ -150,8 +185,11 @@ Everything currently open in both repos, organized by the positioning above:
 - Pedagogical guidance shown live during a session, scoped by age group — not just what to do, but how to coach it at that age.
 - Gamification of the existing progress data (per-category badges, "tried it all", group milestones, a season progress map, jersey unlocks) — confirmed ideas only, age-scoped, no leaderboards ranking kids against each other.
 
-**Parent access (the lightweight, code-based layer)**
-- A trainer issues a parent a code scoped to their child's nickname — no club-admin role, no email/password, no payment tracking.
+**Parent access (the lightweight, invite-based layer)**
+- A trainer links a parent email to a child and sends an invitation — no club-admin role, password or payment tracking.
+- A new parent accepts the invitation link and enters the app directly. An existing account receives a one-click sign-in link with email + OTP retained only as a fallback.
+- The parent entry point goes directly to existing-parent login; parents do not use the self-service new-workspace signup choice.
+- `parent_links.confirmed_at` changes from pending only after a successful authenticated invite-link or OTP session. Pending emails may be corrected and re-sent; confirmed links cannot be silently reassigned.
 - Parent view: child + group progress, training schedule, upcoming matches.
 - One-way trainer notes on a training (e.g. "cancelled, rain") and parent-reported absences — explicitly not a messaging channel; that's WhatsApp's job, not ours.
 
@@ -175,7 +213,7 @@ Club membership administration, payment collection/processing, in-app two-way me
 
 A mobile-first React app for running a youth basketball club's training sessions, built around the U8 group first. An invited trainer signs in with an email code and opens a group assigned to their account, picks or builds a training plan from the exercise library, and runs a live timer during the actual session on their phone — the same shared clock is visible/controllable from any unlocked trainer's device in that group (backed by `sports-training-api`). Exercise ratings and history are stored per-device in `localStorage`; anything shared across devices (plans, club/group info, account authorization) goes through the API.
 
-Screens today: **Groups** (roster/plans per group), **Players** (roster + progress per player), **Library** (browse/filter/rate exercises, build a custom or full 60-minute session), **Session** (the live run-through with bilingual coaching cues), plus **Setup** (pre-session checklist/coaching principles) and **Vocabulary** ("Words" — searchable bilingual Dutch/English coaching vocabulary), and a read-only **Parent view** unlocked by a trainer-issued single-child code.
+Screens today: **Groups** (roster/plans per group), **Players** (roster + progress per player), **Library** (browse/filter/rate exercises, build a custom or full 60-minute session), **Session** (the live run-through with bilingual coaching cues), plus **Setup** (pre-session checklist/coaching principles) and **Vocabulary** ("Words" — searchable bilingual Dutch/English coaching vocabulary), and a read-only **Parent view** unlocked by the parent's confirmed email links to specific children.
 
 **Why this exists:** the trainer needed something faster than paper/spreadsheets during an actual practice — pick exercises, see timing, rate what worked, without breaking flow mid-session. It grew from single-group U8 to a shape that could support multiple groups and (eventually) multiple sports.
 
@@ -186,7 +224,7 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 | Role | Description |
 |---|---|
 | Trainer | Uses an invited email Auth account with group membership to build plans, run sessions and rate players/exercises. |
-| Parent | Read-only single-child view via a trainer-issued parent code — no trainer account or write access. |
+| Parent | Named Auth account with read-only access to children linked by a trainer to the confirmed email — no trainer membership, roster access or write access. |
 
 ---
 
@@ -245,15 +283,16 @@ Screens today: **Groups** (roster/plans per group), **Players** (roster + progre
 
 ## Changelog
 
-- **2026-09-25** — Sign-up and log-in are separate. The landing dialog asks new vs existing for each role (new/existing trainer, new/existing parent). Sign-up (`/auth/signup/request`) refuses an email that already has an account (409, "Log in instead") and sends the branded confirmation email (link + code, 15 min expiry; template in sports-training-api `supabase/templates/confirmation.html`, must also be pasted into the hosted Supabase dashboard). Log-in keeps the emailed code. The link opens in a new tab; the waiting tab signs in through the `storage` event. `ParentNoChildCard` shows the full note the parent sends their trainer themselves.
+- **2026-09-26** — Authentication and account lifecycle aligned across API, UI and hosted Supabase. Trainers now have explicit new-vs-existing entry: new emails confirm ownership before atomically creating a FREE workspace, while existing/invited trainers and superadmins use generic one-click/OTP login. Parents are invite-only and go directly to login; pending parent/trainer emails are visible, correctable and re-sent, and become confirmed only after an authenticated invite-link or OTP session. Incoming link sessions override stale saved browser sessions, and changing auth mode clears stale errors. Auth templates now have separate confirmation, invite and magic-link/OTP behavior. Workspace deletion remains a data-preserving soft delete: access to the deleted club stops, the Auth identity remains, and the same authenticated identity may create a new workspace because historical memberships in deleted clubs no longer count as live access.
+- **2026-09-25** — Historical first version of split signup/login, now superseded by the canonical lifecycle above. Parents no longer choose new vs existing; they are invited by a trainer and enter through parent login.
 
-- **2026-09-22** — In-progress trainer login migration: email OTP and invitation replace group passcodes; parent codes stay child-scoped and read-only. FREE is the product tier, not a pilot. Hosted rollout awaits matching API migration and Auth email configuration.
+- **2026-09-22** — Historical migration phase, now superseded by the canonical auth lifecycle above: invited email accounts, club/group memberships and platform-admin TOTP replaced trainer group passcodes and anonymous private-table reads.
 - **2026-09-21** — Local UI uses strict port 5174 and calls the sibling API on port 3002, avoiding other local services. Both projects require Node 22+; the API must allow the exact UI origin. The API client trims trailing slashes and sends JSON Content-Type only for requests with a body, so GET requests no longer trigger unnecessary preflights.
 
 - **2026-09-20** — sports-training-api#26 Age-scoped pedagogical guidance is now carried with database-backed exercises and shown only on the live `ExerciseTimeline`. The UI resolves the note by the active group's stable `templateId` (not its renameable display name), labels it with the template's display label, and omits the block when no note has been authored.
 - **2026-09-19** — sports-training-api#65 Parent-code reads now use `POST /players/:id/parent-code/read` with the trainer passcode in the JSON body. The old credential-bearing GET query URL was removed so browser history and URL logging cannot capture the trainer passcode; the UI action test enforces that no parent-code request URL contains `passcode=`.
 - **2026-09-16** — File created; captured current scope, architecture, the a11y/interaction-state gap found in this session, and the plan to descope Setup/Vocabulary.
-- **2026-09-17** — Added competitive scouting summary (§ Milestone 1); reframed positioning after review — this is a child development & progress-sharing tool for parents, not a practice planner with a parent screen attached. Per-skill progress tracking + parent-code sharing + age-scoped psychology framing are the load-bearing differentiators for the multi-sport milestone, not sport count or zero-PII alone.
+- **2026-09-17** — Added competitive scouting summary (§ Milestone 1); reframed positioning after review — this is a child development & progress-sharing tool for parents, not a practice planner with a parent screen attached. Per-skill progress tracking + child-scoped parent access + age-scoped psychology framing are the load-bearing differentiators for the multi-sport milestone, not sport count or zero-PII alone.
 - **2026-09-20** — Added gamification/AI-coach competitor scan (§ Milestone 1): 5StarKidz, Sportlingo, and smaller stat-tracker apps are all B2C (parent pays) — none combine gamified parent-facing progress with this app's B2B2C model. Confirms individual (non-comparative) gamification over an AI-coach feature, and links the gamification badges already in progress to the future 3D mascot concept.
 - **2026-09-21** — Added realistic timeline-to-profitability (§ Milestone 1): bootstrap side-project without external capital runs 3-5+ years to break-even vs. standard 2-5 year SaaS/VC benchmarks — the gap is structural (no sales budget, no founder full-time, no fast-scaling acquisition), not a sign of underperformance. Phased plan through Year 5+, with an explicit end-of-2027/2028-season checkpoint to decide continue/pivot/reassess.
 - **2026-09-21** — Corrected "Proof this isn't just theory" → "Current status (honest)" (§ Milestone 1): the app is one week old, zero paying clubs, 3 trainers using it unpaid. Removes the earlier "first real club" framing, which overstated current traction against the pipeline projections elsewhere in this milestone.

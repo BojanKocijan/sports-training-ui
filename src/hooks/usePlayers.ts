@@ -233,6 +233,15 @@ export async function addParentLink(playerId: string, email: string): Promise<{ 
   return { link, emailed: invited }
 }
 
+/** Corrects and resends an invitation only while the parent link is still pending. */
+export async function updateParentLink(playerId: string, linkId: string, email: string): Promise<ParentLink> {
+  const { link } = await api.put<{ link: ParentLink; invited: true }>(
+    `/players/${playerId}/parents/${linkId}`,
+    { email },
+  )
+  return link
+}
+
 /** Unlinks a parent's email from a player; they lose access on their next request. */
 export async function removeParentLink(playerId: string, linkId: string) {
   await api.delete(`/players/${playerId}/parents/${linkId}`)

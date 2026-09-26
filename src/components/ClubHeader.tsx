@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useClub } from "../hooks/useClub";
 import type { ApiGroup } from "../hooks/useGroups";
-import type { AccountRole } from "../hooks/useTrainerAccess";
+import type { AccountRole, TrainerInvite } from "../hooks/useTrainerAccess";
 import { GroupMenu } from "./GroupMenu";
 import { InviteTrainerDialog } from "./InviteTrainerDialog";
 import { PrivacyPolicyScreen } from "./PrivacyPolicyScreen";
@@ -42,6 +42,9 @@ export function ClubHeader({
     email?: string;
     canInvite?: boolean;
     inviteTrainer?: (email: string, groupIds?: string[]) => Promise<void>;
+    clubId?: string | null;
+    fetchTrainerInvites?: (clubId: string) => Promise<TrainerInvite[]>;
+    correctTrainerInvite?: (userId: string, clubId: string, email: string) => Promise<unknown>;
     isSuperadmin?: boolean;
     inviteOwner?: (email: string) => Promise<void>;
     accountRole?: AccountRole | null;
@@ -146,6 +149,9 @@ export function ClubHeader({
           open={inviteOpen}
           onOpenChange={setInviteOpen}
           onInvite={trainerAccess.inviteTrainer}
+          clubId={trainerAccess.clubId ?? undefined}
+          onLoadInvites={trainerAccess.fetchTrainerInvites}
+          onCorrectInvite={trainerAccess.correctTrainerInvite}
           groups={groupSwitcher?.groups ?? []}
           defaultGroupId={groupSwitcher?.groupId}
         />

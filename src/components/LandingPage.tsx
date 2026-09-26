@@ -102,7 +102,7 @@ function HeroVideo() {
 }
 
 /** Public front door: what the app is, who it is for, and the sign-in. Shown whenever nobody is
- * signed in. Sign-in is for trainers; parents get in after a trainer invites their email. */
+ * signed in. Trainers may sign up or log in; invited parents go directly to parent login. */
 /** What the sign-in dialog shows: for a signed-in account with no access yet, the next step for the
  * way they said they were coming in (trainer: name a workspace; parent: ask the trainer to link
  * their child). Otherwise the sign-in form for the chosen role, with the parent information first
@@ -131,7 +131,10 @@ function AccessCard({ trainerAccess, flow, onChange, onNotTrainer }: {
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">How are you coming in?</p>
         <div className="mt-4 grid gap-3">
           {([['trainer', "I'm a trainer"], ['parent', "I'm a parent"]] as const).map(([r, label]) => (
-            <button key={r} type="button" onClick={() => { setSignInIntent(r); onChange({ role: r, mode: null }) }}
+            <button key={r} type="button" onClick={() => {
+              setSignInIntent(r)
+              onChange({ role: r, mode: r === 'parent' ? 'login' : null })
+            }}
               className="rounded-xl bg-orange-500 py-3 text-sm font-bold text-white">
               {label}
             </button>
@@ -170,7 +173,7 @@ function AccessCard({ trainerAccess, flow, onChange, onNotTrainer }: {
   return (
     <>
       {role === 'parent' && (
-        <div className="mb-3 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-neutral-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-neutral-200">
+        <div className="mb-3 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm text-neutral-700 shadow-sm dark:border-orange-500/40 dark:bg-neutral-900/50 dark:text-neutral-100">
           <p className="font-bold text-neutral-900 dark:text-neutral-50">Following your child?</p>
           <p className="mt-1">
             Their trainer adds your email to your child's profile. Sign up or log in with that email to
@@ -182,7 +185,10 @@ function AccessCard({ trainerAccess, flow, onChange, onNotTrainer }: {
       )}
       <SignInCard
         trainerAccess={trainerAccess} role={role} mode={mode}
-        onSwitchRole={(next) => { setSignInIntent(next); onChange({ role: next, mode }) }}
+        onSwitchRole={(next) => {
+          setSignInIntent(next)
+          onChange({ role: next, mode: next === 'parent' ? 'login' : mode })
+        }}
         onSwitchMode={(next) => onChange({ role, mode: next })}
       />
     </>
@@ -197,7 +203,12 @@ export function LandingPage({ trainerAccess }: { trainerAccess: ReturnType<typeo
   const [dismissed, setDismissed] = useState(false)
   const [intent, setIntent] = useState(getSignInIntent)
   const open = flow !== null || (trainerAccess.needsWorkspace && !dismissed)
-  const choose = (role: SignInIntent) => { setSignInIntent(role); setIntent(role); setFlow({ role, mode: null }); setDismissed(false) }
+  const choose = (role: SignInIntent) => {
+    setSignInIntent(role)
+    setIntent(role)
+    setFlow({ role, mode: role === 'parent' ? 'login' : null })
+    setDismissed(false)
+  }
   const closeDialog = () => { setFlow(null); setDismissed(true) }
   const showParentNoChild = trainerAccess.needsWorkspace && intent === 'parent'
 
